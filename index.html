@@ -1,851 +1,979 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="it">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>HIIT Timer</title>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    :root {
-      --bg: #0a0a0a;
-      --surface: #141414;
-      --border: #2a2a2a;
-      --text: #f0f0f0;
-      --muted: #666;
-      --prepare: #f59e0b;
-      --work: #22c55e;
-      --rest: #3b82f6;
-      --warning: #ef4444;
-      --btn-primary: #f0f0f0;
-      --btn-primary-text: #0a0a0a;
-      --radius: 12px;
-    }
-
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      min-height: 100dvh;
-      display: flex;
-      flex-direction: column;
-    }
-
-    /* ── SETUP SCREEN ── */
-    #setup-screen {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 0;
-      max-width: 520px;
-      width: 100%;
-      margin: 0 auto;
-      padding: 24px 16px 32px;
-    }
-
-    #setup-screen h1 {
-      font-size: clamp(1.6rem, 5vw, 2.2rem);
-      font-weight: 800;
-      letter-spacing: -0.03em;
-      margin-bottom: 24px;
-    }
-
-    .config-grid {
-      display: grid;
-      gap: 12px;
-      margin-bottom: 24px;
-    }
-
-    .config-row {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 14px 16px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-    }
-
-    .config-row label {
-      font-size: 0.9rem;
-      color: var(--muted);
-      flex: 1;
-      line-height: 1.3;
-    }
-
-    .config-row .label-main {
-      display: block;
-      font-size: 1rem;
-      color: var(--text);
-      font-weight: 600;
-    }
-
-    .config-row input[type="number"] {
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      color: var(--text);
-      font-size: 1.1rem;
-      font-weight: 700;
-      width: 80px;
-      text-align: center;
-      padding: 8px 6px;
-      -moz-appearance: textfield;
-      appearance: textfield;
-    }
-
-    .config-row input[type="number"]::-webkit-inner-spin-button,
-    .config-row input[type="number"]::-webkit-outer-spin-button { display: none; }
-
-    .config-row input[type="number"]:focus {
-      outline: 2px solid var(--btn-primary);
-      outline-offset: 2px;
-    }
-
-    .stepper {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .stepper button {
-      background: var(--border);
-      border: none;
-      border-radius: 6px;
-      color: var(--text);
-      font-size: 1.2rem;
-      width: 32px;
-      height: 32px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: background 0.15s;
-    }
-
-    .stepper button:hover { background: #3a3a3a; }
-    .stepper button:active { background: #4a4a4a; }
-
-    /* summary card */
-    .summary-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 16px;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-bottom: 24px;
-    }
-
-    .summary-stat { text-align: center; }
-    .summary-stat .val {
-      font-size: clamp(1.8rem, 6vw, 2.4rem);
-      font-weight: 900;
-      letter-spacing: -0.04em;
-      line-height: 1;
-    }
-    .summary-stat .lbl {
-      font-size: 0.75rem;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      margin-top: 4px;
-    }
-
-    .start-btn {
-      background: var(--btn-primary);
-      color: var(--btn-primary-text);
-      border: none;
-      border-radius: var(--radius);
-      font-size: 1.1rem;
-      font-weight: 800;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-      padding: 18px;
-      width: 100%;
-      cursor: pointer;
-      transition: opacity 0.15s;
-    }
-
-    .start-btn:hover { opacity: 0.9; }
-    .start-btn:active { opacity: 0.75; }
-
-    /* ── ACTIVE SCREEN ── */
-    #active-screen {
-      display: none;
-      flex: 1;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-      gap: 24px;
-      padding: 24px 48px 40px;
-      max-width: 1100px;
-      width: 100%;
-      margin: 0 auto;
-    }
-
-    #active-screen.visible { display: flex; }
-
-    .phase-badge {
-      font-size: 0.8rem;
-      font-weight: 800;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      padding: 6px 16px;
-      border-radius: 99px;
-      background: var(--surface);
-      color: var(--muted);
-      transition: background 0.3s, color 0.3s;
-    }
-
-    .phase-badge.prepare { background: var(--prepare); color: #000; }
-    .phase-badge.work    { background: var(--work);    color: #000; }
-    .phase-badge.rest    { background: var(--rest);    color: #fff; }
-    .phase-badge.warning { background: var(--warning); color: #fff; }
-
-    .main-display {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: clamp(12px, 4vw, 32px);
-      width: 100%;
-      flex: 1;
-    }
-
-    .round-display {
-      text-align: center;
-      flex: 1;
-    }
-
-    .display-divider {
-      font-size: clamp(4rem, 10vw, 12rem);
-      font-weight: 200;
-      color: var(--border);
-      line-height: 1;
-      padding-bottom: 0.1em;
-      flex-shrink: 0;
-    }
-
-    .round-display .round-num {
-      font-size: clamp(6rem, 18vw, 16rem);
-      font-weight: 900;
-      line-height: 1;
-      letter-spacing: -0.05em;
-      transition: color 0.3s;
-    }
-
-    .round-display .round-label {
-      font-size: 0.8rem;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      margin-top: 4px;
-    }
-
-    .timer-display {
-      text-align: center;
-      flex: 1;
-    }
-
-    .timer-display .time-val {
-      font-size: clamp(6rem, 18vw, 16rem);
-      font-weight: 900;
-      font-variant-numeric: tabular-nums;
-      letter-spacing: -0.04em;
-      line-height: 1;
-      transition: color 0.3s;
-    }
-
-    .timer-display .time-label {
-      font-size: 0.8rem;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      margin-top: 4px;
-    }
-
-    /* progress bar */
-    .progress-wrap {
-      width: 100%;
-      height: 6px;
-      background: var(--border);
-      border-radius: 99px;
-      overflow: hidden;
-      margin-top: 12px;
-    }
-
-    .progress-bar {
-      height: 100%;
-      border-radius: 99px;
-      background: var(--work);
-      transition: width 0.5s linear, background 0.3s;
-      width: 100%;
-    }
-
-    /* controls */
-    .controls {
-      display: flex;
-      gap: 12px;
-      width: 100%;
-      margin-top: auto;
-    }
-
-    .ctrl-btn {
-      flex: 1;
-      border: none;
-      border-radius: var(--radius);
-      font-size: 1rem;
-      font-weight: 700;
-      padding: 16px;
-      cursor: pointer;
-      transition: opacity 0.15s;
-    }
-
-    .ctrl-btn:hover { opacity: 0.85; }
-    .ctrl-btn:active { opacity: 0.65; }
-
-    #btn-pause {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      color: var(--text);
-    }
-
-    #btn-stop {
-      background: #1a0000;
-      border: 1px solid #3a0000;
-      color: var(--warning);
-    }
-
-    /* finished overlay */
-    #finished-overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.92);
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 16px;
-      z-index: 100;
-    }
-
-    #finished-overlay.visible { display: flex; }
-
-    #finished-overlay h2 {
-      font-size: clamp(2rem, 8vw, 3.5rem);
-      font-weight: 900;
-      letter-spacing: -0.03em;
-    }
-
-    #finished-overlay p {
-      color: var(--muted);
-      font-size: 1rem;
-    }
-
-    #btn-done {
-      background: var(--btn-primary);
-      color: var(--btn-primary-text);
-      border: none;
-      border-radius: var(--radius);
-      font-size: 1rem;
-      font-weight: 800;
-      padding: 16px 40px;
-      cursor: pointer;
-      margin-top: 8px;
-    }
-
-    /* colour themes per phase */
-    body.phase-prepare { --phase-color: var(--prepare); }
-    body.phase-work    { --phase-color: var(--work); }
-    body.phase-rest    { --phase-color: var(--rest); }
-    body.phase-warning { --phase-color: var(--warning); }
-
-    .round-display .round-num,
-    .timer-display .time-val {
-      color: var(--phase-color, var(--text));
-    }
-
-    .progress-bar {
-      background: var(--phase-color, var(--work));
-    }
-  </style>
-</head>
-<body>
-
-<!-- ── SETUP ── -->
-<div id="setup-screen">
-  <h1>HIIT Timer</h1>
-
-  <div class="config-grid">
-    <div class="config-row">
-      <label>
-        <span class="label-main">Round</span>
-        Numero di round totali
-      </label>
-      <div class="stepper">
-        <button data-field="rounds" data-delta="-1">−</button>
-        <input type="number" id="cfg-rounds" min="1" max="99" value="8" />
-        <button data-field="rounds" data-delta="1">+</button>
-      </div>
-    </div>
-
-    <div class="config-row">
-      <label>
-        <span class="label-main">Prepare</span>
-        Conto alla rovescia iniziale (sec)
-      </label>
-      <div class="stepper">
-        <button data-field="prepare" data-delta="-5">−</button>
-        <input type="number" id="cfg-prepare" min="0" max="60" value="10" />
-        <button data-field="prepare" data-delta="5">+</button>
-      </div>
-    </div>
-
-    <div class="config-row">
-      <label>
-        <span class="label-main">Durata round</span>
-        Tempo di lavoro per round (sec)
-      </label>
-      <div class="stepper">
-        <button data-field="work" data-delta="-5">−</button>
-        <input type="number" id="cfg-work" min="5" max="3600" value="40" />
-        <button data-field="work" data-delta="5">+</button>
-      </div>
-    </div>
-
-    <div class="config-row">
-      <label>
-        <span class="label-main">Warning pre-fine</span>
-        Allarme X secondi prima della fine del round
-      </label>
-      <div class="stepper">
-        <button data-field="warning" data-delta="-1">−</button>
-        <input type="number" id="cfg-warning" min="0" max="30" value="5" />
-        <button data-field="warning" data-delta="1">+</button>
-      </div>
-    </div>
-
-    <div class="config-row">
-      <label>
-        <span class="label-main">Rest</span>
-        Recupero tra i round (sec)
-      </label>
-      <div class="stepper">
-        <button data-field="rest" data-delta="-5">−</button>
-        <input type="number" id="cfg-rest" min="0" max="300" value="20" />
-        <button data-field="rest" data-delta="5">+</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="summary-card">
-    <div class="summary-stat">
-      <div class="val" id="sum-rounds">8</div>
-      <div class="lbl">Round</div>
-    </div>
-    <div class="summary-stat">
-      <div class="val" id="sum-total">—</div>
-      <div class="lbl">Durata totale</div>
-    </div>
-  </div>
-
-  <button class="start-btn" id="btn-start">▶ Inizia</button>
-</div>
-
-<!-- ── ACTIVE ── -->
-<div id="active-screen">
-  <div class="phase-badge" id="phase-badge">PREPARE</div>
-
-  <div class="main-display">
-    <div class="round-display">
-      <div class="round-num" id="round-num">1</div>
-      <div class="round-label" id="round-label">/ 8 round</div>
-    </div>
-    <div class="display-divider">|</div>
-    <div class="timer-display">
-      <div class="time-val" id="time-val">00:10</div>
-      <div class="time-label" id="time-label">tempo</div>
-    </div>
-  </div>
-
-  <div class="progress-wrap" style="width:100%">
-    <div class="progress-bar" id="progress-bar"></div>
-  </div>
-
-  <div class="controls">
-    <button class="ctrl-btn" id="btn-pause">⏸ Pausa</button>
-    <button class="ctrl-btn" id="btn-stop">■ Stop</button>
-  </div>
-</div>
-
-<!-- ── FINISHED ── -->
-<div id="finished-overlay">
-  <h2>💪 Fatto!</h2>
-  <p id="finished-msg">Allenamento completato</p>
-  <button id="btn-done">Ricomincia</button>
-</div>
-
-<script>
-// ── Config persistence ──
-const FIELDS = ['rounds','prepare','work','warning','rest'];
-const DEFAULTS = { rounds:8, prepare:10, work:40, warning:5, rest:20 };
-
-function loadConfig() {
-  const saved = localStorage.getItem('hiit-config');
-  if (!saved) return { ...DEFAULTS };
-  try { return { ...DEFAULTS, ...JSON.parse(saved) }; } catch { return { ...DEFAULTS }; }
-}
-
-function saveConfig(cfg) {
-  localStorage.setItem('hiit-config', JSON.stringify(cfg));
-}
-
-function getConfig() {
-  const cfg = {};
-  for (const f of FIELDS) {
-    cfg[f] = parseInt(document.getElementById('cfg-' + f).value) || DEFAULTS[f];
-  }
-  return cfg;
-}
-
-function applyConfig(cfg) {
-  for (const f of FIELDS) {
-    document.getElementById('cfg-' + f).value = cfg[f];
-  }
-}
-
-// ── Summary ──
-function updateSummary() {
-  const cfg = getConfig();
-  const rounds = cfg.rounds;
-  const total = (cfg.prepare || 0) + rounds * cfg.work + (rounds - 1) * cfg.rest;
-  document.getElementById('sum-rounds').textContent = rounds;
-  document.getElementById('sum-total').textContent = fmtTime(total);
-  saveConfig(cfg);
-}
-
-function fmtTime(sec) {
-  const m = Math.floor(sec / 60);
-  const s = sec % 60;
-  return m > 0 ? `${m}:${String(s).padStart(2,'0')}` : `${s}s`;
-}
-
-function fmtTimePad(sec) {
-  const m = Math.floor(sec / 60);
-  const s = sec % 60;
-  return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-}
-
-// ── Input wiring ──
-for (const f of FIELDS) {
-  document.getElementById('cfg-' + f).addEventListener('input', updateSummary);
-}
-
-document.querySelectorAll('[data-field]').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const f = btn.dataset.field;
-    const input = document.getElementById('cfg-' + f);
-    const delta = parseInt(btn.dataset.delta);
-    const min = parseInt(input.min) ?? 0;
-    const max = parseInt(input.max) ?? 9999;
-    input.value = Math.max(min, Math.min(max, (parseInt(input.value) || 0) + delta));
-    updateSummary();
-  });
-});
-
-// ── Audio (Web Audio API) ──
-let audioCtx = null;
-let clipper = null;
-
-function getAudioCtx() {
-  if (!audioCtx) {
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    // Hard clipper for a dry, punchy sound
-    clipper = audioCtx.createWaveShaper();
-    const n = 512;
-    const curve = new Float32Array(n);
-    for (let i = 0; i < n; i++) {
-      const x = (i * 2) / n - 1;
-      curve[i] = Math.max(-0.8, Math.min(0.8, x * 3));
-    }
-    clipper.curve = curve;
-    clipper.connect(audioCtx.destination);
-  }
-  return audioCtx;
-}
-
-function beep(freq, duration, vol = 0.9) {
-  const ctx = getAudioCtx();
-  const osc = ctx.createOscillator();
-  const gain = ctx.createGain();
-  osc.connect(gain);
-  gain.connect(clipper);
-  osc.frequency.value = freq;
-  osc.type = 'square';
-  const t = ctx.currentTime;
-  gain.gain.setValueAtTime(0, t);
-  gain.gain.linearRampToValueAtTime(vol, t + 0.003);  // 3ms attack
-  gain.gain.exponentialRampToValueAtTime(0.001, t + duration);
-  osc.start(t);
-  osc.stop(t + duration);
-}
-
-function playCountdown321() {
-  [0, 0.333, 0.666].forEach(t => {
-    setTimeout(() => beep(1760, 0.07), t * 1000);
-  });
-}
-
-function playStartRound() {
-  beep(1760, 0.75);
-}
-
-function playWarning() {
-  beep(1480, 0.09);
-  setTimeout(() => beep(1480, 0.09), 200);
-}
-
-function playEndRound() {
-  beep(1318, 0.1);
-  setTimeout(() => beep(1318, 0.1), 260);
-}
-
-// ── Wake Lock ──
-let wakeLock = null;
-
-async function acquireWakeLock() {
-  if ('wakeLock' in navigator) {
-    try { wakeLock = await navigator.wakeLock.request('screen'); } catch {}
-  }
-}
-
-function releaseWakeLock() {
-  if (wakeLock) { wakeLock.release(); wakeLock = null; }
-}
-
-// ── Timer state ──
-let state = null;
-let interval = null;
-
-// phases: 'prepare', 'work', 'rest'
-// warningFired: bool per phase
-
-function buildSequence(cfg) {
-  const seq = [];
-  if (cfg.prepare > 0) seq.push({ phase: 'prepare', duration: cfg.prepare, round: null });
-  for (let r = 1; r <= cfg.rounds; r++) {
-    seq.push({ phase: 'work', duration: cfg.work, round: r });
-    if (r < cfg.rounds && cfg.rest > 0) {
-      seq.push({ phase: 'rest', duration: cfg.rest, round: r });
-    }
-  }
-  return seq;
-}
-
-function startTimer() {
-  const cfg = getConfig();
-  saveConfig(cfg);
-
-  // Unlock audio context on first user gesture
-  getAudioCtx();
-
-  const seq = buildSequence(cfg);
-
-  state = {
-    cfg,
-    seq,
-    idx: 0,
-    remaining: seq[0].duration,
-    paused: false,
-    warningFired: false,
-    countdownFired: new Set(),
-    lastTick: performance.now(),
-  };
-
-  showActive();
-  acquireWakeLock();
-  renderActive();
-  onPhaseStart();
-
-  interval = setInterval(tick, 200);
-}
-
-function onPhaseStart() {
-  const seg = state.seq[state.idx];
-  state.warningFired = false;
-  state.countdownFired = new Set();
-
-  if (seg.phase === 'prepare') {
-    // silent or single beep
-    beep(440, 0.1, 0.5);
-  } else if (seg.phase === 'work') {
-    // 321 countdown is played at end of rest / end of prepare
-    playStartRound();
-  } else if (seg.phase === 'rest') {
-    playEndRound();
-  }
-}
-
-function tick() {
-  if (state.paused) return;
-
-  const now = performance.now();
-  const delta = (now - state.lastTick) / 1000;
-  state.lastTick = now;
-
-  state.remaining -= delta;
-
-  const seg = state.seq[state.idx];
-
-  // Warning check (only in work phase)
-  if (seg.phase === 'work' && !state.warningFired && state.cfg.warning > 0) {
-    if (state.remaining <= state.cfg.warning) {
-      state.warningFired = true;
-      playWarning();
-    }
-  }
-
-  // Countdown beeps at 3, 2, 1 seconds remaining — every phase
-  for (const sec of [3, 2, 1]) {
-    if (!state.countdownFired.has(sec) && state.remaining <= sec && state.remaining > sec - 1) {
-      state.countdownFired.add(sec);
-      beep(sec === 1 ? 2093 : 1760, 0.07);
-    }
-  }
-
-  if (state.remaining <= 0) {
-    advancePhase();
-    return;
-  }
-
-  renderActive();
-}
-
-function advancePhase() {
-  const seg = state.seq[state.idx];
-
-  // If ending rest or prepare, play 3-2-1 for next round
-  if (seg.phase === 'rest' || seg.phase === 'prepare') {
-    playCountdown321();
-  }
-
-  state.idx++;
-
-  if (state.idx >= state.seq.length) {
-    finish();
-    return;
-  }
-
-  const next = state.seq[state.idx];
-  state.remaining = next.duration;
-  state.warningFired = false;
-  state.lastTick = performance.now();
-
-  renderActive();
-
-  // Delay onPhaseStart slightly if 321 was just played
-  const delay = (seg.phase === 'rest' || seg.phase === 'prepare') ? 1000 : 0;
-  setTimeout(onPhaseStart, delay);
-}
-
-function finish() {
-  clearInterval(interval);
-  releaseWakeLock();
-  beep(1046, 0.4);
-  setTimeout(() => beep(1318, 0.6), 300);
-  document.getElementById('finished-msg').textContent =
-    `${state.cfg.rounds} round completati — ottimo lavoro!`;
-  document.getElementById('finished-overlay').classList.add('visible');
-}
-
-// ── Render ──
-function renderActive() {
-  const seg = state.seq[state.idx];
-  const rem = Math.max(0, Math.ceil(state.remaining));
-  const isWarning = seg.phase === 'work' && state.cfg.warning > 0 && rem <= state.cfg.warning;
-  const displayPhase = isWarning ? 'warning' : seg.phase;
-
-  // badge
-  const badge = document.getElementById('phase-badge');
-  badge.className = 'phase-badge ' + displayPhase;
-  badge.textContent = {
-    prepare: 'PREPARE',
-    work: 'WORK',
-    rest: 'REST',
-    warning: 'WARNING',
-  }[displayPhase];
-
-  // round number
-  const roundNum = document.getElementById('round-num');
-  if (seg.phase === 'prepare') {
-    roundNum.textContent = '—';
-    document.getElementById('round-label').textContent = `${state.cfg.rounds} round`;
-    document.getElementById('time-label').textContent = 'prepare';
-  } else if (seg.phase === 'rest') {
-    roundNum.textContent = seg.round;
-    document.getElementById('round-label').textContent = `/ ${state.cfg.rounds} round`;
-    document.getElementById('time-label').textContent = 'rest';
-  } else {
-    roundNum.textContent = seg.round;
-    document.getElementById('round-label').textContent = `/ ${state.cfg.rounds} round`;
-    document.getElementById('time-label').textContent = 'lavoro';
-  }
-
-  // time
-  document.getElementById('time-val').textContent = fmtTimePad(rem);
-
-  // progress bar
-  const pct = (state.remaining / seg.duration) * 100;
-  document.getElementById('progress-bar').style.width = Math.max(0, pct) + '%';
-
-  // body class for colour
-  document.body.className = 'phase-' + displayPhase;
-}
-
-// ── UI transitions ──
-function showActive() {
-  document.getElementById('setup-screen').style.display = 'none';
-  const a = document.getElementById('active-screen');
-  a.classList.add('visible');
-}
-
-function showSetup() {
-  document.getElementById('setup-screen').style.display = '';
-  const a = document.getElementById('active-screen');
-  a.classList.remove('visible');
-  document.body.className = '';
-  document.getElementById('finished-overlay').classList.remove('visible');
-}
-
-// ── Controls ──
-document.getElementById('btn-start').addEventListener('click', startTimer);
-
-document.getElementById('btn-pause').addEventListener('click', () => {
-  if (!state) return;
-  state.paused = !state.paused;
-  if (!state.paused) state.lastTick = performance.now();
-  document.getElementById('btn-pause').textContent = state.paused ? '▶ Riprendi' : '⏸ Pausa';
-});
-
-document.getElementById('btn-stop').addEventListener('click', () => {
-  clearInterval(interval);
-  releaseWakeLock();
-  state = null;
-  showSetup();
-});
-
-document.getElementById('btn-done').addEventListener('click', () => {
-  clearInterval(interval);
-  releaseWakeLock();
-  state = null;
-  showSetup();
-});
-
-// ── Init ──
-applyConfig(loadConfig());
-updateSummary();
-</script>
-</body>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>HIIT Timer</title>
+        <style>
+            *,
+            *::before,
+            *::after {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+            }
+
+            :root {
+                --bg: #0a0a0a;
+                --surface: #141414;
+                --border: #2a2a2a;
+                --text: #f0f0f0;
+                --muted: #666;
+                --prepare: #f59e0b;
+                --work: #22c55e;
+                --rest: #3b82f6;
+                --warning: #ef4444;
+                --btn-primary: #f0f0f0;
+                --btn-primary-text: #0a0a0a;
+                --radius: 12px;
+            }
+
+            body {
+                background: var(--bg);
+                color: var(--text);
+                font-family:
+                    -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+                min-height: 100dvh;
+                display: flex;
+                flex-direction: column;
+            }
+
+            /* ── SETUP SCREEN ── */
+            #setup-screen {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                gap: 0;
+                max-width: 520px;
+                width: 100%;
+                margin: 0 auto;
+                padding: 24px 16px 32px;
+            }
+
+            #setup-screen h1 {
+                font-size: clamp(1.6rem, 5vw, 2.2rem);
+                font-weight: 800;
+                letter-spacing: -0.03em;
+                margin-bottom: 24px;
+            }
+
+            .config-grid {
+                display: grid;
+                gap: 12px;
+                margin-bottom: 24px;
+            }
+
+            .config-row {
+                background: var(--surface);
+                border: 1px solid var(--border);
+                border-radius: var(--radius);
+                padding: 14px 16px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 12px;
+            }
+
+            .config-row label {
+                font-size: 0.9rem;
+                color: var(--muted);
+                flex: 1;
+                line-height: 1.3;
+            }
+
+            .config-row .label-main {
+                display: block;
+                font-size: 1rem;
+                color: var(--text);
+                font-weight: 600;
+            }
+
+            .config-row input[type="number"] {
+                background: var(--bg);
+                border: 1px solid var(--border);
+                border-radius: 8px;
+                color: var(--text);
+                font-size: 1.1rem;
+                font-weight: 700;
+                width: 80px;
+                text-align: center;
+                padding: 8px 6px;
+                -moz-appearance: textfield;
+                appearance: textfield;
+            }
+
+            .config-row input[type="number"]::-webkit-inner-spin-button,
+            .config-row input[type="number"]::-webkit-outer-spin-button {
+                display: none;
+            }
+
+            .config-row input[type="number"]:focus {
+                outline: 2px solid var(--btn-primary);
+                outline-offset: 2px;
+            }
+
+            .stepper {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+            }
+
+            .stepper button {
+                background: var(--border);
+                border: none;
+                border-radius: 6px;
+                color: var(--text);
+                font-size: 1.2rem;
+                width: 32px;
+                height: 32px;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: background 0.15s;
+            }
+
+            .stepper button:hover {
+                background: #3a3a3a;
+            }
+            .stepper button:active {
+                background: #4a4a4a;
+            }
+
+            /* summary card */
+            .summary-card {
+                background: var(--surface);
+                border: 1px solid var(--border);
+                border-radius: var(--radius);
+                padding: 16px;
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 12px;
+                margin-bottom: 24px;
+            }
+
+            .summary-stat {
+                text-align: center;
+            }
+            .summary-stat .val {
+                font-size: clamp(1.8rem, 6vw, 2.4rem);
+                font-weight: 900;
+                letter-spacing: -0.04em;
+                line-height: 1;
+            }
+            .summary-stat .lbl {
+                font-size: 0.75rem;
+                color: var(--muted);
+                text-transform: uppercase;
+                letter-spacing: 0.08em;
+                margin-top: 4px;
+            }
+
+            .start-btn {
+                background: var(--btn-primary);
+                color: var(--btn-primary-text);
+                border: none;
+                border-radius: var(--radius);
+                font-size: 1.1rem;
+                font-weight: 800;
+                letter-spacing: 0.04em;
+                text-transform: uppercase;
+                padding: 18px;
+                width: 100%;
+                cursor: pointer;
+                transition: opacity 0.15s;
+            }
+
+            .start-btn:hover {
+                opacity: 0.9;
+            }
+            .start-btn:active {
+                opacity: 0.75;
+            }
+
+            /* ── ACTIVE SCREEN ── */
+            #active-screen {
+                display: none;
+                flex: 1;
+                flex-direction: column;
+                align-items: center;
+                justify-content: flex-start;
+                gap: 24px;
+                padding: 24px 48px 40px;
+                max-width: 1100px;
+                width: 100%;
+                margin: 0 auto;
+            }
+
+            #active-screen.visible {
+                display: flex;
+            }
+
+            .phase-badge {
+                font-size: 0.8rem;
+                font-weight: 800;
+                letter-spacing: 0.14em;
+                text-transform: uppercase;
+                padding: 6px 16px;
+                border-radius: 99px;
+                background: var(--surface);
+                color: var(--muted);
+                transition:
+                    background 0.3s,
+                    color 0.3s;
+            }
+
+            .phase-badge.prepare {
+                background: var(--prepare);
+                color: #000;
+            }
+            .phase-badge.work {
+                background: var(--work);
+                color: #000;
+            }
+            .phase-badge.rest {
+                background: var(--rest);
+                color: #fff;
+            }
+            .phase-badge.warning {
+                background: var(--warning);
+                color: #fff;
+            }
+
+            .main-display {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: clamp(12px, 4vw, 32px);
+                width: 100%;
+                flex: 1;
+            }
+
+            .round-display {
+                text-align: center;
+                flex: 1;
+            }
+
+            .display-divider {
+                font-size: clamp(4rem, 10vw, 12rem);
+                font-weight: 200;
+                color: var(--border);
+                line-height: 1;
+                padding-bottom: 0.1em;
+                flex-shrink: 0;
+            }
+
+            .round-display .round-num {
+                font-size: clamp(6rem, 18vw, 16rem);
+                font-weight: 900;
+                line-height: 1;
+                letter-spacing: -0.05em;
+                transition: color 0.3s;
+            }
+
+            .round-display .round-label {
+                font-size: 0.8rem;
+                color: var(--muted);
+                text-transform: uppercase;
+                letter-spacing: 0.1em;
+                margin-top: 4px;
+            }
+
+            .timer-display {
+                text-align: center;
+                flex: 1;
+            }
+
+            .timer-display .time-val {
+                font-size: clamp(6rem, 18vw, 16rem);
+                font-weight: 900;
+                font-variant-numeric: tabular-nums;
+                letter-spacing: -0.04em;
+                line-height: 1;
+                transition: color 0.3s;
+            }
+
+            .timer-display .time-label {
+                font-size: 0.8rem;
+                color: var(--muted);
+                text-transform: uppercase;
+                letter-spacing: 0.1em;
+                margin-top: 4px;
+            }
+
+            /* progress bar */
+            .progress-wrap {
+                width: 100%;
+                height: 6px;
+                background: var(--border);
+                border-radius: 99px;
+                overflow: hidden;
+                margin-top: 12px;
+            }
+
+            .progress-bar {
+                height: 100%;
+                border-radius: 99px;
+                background: var(--work);
+                transition:
+                    width 0.5s linear,
+                    background 0.3s;
+                width: 100%;
+            }
+
+            /* controls */
+            .controls {
+                display: flex;
+                gap: 12px;
+                width: 100%;
+                margin-top: auto;
+            }
+
+            .ctrl-btn {
+                flex: 1;
+                border: none;
+                border-radius: var(--radius);
+                font-size: 1rem;
+                font-weight: 700;
+                padding: 16px;
+                cursor: pointer;
+                transition: opacity 0.15s;
+            }
+
+            .ctrl-btn:hover {
+                opacity: 0.85;
+            }
+            .ctrl-btn:active {
+                opacity: 0.65;
+            }
+
+            #btn-pause {
+                background: var(--surface);
+                border: 1px solid var(--border);
+                color: var(--text);
+            }
+
+            #btn-stop {
+                background: #1a0000;
+                border: 1px solid #3a0000;
+                color: var(--warning);
+            }
+
+            /* finished overlay */
+            #finished-overlay {
+                display: none;
+                position: fixed;
+                inset: 0;
+                background: rgba(0, 0, 0, 0.92);
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                gap: 16px;
+                z-index: 100;
+            }
+
+            #finished-overlay.visible {
+                display: flex;
+            }
+
+            #finished-overlay h2 {
+                font-size: clamp(2rem, 8vw, 3.5rem);
+                font-weight: 900;
+                letter-spacing: -0.03em;
+            }
+
+            #finished-overlay p {
+                color: var(--muted);
+                font-size: 1rem;
+            }
+
+            #btn-done {
+                background: var(--btn-primary);
+                color: var(--btn-primary-text);
+                border: none;
+                border-radius: var(--radius);
+                font-size: 1rem;
+                font-weight: 800;
+                padding: 16px 40px;
+                cursor: pointer;
+                margin-top: 8px;
+            }
+
+            /* colour themes per phase */
+            body.phase-prepare {
+                --phase-color: var(--prepare);
+            }
+            body.phase-work {
+                --phase-color: var(--work);
+            }
+            body.phase-rest {
+                --phase-color: var(--rest);
+            }
+            body.phase-warning {
+                --phase-color: var(--warning);
+            }
+
+            .round-display .round-num,
+            .timer-display .time-val {
+                color: var(--phase-color, var(--text));
+            }
+
+            .progress-bar {
+                background: var(--phase-color, var(--work));
+            }
+        </style>
+    </head>
+    <body>
+        <div id="setup-screen">
+            <h1>HIIT Timer</h1>
+
+            <div class="config-grid">
+                <div class="config-row">
+                    <label>
+                        <span class="label-main">Round</span>
+                        Numero di round totali
+                    </label>
+                    <div class="stepper">
+                        <button data-field="rounds" data-delta="-1">−</button>
+                        <input
+                            type="number"
+                            id="cfg-rounds"
+                            min="1"
+                            max="99"
+                            value="8"
+                        />
+                        <button data-field="rounds" data-delta="1">+</button>
+                    </div>
+                </div>
+
+                <div class="config-row">
+                    <label>
+                        <span class="label-main">Prepare</span>
+                        Conto alla rovescia iniziale (sec)
+                    </label>
+                    <div class="stepper">
+                        <button data-field="prepare" data-delta="-5">−</button>
+                        <input
+                            type="number"
+                            id="cfg-prepare"
+                            min="0"
+                            max="60"
+                            value="10"
+                        />
+                        <button data-field="prepare" data-delta="5">+</button>
+                    </div>
+                </div>
+
+                <div class="config-row">
+                    <label>
+                        <span class="label-main">Durata round</span>
+                        Tempo di lavoro per round (sec)
+                    </label>
+                    <div class="stepper">
+                        <button data-field="work" data-delta="-5">−</button>
+                        <input
+                            type="number"
+                            id="cfg-work"
+                            min="5"
+                            max="3600"
+                            value="40"
+                        />
+                        <button data-field="work" data-delta="5">+</button>
+                    </div>
+                </div>
+
+                <div class="config-row">
+                    <label>
+                        <span class="label-main">Warning pre-fine</span>
+                        Allarme X secondi prima della fine del round
+                    </label>
+                    <div class="stepper">
+                        <button data-field="warning" data-delta="-1">−</button>
+                        <input
+                            type="number"
+                            id="cfg-warning"
+                            min="0"
+                            max="30"
+                            value="5"
+                        />
+                        <button data-field="warning" data-delta="1">+</button>
+                    </div>
+                </div>
+
+                <div class="config-row">
+                    <label>
+                        <span class="label-main">Rest</span>
+                        Recupero tra i round (sec)
+                    </label>
+                    <div class="stepper">
+                        <button data-field="rest" data-delta="-5">−</button>
+                        <input
+                            type="number"
+                            id="cfg-rest"
+                            min="0"
+                            max="300"
+                            value="20"
+                        />
+                        <button data-field="rest" data-delta="5">+</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="summary-card">
+                <div class="summary-stat">
+                    <div class="val" id="sum-rounds">8</div>
+                    <div class="lbl">Round</div>
+                </div>
+                <div class="summary-stat">
+                    <div class="val" id="sum-total">—</div>
+                    <div class="lbl">Durata totale</div>
+                </div>
+            </div>
+
+            <button class="start-btn" id="btn-start">▶ Inizia</button>
+        </div>
+
+        <div id="active-screen">
+            <div class="phase-badge" id="phase-badge">PREPARE</div>
+
+            <div class="main-display">
+                <div class="round-display">
+                    <div class="round-num" id="round-num">1</div>
+                    <div class="round-label" id="round-label">/ 8 round</div>
+                </div>
+                <div class="display-divider">|</div>
+                <div class="timer-display">
+                    <div class="time-val" id="time-val">00:10</div>
+                    <div class="time-label" id="time-label">tempo</div>
+                </div>
+            </div>
+
+            <div class="progress-wrap" style="width: 100%">
+                <div class="progress-bar" id="progress-bar"></div>
+            </div>
+
+            <div class="controls">
+                <button class="ctrl-btn" id="btn-pause">⏸ Pausa</button>
+                <button class="ctrl-btn" id="btn-stop">■ Stop</button>
+            </div>
+        </div>
+
+        <div id="finished-overlay">
+            <h2>💪 Fatto!</h2>
+            <p id="finished-msg">Allenamento completato</p>
+            <button id="btn-done">Ricomincia</button>
+        </div>
+
+        <script>
+            // ── Config persistence ──
+            const FIELDS = ["rounds", "prepare", "work", "warning", "rest"];
+            const DEFAULTS = {
+                rounds: 8,
+                prepare: 10,
+                work: 40,
+                warning: 5,
+                rest: 20,
+            };
+
+            function loadConfig() {
+                const saved = localStorage.getItem("hiit-config");
+                if (!saved) return { ...DEFAULTS };
+                try {
+                    return { ...DEFAULTS, ...JSON.parse(saved) };
+                } catch {
+                    return { ...DEFAULTS };
+                }
+            }
+
+            function saveConfig(cfg) {
+                localStorage.setItem("hiit-config", JSON.stringify(cfg));
+            }
+
+            function getConfig() {
+                const cfg = {};
+                for (const f of FIELDS) {
+                    cfg[f] =
+                        parseInt(document.getElementById("cfg-" + f).value) ||
+                        DEFAULTS[f];
+                }
+                return cfg;
+            }
+
+            function applyConfig(cfg) {
+                for (const f of FIELDS) {
+                    document.getElementById("cfg-" + f).value = cfg[f];
+                }
+            }
+
+            // ── Summary ──
+            function updateSummary() {
+                const cfg = getConfig();
+                const rounds = cfg.rounds;
+                const total =
+                    (cfg.prepare || 0) +
+                    rounds * cfg.work +
+                    (rounds - 1) * cfg.rest;
+                document.getElementById("sum-rounds").textContent = rounds;
+                document.getElementById("sum-total").textContent =
+                    fmtTime(total);
+                saveConfig(cfg);
+            }
+
+            function fmtTime(sec) {
+                const m = Math.floor(sec / 60);
+                const s = sec % 60;
+                return m > 0 ? `${m}:${String(s).padStart(2, "0")}` : `${s}s`;
+            }
+
+            function fmtTimePad(sec) {
+                const m = Math.floor(sec / 60);
+                const s = sec % 60;
+                return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+            }
+
+            // ── Input wiring ──
+            for (const f of FIELDS) {
+                document
+                    .getElementById("cfg-" + f)
+                    .addEventListener("input", updateSummary);
+            }
+
+            document.querySelectorAll("[data-field]").forEach((btn) => {
+                btn.addEventListener("click", () => {
+                    const f = btn.dataset.field;
+                    const input = document.getElementById("cfg-" + f);
+                    const delta = parseInt(btn.dataset.delta);
+                    const min = parseInt(input.min) ?? 0;
+                    const max = parseInt(input.max) ?? 9999;
+                    input.value = Math.max(
+                        min,
+                        Math.min(max, (parseInt(input.value) || 0) + delta),
+                    );
+                    updateSummary();
+                });
+            });
+
+            // ── Audio (Web Audio API - Stile CrossHero / Rogue Gym Clock) ──
+            let audioCtx = null;
+
+            function getAudioCtx() {
+                if (!audioCtx) {
+                    audioCtx = new (
+                        window.AudioContext || window.webkitAudioContext
+                    )();
+                }
+                return audioCtx;
+            }
+
+            // Generatore di bip personalizzabile
+            function playBeep(frequency, duration, type = "sine") {
+                try {
+                    const ctx = getAudioCtx();
+                    if (ctx.state === "suspended") {
+                        ctx.resume();
+                    }
+
+                    const osc = ctx.createOscillator();
+                    const gainNode = ctx.createGain();
+
+                    osc.type = type;
+                    osc.frequency.value = frequency;
+
+                    const now = ctx.currentTime;
+
+                    // Inviluppo del volume pulito e immediato (stile CrossHero)
+                    gainNode.gain.setValueAtTime(0, now);
+                    gainNode.gain.linearRampToValueAtTime(0.8, now + 0.005); // Attacco istantaneo di 5ms
+                    gainNode.gain.setValueAtTime(0.8, now + duration - 0.01);
+                    gainNode.gain.linearRampToValueAtTime(0, now + duration); // Rilascio netto di 10ms
+
+                    osc.connect(gainNode);
+                    gainNode.connect(ctx.destination);
+
+                    osc.start(now);
+                    osc.stop(now + duration);
+                } catch (e) {
+                    console.error("Errore audio:", e);
+                }
+            }
+
+            // Bip di countdown standard per i secondi 3, 2, 1 (Frequenza medio-bassa, netto e corto)
+            function playLowBeep() {
+                playBeep(900, 0.25, "sine");
+            }
+
+            // Bip di inizio round o cambio fase importante al secondo 0 (Frequenza molto alta e lungo)
+            function playHighBeep() {
+                playBeep(2300, 0.7, "sine");
+            }
+
+            // Rimosso il vecchio sistema 321 automatico disallineato per sincronizzarlo al secondo esatto nel tick
+
+            function playWarning() {
+                // Avviso pre-fine round: due bip rapidi a media intensità
+                playBeep(1200, 0.08, "sine");
+                setTimeout(() => playBeep(1200, 0.08, "sine"), 150);
+            }
+
+            // ── Wake Lock ──
+            let wakeLock = null;
+
+            async function acquireWakeLock() {
+                if ("wakeLock" in navigator) {
+                    try {
+                        wakeLock = await navigator.wakeLock.request("screen");
+                    } catch {}
+                }
+            }
+
+            function releaseWakeLock() {
+                if (wakeLock) {
+                    wakeLock.release();
+                    wakeLock = null;
+                }
+            }
+
+            // ── Timer state ──
+            let state = null;
+            let interval = null;
+
+            function buildSequence(cfg) {
+                const seq = [];
+                if (cfg.prepare > 0)
+                    seq.push({
+                        phase: "prepare",
+                        duration: cfg.prepare,
+                        round: null,
+                    });
+                for (let r = 1; r <= cfg.rounds; r++) {
+                    seq.push({ phase: "work", duration: cfg.work, round: r });
+                    if (r < cfg.rounds && cfg.rest > 0) {
+                        seq.push({
+                            phase: "rest",
+                            duration: cfg.rest,
+                            round: r,
+                        });
+                    }
+                }
+                return seq;
+            }
+
+            function startTimer() {
+                const cfg = getConfig();
+                saveConfig(cfg);
+
+                // Inizializza l'audio al click dell'utente
+                getAudioCtx();
+
+                const seq = buildSequence(cfg);
+
+                state = {
+                    cfg,
+                    seq,
+                    idx: 0,
+                    remaining: seq[0].duration,
+                    paused: false,
+                    warningFired: false,
+                    beepsFired: new Set(), // Traccia i bip al secondo esatto di questa fase
+                    lastTick: performance.now(),
+                };
+
+                showActive();
+                acquireWakeLock();
+                renderActive();
+                onPhaseStart();
+
+                interval = setInterval(tick, 50); // Risoluzione aumentata a 50ms per bip spaccati al millesimo
+            }
+
+            function onPhaseStart() {
+                state.warningFired = false;
+                state.beepsFired = new Set();
+
+                // Suona il bip lungo di inizio allo scattare della fase
+                playHighBeep();
+            }
+
+            function tick() {
+                if (state.paused) return;
+
+                const now = performance.now();
+                const delta = (now - state.lastTick) / 1000;
+                state.lastTick = now;
+
+                state.remaining -= delta;
+
+                const seg = state.seq[state.idx];
+                const currentSecCeil = Math.max(0, Math.ceil(state.remaining));
+
+                // Controllo Warning pre-fine (solo in fase di lavoro)
+                if (
+                    seg.phase === "work" &&
+                    !state.warningFired &&
+                    state.cfg.warning > 0
+                ) {
+                    if (state.remaining <= state.cfg.warning) {
+                        state.warningFired = true;
+                        playWarning();
+                    }
+                }
+
+                // Gestione dei Bip di countdown dei secondi 3, 2, 1 standard di CrossFit
+                if (currentSecCeil <= 3 && currentSecCeil >= 1) {
+                    if (!state.beepsFired.has(currentSecCeil)) {
+                        state.beepsFired.add(currentSecCeil);
+                        playLowBeep();
+                    }
+                }
+
+                if (state.remaining <= 0) {
+                    advancePhase();
+                    return;
+                }
+
+                renderActive();
+            }
+
+            function advancePhase() {
+                state.idx++;
+
+                if (state.idx >= state.seq.length) {
+                    finish();
+                    return;
+                }
+
+                const next = state.seq[state.idx];
+                state.remaining = next.duration;
+                state.warningFired = false;
+                state.beepsFired = new Set();
+                state.lastTick = performance.now();
+
+                renderActive();
+                onPhaseStart();
+            }
+
+            function finish() {
+                clearInterval(interval);
+                releaseWakeLock();
+
+                // Suono trionfale finale (due bip lunghi consecutivi)
+                playHighBeep();
+                setTimeout(playHighBeep, 400);
+
+                document.getElementById("finished-msg").textContent =
+                    `${state.cfg.rounds} round completati — ottimo lavoro!`;
+                document
+                    .getElementById("finished-overlay")
+                    .classList.add("visible");
+            }
+
+            // ── Render ──
+            function renderActive() {
+                const seg = state.seq[state.idx];
+                const rem = Math.max(0, Math.ceil(state.remaining));
+                const isWarning =
+                    seg.phase === "work" &&
+                    state.cfg.warning > 0 &&
+                    rem <= state.cfg.warning;
+                const displayPhase = isWarning ? "warning" : seg.phase;
+
+                // badge
+                const badge = document.getElementById("phase-badge");
+                badge.className = "phase-badge " + displayPhase;
+                badge.textContent = {
+                    prepare: "PREPARE",
+                    work: "WORK",
+                    rest: "REST",
+                    warning: "WARNING",
+                }[displayPhase];
+
+                // round number
+                const roundNum = document.getElementById("round-num");
+                if (seg.phase === "prepare") {
+                    roundNum.textContent = "—";
+                    document.getElementById("round-label").textContent =
+                        `${state.cfg.rounds} round`;
+                    document.getElementById("time-label").textContent =
+                        "prepare";
+                } else if (seg.phase === "rest") {
+                    roundNum.textContent = seg.round;
+                    document.getElementById("round-label").textContent =
+                        `/ ${state.cfg.rounds} round`;
+                    document.getElementById("time-label").textContent = "rest";
+                } else {
+                    roundNum.textContent = seg.round;
+                    document.getElementById("round-label").textContent =
+                        `/ ${state.cfg.rounds} round`;
+                    document.getElementById("time-label").textContent =
+                        "lavoro";
+                }
+
+                // time
+                document.getElementById("time-val").textContent =
+                    fmtTimePad(rem);
+
+                // progress bar
+                const pct = (state.remaining / seg.duration) * 100;
+                document.getElementById("progress-bar").style.width =
+                    Math.max(0, pct) + "%";
+
+                // body class for colour
+                document.body.className = "phase-" + displayPhase;
+            }
+
+            // ── UI transitions ──
+            function showActive() {
+                document.getElementById("setup-screen").style.display = "none";
+                const a = document.getElementById("active-screen");
+                a.classList.add("visible");
+            }
+
+            function showSetup() {
+                document.getElementById("setup-screen").style.display = "";
+                const a = document.getElementById("active-screen");
+                a.classList.remove("visible");
+                document.body.className = "";
+                document
+                    .getElementById("finished-overlay")
+                    .classList.remove("visible");
+            }
+
+            // ── Controls ──
+            document
+                .getElementById("btn-start")
+                .addEventListener("click", startTimer);
+
+            document
+                .getElementById("btn-pause")
+                .addEventListener("click", () => {
+                    if (!state) return;
+                    state.paused = !state.paused;
+                    if (!state.paused) state.lastTick = performance.now();
+                    document.getElementById("btn-pause").textContent =
+                        state.paused ? "▶ Riprendi" : "⏸ Pausa";
+                });
+
+            document
+                .getElementById("btn-stop")
+                .addEventListener("click", () => {
+                    clearInterval(interval);
+                    releaseWakeLock();
+                    state = null;
+                    showSetup();
+                });
+
+            document
+                .getElementById("btn-done")
+                .addEventListener("click", () => {
+                    clearInterval(interval);
+                    releaseWakeLock();
+                    state = null;
+                    showSetup();
+                });
+
+            // ── Init ──
+            applyConfig(loadConfig());
+            updateSummary();
+        </script>
+    </body>
 </html>
