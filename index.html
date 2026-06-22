@@ -3,7 +3,7 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>HIIT Timer</title>
+        <title>HIIT Timer Pro</title>
         <style>
             *,
             *::before,
@@ -60,7 +60,7 @@
             .config-grid {
                 display: grid;
                 gap: 12px;
-                margin-bottom: 24px;
+                margin-bottom: 12px;
             }
 
             .config-row {
@@ -72,6 +72,22 @@
                 align-items: center;
                 justify-content: space-between;
                 gap: 12px;
+                transition:
+                    opacity 0.2s ease,
+                    max-height 0.2s ease,
+                    padding 0.2s ease,
+                    margin 0.2s ease;
+            }
+
+            .config-row.hidden {
+                opacity: 0;
+                max-height: 0;
+                padding-top: 0;
+                padding-bottom: 0;
+                margin: 0;
+                border: none;
+                overflow: hidden;
+                pointer-events: none;
             }
 
             .config-row label {
@@ -88,7 +104,8 @@
                 font-weight: 600;
             }
 
-            .config-row input[type="number"] {
+            .stepper input[type="text"],
+            .stepper input[type="number"] {
                 background: var(--bg);
                 border: 1px solid var(--border);
                 border-radius: 8px;
@@ -102,12 +119,12 @@
                 appearance: textfield;
             }
 
-            .config-row input[type="number"]::-webkit-inner-spin-button,
-            .config-row input[type="number"]::-webkit-outer-spin-button {
+            .stepper input[type="number"]::-webkit-inner-spin-button,
+            .stepper input[type="number"]::-webkit-outer-spin-button {
                 display: none;
             }
 
-            .config-row input[type="number"]:focus {
+            .stepper input:focus {
                 outline: 2px solid var(--btn-primary);
                 outline-offset: 2px;
             }
@@ -138,6 +155,117 @@
             }
             .stepper button:active {
                 background: #4a4a4a;
+            }
+
+            /* ── TOGGLE ADVANCED ROW ── */
+            .toggle-row {
+                background: var(--surface);
+                border: 1px solid var(--border);
+                border-radius: var(--radius);
+                margin-bottom: 12px;
+                cursor: pointer;
+            }
+
+            .toggle-label-wrap {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 14px 16px;
+                width: 100%;
+                cursor: pointer;
+                user-select: none;
+            }
+
+            .toggle-label-wrap span {
+                font-size: 1rem;
+                font-weight: 600;
+                color: var(--text);
+            }
+
+            .switch {
+                position: relative;
+                display: inline-block;
+                width: 50px;
+                height: 26px;
+                pointer-events: none;
+            }
+
+            .switch input {
+                opacity: 0;
+                width: 0;
+                height: 0;
+            }
+
+            .slider {
+                position: absolute;
+                inset: 0;
+                background-color: var(--border);
+                transition: 0.3s;
+                border-radius: 34px;
+            }
+
+            .slider:before {
+                position: absolute;
+                content: "";
+                height: 18px;
+                width: 18px;
+                left: 4px;
+                bottom: 4px;
+                background-color: var(--muted);
+                transition: 0.3s;
+                border-radius: 50%;
+            }
+
+            input:checked + .slider {
+                background-color: var(--work);
+            }
+            input:checked + .slider:before {
+                transform: translateX(24px);
+                background-color: #000;
+            }
+
+            /* ── LISTA DINAMICA ROUND ── */
+            .rounds-list-container {
+                background: var(--surface);
+                border: 1px solid var(--border);
+                border-radius: var(--radius);
+                padding: 16px;
+                margin-bottom: 24px;
+                display: none;
+            }
+
+            .rounds-list-container.visible {
+                display: block;
+            }
+
+            .rounds-list-container h3 {
+                font-size: 1rem;
+                font-weight: 700;
+                margin-bottom: 12px;
+                color: var(--text);
+            }
+
+            .rounds-list {
+                display: grid;
+                gap: 8px;
+                max-height: 200px;
+                overflow-y: auto;
+                padding-right: 4px;
+            }
+
+            .round-item {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                background: var(--bg);
+                border: 1px solid var(--border);
+                padding: 8px 12px;
+                border-radius: 8px;
+            }
+
+            .round-item span {
+                font-size: 0.9rem;
+                font-weight: 600;
             }
 
             /* summary card */
@@ -314,7 +442,7 @@
             .progress-bar {
                 height: 100%;
                 border-radius: 99px;
-                background: var(--work);
+                background: var(--phase-color, var(--work));
                 transition:
                     width 0.5s linear,
                     background 0.3s;
@@ -417,66 +545,61 @@
             .timer-display .time-val {
                 color: var(--phase-color, var(--text));
             }
-
-            .progress-bar {
-                background: var(--phase-color, var(--work));
-            }
         </style>
     </head>
     <body>
         <div id="setup-screen">
-            <h1>HIIT Timer</h1>
+            <h1>HIIT Timer Pro</h1>
 
             <div class="config-grid">
                 <div class="config-row">
                     <label>
-                        <span class="label-main">Round</span>
+                        <span class="label-main">Round totali</span>
                         Numero di round totali
                     </label>
                     <div class="stepper">
-                        <button data-field="rounds" data-delta="-1">−</button>
+                        <button id="btn-round-minus">−</button>
                         <input
                             type="number"
                             id="cfg-rounds"
                             min="1"
-                            max="99"
+                            max="30"
                             value="8"
+                            readonly
                         />
-                        <button data-field="rounds" data-delta="1">+</button>
+                        <button id="btn-round-plus">+</button>
                     </div>
                 </div>
 
                 <div class="config-row">
                     <label>
                         <span class="label-main">Prepare</span>
-                        Conto alla rovescia iniziale (sec)
+                        Conto alla rovescia iniziale
                     </label>
                     <div class="stepper">
                         <button data-field="prepare" data-delta="-5">−</button>
                         <input
-                            type="number"
+                            type="text"
                             id="cfg-prepare"
-                            min="0"
-                            max="60"
-                            value="10"
+                            data-value="10"
+                            inputmode="numeric"
                         />
                         <button data-field="prepare" data-delta="5">+</button>
                     </div>
                 </div>
 
-                <div class="config-row">
+                <div class="config-row" id="row-standard-work">
                     <label>
                         <span class="label-main">Durata round</span>
-                        Tempo di lavoro per round (sec)
+                        Tempo di lavoro (uguale per tutti i round)
                     </label>
                     <div class="stepper">
                         <button data-field="work" data-delta="-5">−</button>
                         <input
-                            type="number"
+                            type="text"
                             id="cfg-work"
-                            min="5"
-                            max="3600"
-                            value="40"
+                            data-value="40"
+                            inputmode="numeric"
                         />
                         <button data-field="work" data-delta="5">+</button>
                     </div>
@@ -488,35 +611,53 @@
                         Allarme X secondi prima della fine del round
                     </label>
                     <div class="stepper">
-                        <button data-field="warning" data-delta="-1">−</button>
+                        <button id="btn-warning-minus">−</button>
                         <input
                             type="number"
                             id="cfg-warning"
                             min="0"
                             max="30"
                             value="5"
+                            readonly
                         />
-                        <button data-field="warning" data-delta="1">+</button>
+                        <button id="btn-warning-plus">+</button>
                     </div>
                 </div>
 
                 <div class="config-row">
                     <label>
                         <span class="label-main">Rest</span>
-                        Recupero tra i round (sec)
+                        Recupero tra i round
                     </label>
                     <div class="stepper">
                         <button data-field="rest" data-delta="-5">−</button>
                         <input
-                            type="number"
+                            type="text"
                             id="cfg-rest"
-                            min="0"
-                            max="300"
-                            value="20"
+                            data-value="20"
+                            inputmode="numeric"
                         />
                         <button data-field="rest" data-delta="5">+</button>
                     </div>
                 </div>
+            </div>
+
+            <div class="toggle-row">
+                <label class="toggle-label-wrap" for="cfg-advanced-toggle">
+                    <span>Imposta tempi diversi per ogni set</span>
+                    <div class="switch">
+                        <input type="checkbox" id="cfg-advanced-toggle" />
+                        <span class="slider"></span>
+                    </div>
+                </label>
+            </div>
+
+            <div
+                class="rounds-list-container"
+                id="rounds-inputs-container-wrap"
+            >
+                <h3>Personalizza durata singoli Set (mm:ss)</h3>
+                <div class="rounds-list" id="rounds-inputs-container"></div>
             </div>
 
             <div class="summary-card">
@@ -565,58 +706,309 @@
         </div>
 
         <script>
-            // ── Config persistence ──
-            const FIELDS = ["rounds", "prepare", "work", "warning", "rest"];
-            const DEFAULTS = {
-                rounds: 8,
-                prepare: 10,
-                work: 40,
-                warning: 5,
-                rest: 20,
-            };
+            // ── Variabili di Stato Configurazione ──
+            let roundTimes = [40, 40, 40, 40, 40, 40, 40, 40];
+            const DEFAULTS = { prepare: 10, work: 40, warning: 5, rest: 20 };
+
+            // Converte i secondi nel formato stringa mm:ss
+            function formatSecondsToMMSS(totalSeconds) {
+                const m = Math.floor(totalSeconds / 60);
+                const s = totalSeconds % 60;
+                return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+            }
+
+            // ── FUNZIONE DI SANIFICAZIONE AVANZATA ──
+            // Accetta testi liberi (es: "40", "1:20", "02:05", "90") e restituisce i secondi puri corretti
+            function parseAndSanitizeTimeToSeconds(
+                inputStr,
+                fallbackValue = 10,
+                isWorkField = false,
+            ) {
+                // Rimuove tutto tranne numeri e i due punti
+                let clean = inputStr.replace(/[^0-9:]/g, "").trim();
+                if (!clean) return fallbackValue;
+
+                let seconds = 0;
+                if (clean.includes(":")) {
+                    const parts = clean.split(":");
+                    const mins = parseInt(parts[0]) || 0;
+                    const secs = parseInt(parts[1]) || 0;
+                    seconds = mins * 60 + secs;
+                } else {
+                    // Se inserisce solo un numero puro (es: "40" o "90")
+                    seconds = parseInt(clean) || fallbackValue;
+                }
+
+                // Vincoli minimi e massimi di sicurezza
+                const minAllowed = isWorkField ? 5 : 0;
+                if (seconds < minAllowed) seconds = minAllowed;
+                if (seconds > 3600) seconds = 3600; // Massimo 1 ora
+
+                return seconds;
+            }
 
             function loadConfig() {
-                const saved = localStorage.getItem("hiit-config");
-                if (!saved) return { ...DEFAULTS };
+                const saved = localStorage.getItem("hiit-config-v6");
+                if (!saved) {
+                    setRawValue("prepare", DEFAULTS.prepare);
+                    setRawValue("work", DEFAULTS.work);
+                    setRawValue("rest", DEFAULTS.rest);
+                    document.getElementById("cfg-warning").value =
+                        DEFAULTS.warning;
+                    syncRoundsArray(
+                        parseInt(document.getElementById("cfg-rounds").value),
+                    );
+                    return;
+                }
                 try {
-                    return { ...DEFAULTS, ...JSON.parse(saved) };
-                } catch {
-                    return { ...DEFAULTS };
+                    const parsed = JSON.parse(saved);
+                    setRawValue("prepare", parsed.prepare ?? DEFAULTS.prepare);
+                    setRawValue("work", parsed.work ?? DEFAULTS.work);
+                    setRawValue("rest", parsed.rest ?? DEFAULTS.rest);
+                    document.getElementById("cfg-warning").value =
+                        parsed.warning ?? DEFAULTS.warning;
+                    document.getElementById("cfg-advanced-toggle").checked =
+                        parsed.advancedMode ?? false;
+
+                    if (
+                        Array.isArray(parsed.roundTimes) &&
+                        parsed.roundTimes.length > 0
+                    ) {
+                        roundTimes = parsed.roundTimes;
+                    }
+                } catch (e) {
+                    console.error(e);
+                }
+
+                toggleAdvancedMode();
+            }
+
+            function saveConfig() {
+                const cfg = {
+                    prepare: getRawValue("prepare"),
+                    work: getRawValue("work"),
+                    warning:
+                        parseInt(
+                            document.getElementById("cfg-warning").value,
+                        ) || DEFAULTS.warning,
+                    rest: getRawValue("rest"),
+                    advancedMode: document.getElementById("cfg-advanced-toggle")
+                        .checked,
+                    roundTimes: roundTimes,
+                };
+                localStorage.setItem("hiit-config-v6", JSON.stringify(cfg));
+            }
+
+            function getRawValue(idPart) {
+                return (
+                    parseInt(
+                        document.getElementById("cfg-" + idPart).dataset.value,
+                    ) || 0
+                );
+            }
+            function setRawValue(idPart, seconds) {
+                const input = document.getElementById("cfg-" + idPart);
+                input.dataset.value = seconds;
+                input.value = formatSecondsToMMSS(seconds);
+            }
+
+            function syncRoundsArray(targetLength) {
+                const currentWorkDefault = getRawValue("work") || DEFAULTS.work;
+                while (roundTimes.length < targetLength) {
+                    const lastVal =
+                        roundTimes[roundTimes.length - 1] || currentWorkDefault;
+                    roundTimes.push(lastVal);
+                }
+                while (roundTimes.length > targetLength) {
+                    roundTimes.pop();
                 }
             }
 
-            function saveConfig(cfg) {
-                localStorage.setItem("hiit-config", JSON.stringify(cfg));
-            }
+            function toggleAdvancedMode() {
+                const isAdvanced = document.getElementById(
+                    "cfg-advanced-toggle",
+                ).checked;
+                const rowStandard =
+                    document.getElementById("row-standard-work");
+                const containerWrap = document.getElementById(
+                    "rounds-inputs-container-wrap",
+                );
+                const totalRounds = roundTimes.length;
 
-            function getConfig() {
-                const cfg = {};
-                for (const f of FIELDS) {
-                    cfg[f] =
-                        parseInt(document.getElementById("cfg-" + f).value) ||
-                        DEFAULTS[f];
+                if (isAdvanced) {
+                    rowStandard.classList.add("hidden");
+                    containerWrap.classList.add("visible");
+                } else {
+                    rowStandard.classList.remove("hidden");
+                    containerWrap.classList.remove("visible");
+                    const standardValue = getRawValue("work") || DEFAULTS.work;
+                    roundTimes = Array(totalRounds).fill(standardValue);
                 }
-                return cfg;
+
+                buildRoundInputs();
             }
 
-            function applyConfig(cfg) {
-                for (const f of FIELDS) {
-                    document.getElementById("cfg-" + f).value = cfg[f];
-                }
+            function buildRoundInputs() {
+                document.getElementById("cfg-rounds").value = roundTimes.length;
+                const container = document.getElementById(
+                    "rounds-inputs-container",
+                );
+                container.innerHTML = "";
+
+                roundTimes.forEach((time, index) => {
+                    const row = document.createElement("div");
+                    row.className = "round-item";
+                    row.innerHTML = `
+      <span>Set ${index + 1}</span>
+      <div class="stepper">
+        <button type="button" class="btn-time-minus" data-idx="${index}">−</button>
+        <input type="text" class="cfg-single-work" data-idx="${index}" value="${formatSecondsToMMSS(time)}" inputmode="numeric" />
+        <button type="button" class="btn-time-plus" data-idx="${index}">+</button>
+      </div>
+    `;
+                    container.appendChild(row);
+                });
+
+                // Eventi pulsanti dei singoli set
+                container.querySelectorAll(".btn-time-minus").forEach((b) => {
+                    b.addEventListener("click", () =>
+                        modifyRoundTime(parseInt(b.dataset.idx), -5),
+                    );
+                });
+                container.querySelectorAll(".btn-time-plus").forEach((b) => {
+                    b.addEventListener("click", () =>
+                        modifyRoundTime(parseInt(b.dataset.idx), 5),
+                    );
+                });
+
+                // Gestione della digitazione manuale sui singoli Set
+                container
+                    .querySelectorAll(".cfg-single-work")
+                    .forEach((input) => {
+                        const handleSingleBlur = () => {
+                            const idx = parseInt(input.dataset.idx);
+                            const sanitizedSec = parseAndSanitizeTimeToSeconds(
+                                input.value,
+                                DEFAULTS.work,
+                                true,
+                            );
+                            roundTimes[idx] = sanitizedSec;
+                            input.value = formatSecondsToMMSS(sanitizedSec);
+                            updateSummary();
+                        };
+
+                        input.addEventListener("blur", handleSingleBlur);
+                        input.addEventListener("keydown", (e) => {
+                            if (e.key === "Enter") {
+                                input.blur();
+                            }
+                        });
+                    });
+
+                updateSummary();
             }
 
-            // ── Summary ──
+            function modifyRoundTime(idx, delta) {
+                roundTimes[idx] = Math.max(5, (roundTimes[idx] || 40) + delta);
+                buildRoundInputs();
+            }
+
+            // Gestione manuale e sanificazione sui 3 campi principali (Prepare, Work, Rest)
+            ["prepare", "work", "rest"].forEach((field) => {
+                const input = document.getElementById("cfg-" + field);
+
+                const handleMainBlur = () => {
+                    const def = DEFAULTS[field];
+                    const isWork = field === "work";
+                    const sanitizedSec = parseAndSanitizeTimeToSeconds(
+                        input.value,
+                        def,
+                        isWork,
+                    );
+                    setRawValue(field, sanitizedSec);
+                    updateSummary();
+                };
+
+                input.addEventListener("blur", handleMainBlur);
+                input.addEventListener("keydown", (e) => {
+                    if (e.key === "Enter") {
+                        input.blur();
+                    }
+                });
+            });
+
+            // Pulsanti generali + e - per il numero di Round totali
+            document
+                .getElementById("btn-round-plus")
+                .addEventListener("click", () => {
+                    let currentRounds = roundTimes.length;
+                    if (currentRounds >= 30) return;
+                    syncRoundsArray(currentRounds + 1);
+                    if (
+                        !document.getElementById("cfg-advanced-toggle").checked
+                    ) {
+                        const standardValue =
+                            getRawValue("work") || DEFAULTS.work;
+                        roundTimes[roundTimes.length - 1] = standardValue;
+                    }
+                    buildRoundInputs();
+                });
+
+            document
+                .getElementById("btn-round-minus")
+                .addEventListener("click", () => {
+                    let currentRounds = roundTimes.length;
+                    if (currentRounds <= 1) return;
+                    syncRoundsArray(currentRounds - 1);
+                    buildRoundInputs();
+                });
+
+            // Pulsanti Warning pre-fine
+            document
+                .getElementById("btn-warning-plus")
+                .addEventListener("click", () => {
+                    const input = document.getElementById("cfg-warning");
+                    input.value = Math.min(
+                        30,
+                        (parseInt(input.value) || 0) + 1,
+                    );
+                    updateSummary();
+                });
+            document
+                .getElementById("btn-warning-minus")
+                .addEventListener("click", () => {
+                    const input = document.getElementById("cfg-warning");
+                    input.value = Math.max(0, (parseInt(input.value) || 0) - 1);
+                    updateSummary();
+                });
+
+            document
+                .getElementById("cfg-advanced-toggle")
+                .addEventListener("change", toggleAdvancedMode);
+
+            // Aggiorna il sommario complessivo dell'allenamento
             function updateSummary() {
-                const cfg = getConfig();
-                const rounds = cfg.rounds;
-                const total =
-                    (cfg.prepare || 0) +
-                    rounds * cfg.work +
-                    (rounds - 1) * cfg.rest;
-                document.getElementById("sum-rounds").textContent = rounds;
+                const prepare = getRawValue("prepare");
+                const rest = getRawValue("rest");
+                const totalRounds = roundTimes.length;
+
+                let workTotal = 0;
+                if (document.getElementById("cfg-advanced-toggle").checked) {
+                    workTotal = roundTimes.reduce((a, b) => a + b, 0);
+                } else {
+                    const standardValue = getRawValue("work") || DEFAULTS.work;
+                    workTotal = totalRounds * standardValue;
+                    roundTimes = Array(totalRounds).fill(standardValue);
+                }
+
+                const restTotal =
+                    totalRounds > 1 ? (totalRounds - 1) * rest : 0;
+                const totalDuration = prepare + workTotal + restTotal;
+
+                document.getElementById("sum-rounds").textContent = totalRounds;
                 document.getElementById("sum-total").textContent =
-                    fmtTime(total);
-                saveConfig(cfg);
+                    fmtTime(totalDuration);
+                saveConfig();
             }
 
             function fmtTime(sec) {
@@ -625,99 +1017,71 @@
                 return m > 0 ? `${m}:${String(s).padStart(2, "0")}` : `${s}s`;
             }
 
-            function fmtTimePad(sec) {
-                const m = Math.floor(sec / 60);
-                const s = sec % 60;
-                return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
-            }
-
-            // ── Input wiring ──
-            for (const f of FIELDS) {
-                document
-                    .getElementById("cfg-" + f)
-                    .addEventListener("input", updateSummary);
-            }
-
+            // Eventi pulsanti incremento/decremento dei campi principali
             document.querySelectorAll("[data-field]").forEach((btn) => {
                 btn.addEventListener("click", () => {
-                    const f = btn.dataset.field;
-                    const input = document.getElementById("cfg-" + f);
+                    const field = btn.dataset.field;
                     const delta = parseInt(btn.dataset.delta);
-                    const min = parseInt(input.min) ?? 0;
-                    const max = parseInt(input.max) ?? 9999;
-                    input.value = Math.max(
-                        min,
-                        Math.min(max, (parseInt(input.value) || 0) + delta),
-                    );
+
+                    let currentSec = getRawValue(field);
+                    let newSec = currentSec + delta;
+
+                    if (field === "work" && newSec < 5) newSec = 5;
+                    if (field !== "work" && newSec < 0) newSec = 0;
+                    if (newSec > 3600) newSec = 3600;
+
+                    setRawValue(field, newSec);
                     updateSummary();
                 });
             });
 
-            // ── Audio (Web Audio API - Stile CrossHero / Rogue Gym Clock) ──
+            // ── Audio Engine ──
             let audioCtx = null;
-
             function getAudioCtx() {
-                if (!audioCtx) {
+                if (!audioCtx)
                     audioCtx = new (
                         window.AudioContext || window.webkitAudioContext
                     )();
-                }
                 return audioCtx;
             }
 
-            // Generatore di bip personalizzabile
-            function playBeep(frequency, duration, type = "sine") {
+            function playBeep(frequency, duration) {
                 try {
                     const ctx = getAudioCtx();
-                    if (ctx.state === "suspended") {
-                        ctx.resume();
-                    }
-
+                    if (ctx.state === "suspended") ctx.resume();
                     const osc = ctx.createOscillator();
                     const gainNode = ctx.createGain();
-
-                    osc.type = type;
+                    osc.type = "sine";
                     osc.frequency.value = frequency;
-
                     const now = ctx.currentTime;
 
-                    // Inviluppo del volume pulito e immediato (stile CrossHero)
                     gainNode.gain.setValueAtTime(0, now);
-                    gainNode.gain.linearRampToValueAtTime(0.8, now + 0.005); // Attacco istantaneo di 5ms
+                    gainNode.gain.linearRampToValueAtTime(0.8, now + 0.005);
                     gainNode.gain.setValueAtTime(0.8, now + duration - 0.01);
-                    gainNode.gain.linearRampToValueAtTime(0, now + duration); // Rilascio netto di 10ms
+                    gainNode.gain.linearRampToValueAtTime(0, now + duration);
 
                     osc.connect(gainNode);
                     gainNode.connect(ctx.destination);
-
                     osc.start(now);
                     osc.stop(now + duration);
                 } catch (e) {
-                    console.error("Errore audio:", e);
+                    console.error(e);
                 }
             }
 
-            // Bip di countdown standard per i secondi 3, 2, 1 (Frequenza medio-bassa, netto e corto)
             function playLowBeep() {
-                playBeep(900, 0.25, "sine");
+                playBeep(900, 0.25);
             }
-
-            // Bip di inizio round o cambio fase importante al secondo 0 (Frequenza molto alta e lungo)
             function playHighBeep() {
-                playBeep(2300, 0.7, "sine");
+                playBeep(2300, 0.7);
             }
-
-            // Rimosso il vecchio sistema 321 automatico disallineato per sincronizzarlo al secondo esatto nel tick
-
             function playWarning() {
-                // Avviso pre-fine round: due bip rapidi a media intensità
-                playBeep(1200, 0.08, "sine");
-                setTimeout(() => playBeep(1200, 0.08, "sine"), 150);
+                playBeep(1200, 0.08);
+                setTimeout(() => playBeep(1200, 0.08), 150);
             }
 
             // ── Wake Lock ──
             let wakeLock = null;
-
             async function acquireWakeLock() {
                 if ("wakeLock" in navigator) {
                     try {
@@ -725,7 +1089,6 @@
                     } catch {}
                 }
             }
-
             function releaseWakeLock() {
                 if (wakeLock) {
                     wakeLock.release();
@@ -733,49 +1096,58 @@
                 }
             }
 
-            // ── Timer state ──
+            // ── Motore Sequenza Timer ──
             let state = null;
             let interval = null;
 
-            function buildSequence(cfg) {
+            function buildSequence() {
+                const prepare = getRawValue("prepare");
+                const rest = getRawValue("rest");
+                const warning =
+                    parseInt(document.getElementById("cfg-warning").value) || 0;
+
                 const seq = [];
-                if (cfg.prepare > 0)
+                if (prepare > 0)
                     seq.push({
                         phase: "prepare",
-                        duration: cfg.prepare,
+                        duration: prepare,
                         round: null,
+                        warning: 0,
                     });
-                for (let r = 1; r <= cfg.rounds; r++) {
-                    seq.push({ phase: "work", duration: cfg.work, round: r });
-                    if (r < cfg.rounds && cfg.rest > 0) {
+
+                roundTimes.forEach((workDuration, index) => {
+                    const rNumber = index + 1;
+                    seq.push({
+                        phase: "work",
+                        duration: workDuration,
+                        round: rNumber,
+                        warning: warning,
+                    });
+                    if (rNumber < roundTimes.length && rest > 0) {
                         seq.push({
                             phase: "rest",
-                            duration: cfg.rest,
-                            round: r,
+                            duration: rest,
+                            round: rNumber,
+                            warning: 0,
                         });
                     }
-                }
+                });
                 return seq;
             }
 
             function startTimer() {
-                const cfg = getConfig();
-                saveConfig(cfg);
-
-                // Inizializza l'audio al click dell'utente
                 getAudioCtx();
-
-                const seq = buildSequence(cfg);
+                const seq = buildSequence();
 
                 state = {
-                    cfg,
                     seq,
                     idx: 0,
                     remaining: seq[0].duration,
                     paused: false,
                     warningFired: false,
-                    beepsFired: new Set(), // Traccia i bip al secondo esatto di questa fase
+                    beepsFired: new Set(),
                     lastTick: performance.now(),
+                    totalRounds: roundTimes.length,
                 };
 
                 showActive();
@@ -783,14 +1155,12 @@
                 renderActive();
                 onPhaseStart();
 
-                interval = setInterval(tick, 50); // Risoluzione aumentata a 50ms per bip spaccati al millesimo
+                interval = setInterval(tick, 50);
             }
 
             function onPhaseStart() {
                 state.warningFired = false;
                 state.beepsFired = new Set();
-
-                // Suona il bip lungo di inizio allo scattare della fase
                 playHighBeep();
             }
 
@@ -802,23 +1172,20 @@
                 state.lastTick = now;
 
                 state.remaining -= delta;
-
                 const seg = state.seq[state.idx];
                 const currentSecCeil = Math.max(0, Math.ceil(state.remaining));
 
-                // Controllo Warning pre-fine (solo in fase di lavoro)
                 if (
                     seg.phase === "work" &&
                     !state.warningFired &&
-                    state.cfg.warning > 0
+                    seg.warning > 0
                 ) {
-                    if (state.remaining <= state.cfg.warning) {
+                    if (state.remaining <= seg.warning) {
                         state.warningFired = true;
                         playWarning();
                     }
                 }
 
-                // Gestione dei Bip di countdown dei secondi 3, 2, 1 standard di CrossFit
                 if (currentSecCeil <= 3 && currentSecCeil >= 1) {
                     if (!state.beepsFired.has(currentSecCeil)) {
                         state.beepsFired.add(currentSecCeil);
@@ -836,7 +1203,6 @@
 
             function advancePhase() {
                 state.idx++;
-
                 if (state.idx >= state.seq.length) {
                     finish();
                     return;
@@ -855,29 +1221,25 @@
             function finish() {
                 clearInterval(interval);
                 releaseWakeLock();
-
-                // Suono trionfale finale (due bip lunghi consecutivi)
                 playHighBeep();
                 setTimeout(playHighBeep, 400);
 
                 document.getElementById("finished-msg").textContent =
-                    `${state.cfg.rounds} round completati — ottimo lavoro!`;
+                    `${state.totalRounds} round completati!`;
                 document
                     .getElementById("finished-overlay")
                     .classList.add("visible");
             }
 
-            // ── Render ──
             function renderActive() {
                 const seg = state.seq[state.idx];
                 const rem = Math.max(0, Math.ceil(state.remaining));
                 const isWarning =
                     seg.phase === "work" &&
-                    state.cfg.warning > 0 &&
-                    rem <= state.cfg.warning;
+                    seg.warning > 0 &&
+                    rem <= seg.warning;
                 const displayPhase = isWarning ? "warning" : seg.phase;
 
-                // badge
                 const badge = document.getElementById("phase-badge");
                 badge.className = "phase-badge " + displayPhase;
                 badge.textContent = {
@@ -887,62 +1249,51 @@
                     warning: "WARNING",
                 }[displayPhase];
 
-                // round number
                 const roundNum = document.getElementById("round-num");
+                const roundLabel = document.getElementById("round-label");
+                const totalRoundsText = state.totalRounds;
+
                 if (seg.phase === "prepare") {
                     roundNum.textContent = "—";
-                    document.getElementById("round-label").textContent =
-                        `${state.cfg.rounds} round`;
+                    roundLabel.textContent = `${totalRoundsText} round`;
                     document.getElementById("time-label").textContent =
                         "prepare";
-                } else if (seg.phase === "rest") {
-                    roundNum.textContent = seg.round;
-                    document.getElementById("round-label").textContent =
-                        `/ ${state.cfg.rounds} round`;
-                    document.getElementById("time-label").textContent = "rest";
                 } else {
                     roundNum.textContent = seg.round;
-                    document.getElementById("round-label").textContent =
-                        `/ ${state.cfg.rounds} round`;
+                    roundLabel.textContent = `/ ${totalRoundsText} round`;
                     document.getElementById("time-label").textContent =
-                        "lavoro";
+                        seg.phase === "rest" ? "rest" : "lavoro";
                 }
 
-                // time
                 document.getElementById("time-val").textContent =
-                    fmtTimePad(rem);
-
-                // progress bar
+                    formatSecondsToMMSS(rem);
                 const pct = (state.remaining / seg.duration) * 100;
                 document.getElementById("progress-bar").style.width =
                     Math.max(0, pct) + "%";
-
-                // body class for colour
                 document.body.className = "phase-" + displayPhase;
             }
 
-            // ── UI transitions ──
             function showActive() {
                 document.getElementById("setup-screen").style.display = "none";
-                const a = document.getElementById("active-screen");
-                a.classList.add("visible");
+                document
+                    .getElementById("active-screen")
+                    .classList.add("visible");
             }
 
             function showSetup() {
                 document.getElementById("setup-screen").style.display = "";
-                const a = document.getElementById("active-screen");
-                a.classList.remove("visible");
+                document
+                    .getElementById("active-screen")
+                    .classList.remove("visible");
                 document.body.className = "";
                 document
                     .getElementById("finished-overlay")
                     .classList.remove("visible");
             }
 
-            // ── Controls ──
             document
                 .getElementById("btn-start")
                 .addEventListener("click", startTimer);
-
             document
                 .getElementById("btn-pause")
                 .addEventListener("click", () => {
@@ -952,7 +1303,6 @@
                     document.getElementById("btn-pause").textContent =
                         state.paused ? "▶ Riprendi" : "⏸ Pausa";
                 });
-
             document
                 .getElementById("btn-stop")
                 .addEventListener("click", () => {
@@ -961,7 +1311,6 @@
                     state = null;
                     showSetup();
                 });
-
             document
                 .getElementById("btn-done")
                 .addEventListener("click", () => {
@@ -971,9 +1320,8 @@
                     showSetup();
                 });
 
-            // ── Init ──
-            applyConfig(loadConfig());
-            updateSummary();
+            // Avvio iniziale
+            loadConfig();
         </script>
     </body>
 </html>
