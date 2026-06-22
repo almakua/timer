@@ -38,6 +38,37 @@
                 flex-direction: column;
             }
 
+            /* ── TAB SELEZIONE MODALITÀ ── */
+            .mode-selector {
+                display: flex;
+                background: var(--surface);
+                border: 1px solid var(--border);
+                border-radius: var(--radius);
+                padding: 4px;
+                margin-bottom: 20px;
+                gap: 4px;
+            }
+
+            .mode-tab {
+                flex: 1;
+                background: transparent;
+                border: none;
+                color: var(--muted);
+                font-weight: 700;
+                font-size: 0.95rem;
+                padding: 12px 8px;
+                border-radius: calc(var(--radius) - 4px);
+                cursor: pointer;
+                transition:
+                    background 0.2s,
+                    color 0.2s;
+            }
+
+            .mode-tab.active {
+                background: var(--border);
+                color: var(--text);
+            }
+
             /* ── SETUP SCREEN ── */
             #setup-screen {
                 flex: 1;
@@ -54,7 +85,7 @@
                 font-size: clamp(1.6rem, 5vw, 2.2rem);
                 font-weight: 800;
                 letter-spacing: -0.03em;
-                margin-bottom: 24px;
+                margin-bottom: 20px;
             }
 
             .config-grid {
@@ -79,7 +110,10 @@
                     margin 0.2s ease;
             }
 
-            .config-row.hidden {
+            .config-row.hidden,
+            .toggle-row.hidden,
+            .rounds-list-container.hidden,
+            .summary-card.hidden {
                 opacity: 0;
                 max-height: 0;
                 padding-top: 0;
@@ -123,7 +157,6 @@
             .stepper input[type="number"]::-webkit-outer-spin-button {
                 display: none;
             }
-
             .stepper input:focus {
                 outline: 2px solid var(--btn-primary);
                 outline-offset: 2px;
@@ -149,7 +182,6 @@
                 justify-content: center;
                 transition: background 0.15s;
             }
-
             .stepper button:hover {
                 background: #3a3a3a;
             }
@@ -164,6 +196,10 @@
                 border-radius: var(--radius);
                 margin-bottom: 12px;
                 cursor: pointer;
+                transition:
+                    opacity 0.2s,
+                    max-height 0.2s,
+                    margin 0.2s;
             }
 
             .toggle-label-wrap {
@@ -175,7 +211,6 @@
                 cursor: pointer;
                 user-select: none;
             }
-
             .toggle-label-wrap span {
                 font-size: 1rem;
                 font-weight: 600;
@@ -189,13 +224,11 @@
                 height: 26px;
                 pointer-events: none;
             }
-
             .switch input {
                 opacity: 0;
                 width: 0;
                 height: 0;
             }
-
             .slider {
                 position: absolute;
                 inset: 0;
@@ -203,7 +236,6 @@
                 transition: 0.3s;
                 border-radius: 34px;
             }
-
             .slider:before {
                 position: absolute;
                 content: "";
@@ -215,7 +247,6 @@
                 transition: 0.3s;
                 border-radius: 50%;
             }
-
             input:checked + .slider {
                 background-color: var(--work);
             }
@@ -233,18 +264,15 @@
                 margin-bottom: 24px;
                 display: none;
             }
-
             .rounds-list-container.visible {
                 display: block;
             }
-
             .rounds-list-container h3 {
                 font-size: 1rem;
                 font-weight: 700;
                 margin-bottom: 12px;
                 color: var(--text);
             }
-
             .rounds-list {
                 display: grid;
                 gap: 8px;
@@ -252,7 +280,6 @@
                 overflow-y: auto;
                 padding-right: 4px;
             }
-
             .round-item {
                 display: flex;
                 align-items: center;
@@ -262,13 +289,12 @@
                 padding: 8px 12px;
                 border-radius: 8px;
             }
-
             .round-item span {
                 font-size: 0.9rem;
                 font-weight: 600;
             }
 
-            /* summary card */
+            /* Summary Card */
             .summary-card {
                 background: var(--surface);
                 border: 1px solid var(--border);
@@ -278,8 +304,11 @@
                 grid-template-columns: 1fr 1fr;
                 gap: 12px;
                 margin-bottom: 24px;
+                transition:
+                    opacity 0.2s,
+                    max-height 0.2s,
+                    margin 0.2s;
             }
-
             .summary-stat {
                 text-align: center;
             }
@@ -311,7 +340,6 @@
                 cursor: pointer;
                 transition: opacity 0.15s;
             }
-
             .start-btn:hover {
                 opacity: 0.9;
             }
@@ -327,12 +355,11 @@
                 align-items: center;
                 justify-content: flex-start;
                 gap: 24px;
-                padding: 24px 48px 40px;
+                padding: 24px 24px 40px;
                 max-width: 1100px;
                 width: 100%;
                 margin: 0 auto;
             }
-
             #active-screen.visible {
                 display: flex;
             }
@@ -350,7 +377,6 @@
                     background 0.3s,
                     color 0.3s;
             }
-
             .phase-badge.prepare {
                 background: var(--prepare);
                 color: #000;
@@ -363,10 +389,6 @@
                 background: var(--rest);
                 color: #fff;
             }
-            .phase-badge.warning {
-                background: var(--warning);
-                color: #fff;
-            }
 
             .main-display {
                 display: flex;
@@ -377,9 +399,13 @@
                 flex: 1;
             }
 
+            /* Struttura Box Display */
             .round-display {
                 text-align: center;
                 flex: 1;
+            }
+            .round-display.hidden {
+                display: none;
             }
 
             .display-divider {
@@ -390,16 +416,18 @@
                 padding-bottom: 0.1em;
                 flex-shrink: 0;
             }
+            .display-divider.hidden {
+                display: none;
+            }
 
-            .round-display .round-num {
-                font-size: clamp(6rem, 18vw, 16rem);
+            .round-num {
+                font-size: clamp(5rem, 15vw, 14rem);
                 font-weight: 900;
                 line-height: 1;
                 letter-spacing: -0.05em;
                 transition: color 0.3s;
             }
-
-            .round-display .round-label {
+            .round-label {
                 font-size: 0.8rem;
                 color: var(--muted);
                 text-transform: uppercase;
@@ -410,17 +438,20 @@
             .timer-display {
                 text-align: center;
                 flex: 1;
+                position: relative;
             }
-
             .timer-display .time-val {
-                font-size: clamp(6rem, 18vw, 16rem);
+                font-size: clamp(
+                    6rem,
+                    18vw,
+                    16rem
+                ); /* Ingrandito al massimo per AMRAP e visione di gruppo */
                 font-weight: 900;
                 font-variant-numeric: tabular-nums;
                 letter-spacing: -0.04em;
                 line-height: 1;
                 transition: color 0.3s;
             }
-
             .timer-display .time-label {
                 font-size: 0.8rem;
                 color: var(--muted);
@@ -429,7 +460,57 @@
                 margin-top: 4px;
             }
 
-            /* progress bar */
+            /* Sub-info per visualizzare il Time Cap concesso in For Time */
+            .time-cap-subinfo {
+                display: none;
+                font-size: 1.1rem;
+                font-weight: 700;
+                color: var(--muted);
+                margin-top: 8px;
+                letter-spacing: 0.05em;
+            }
+            .time-cap-subinfo.visible {
+                display: block;
+            }
+            .time-cap-subinfo span {
+                color: var(--prepare);
+            }
+
+            /* ── EXTRA TIME BUTTON ZONE ── */
+            .workout-modifiers-zone {
+                display: none;
+                width: 100%;
+                max-width: 240px;
+                margin-top: -10px;
+            }
+            .workout-modifiers-zone.visible {
+                display: flex;
+                justify-content: center;
+            }
+
+            .extratime-action-btn {
+                background: #1e3a1e;
+                border: 1px solid var(--work);
+                color: var(--work);
+                padding: 12px 24px;
+                border-radius: var(--radius);
+                font-size: 0.95rem;
+                font-weight: 800;
+                cursor: pointer;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+                width: 100%;
+                text-align: center;
+                transition: background 0.15s;
+            }
+            .extratime-action-btn:hover {
+                background: #254a25;
+            }
+            .extratime-action-btn:active {
+                background: #162d16;
+            }
+
+            /* Progress bar */
             .progress-wrap {
                 width: 100%;
                 height: 6px;
@@ -438,7 +519,9 @@
                 overflow: hidden;
                 margin-top: 12px;
             }
-
+            .progress-wrap.hidden {
+                display: none;
+            }
             .progress-bar {
                 height: 100%;
                 border-radius: 99px;
@@ -449,14 +532,13 @@
                 width: 100%;
             }
 
-            /* controls */
+            /* Controls */
             .controls {
                 display: flex;
                 gap: 12px;
                 width: 100%;
                 margin-top: auto;
             }
-
             .ctrl-btn {
                 flex: 1;
                 border: none;
@@ -467,27 +549,24 @@
                 cursor: pointer;
                 transition: opacity 0.15s;
             }
-
             .ctrl-btn:hover {
                 opacity: 0.85;
             }
             .ctrl-btn:active {
                 opacity: 0.65;
             }
-
             #btn-pause {
                 background: var(--surface);
                 border: 1px solid var(--border);
                 color: var(--text);
             }
-
             #btn-stop {
                 background: #1a0000;
                 border: 1px solid #3a0000;
                 color: var(--warning);
             }
 
-            /* finished overlay */
+            /* Finished Overlay */
             #finished-overlay {
                 display: none;
                 position: fixed;
@@ -499,22 +578,18 @@
                 gap: 16px;
                 z-index: 100;
             }
-
             #finished-overlay.visible {
                 display: flex;
             }
-
             #finished-overlay h2 {
                 font-size: clamp(2rem, 8vw, 3.5rem);
                 font-weight: 900;
                 letter-spacing: -0.03em;
             }
-
             #finished-overlay p {
                 color: var(--muted);
                 font-size: 1rem;
             }
-
             #btn-done {
                 background: var(--btn-primary);
                 color: var(--btn-primary-text);
@@ -523,11 +598,10 @@
                 font-size: 1rem;
                 font-weight: 800;
                 padding: 16px 40px;
-                cursor: pointer;
                 margin-top: 8px;
+                cursor: pointer;
             }
 
-            /* colour themes per phase */
             body.phase-prepare {
                 --phase-color: var(--prepare);
             }
@@ -537,10 +611,6 @@
             body.phase-rest {
                 --phase-color: var(--rest);
             }
-            body.phase-warning {
-                --phase-color: var(--warning);
-            }
-
             .round-display .round-num,
             .timer-display .time-val {
                 color: var(--phase-color, var(--text));
@@ -551,8 +621,20 @@
         <div id="setup-screen">
             <h1>HIIT Timer Pro</h1>
 
+            <div class="mode-selector">
+                <button type="button" class="mode-tab active" data-mode="hiit">
+                    HIIT
+                </button>
+                <button type="button" class="mode-tab" data-mode="amrap">
+                    AMRAP
+                </button>
+                <button type="button" class="mode-tab" data-mode="fortime">
+                    FOR TIME
+                </button>
+            </div>
+
             <div class="config-grid">
-                <div class="config-row">
+                <div class="config-row" id="row-rounds">
                     <label>
                         <span class="label-main">Round totali</span>
                         Numero di round totali
@@ -571,7 +653,7 @@
                     </div>
                 </div>
 
-                <div class="config-row">
+                <div class="config-row" id="row-prepare">
                     <label>
                         <span class="label-main">Prepare</span>
                         Conto alla rovescia iniziale
@@ -590,8 +672,12 @@
 
                 <div class="config-row" id="row-standard-work">
                     <label>
-                        <span class="label-main">Durata round</span>
-                        Tempo di lavoro (uguale per tutti i round)
+                        <span class="label-main" id="lbl-work-main"
+                            >Durata round</span
+                        >
+                        <span id="lbl-work-sub"
+                            >Tempo di lavoro (uguale per tutti i round)</span
+                        >
                     </label>
                     <div class="stepper">
                         <button data-field="work" data-delta="-5">−</button>
@@ -605,10 +691,31 @@
                     </div>
                 </div>
 
-                <div class="config-row">
+                <div class="config-row" id="row-extra-delta">
+                    <label>
+                        <span class="label-main">Scatto Extra Time</span>
+                        Tempo aggiunto ad ogni click sul tasto "+" in esecuzione
+                    </label>
+                    <div class="stepper">
+                        <button data-field="extradelta" data-delta="-5">
+                            −
+                        </button>
+                        <input
+                            type="text"
+                            id="cfg-extradelta"
+                            data-value="60"
+                            inputmode="numeric"
+                        />
+                        <button data-field="extradelta" data-delta="5">
+                            +
+                        </button>
+                    </div>
+                </div>
+
+                <div class="config-row" id="row-warning">
                     <label>
                         <span class="label-main">Warning pre-fine</span>
-                        Allarme X secondi prima della fine del round
+                        Allarme X secondi prima della fine del blocco
                     </label>
                     <div class="stepper">
                         <button id="btn-warning-minus">−</button>
@@ -624,7 +731,7 @@
                     </div>
                 </div>
 
-                <div class="config-row">
+                <div class="config-row" id="row-rest">
                     <label>
                         <span class="label-main">Rest</span>
                         Recupero tra i round
@@ -642,7 +749,7 @@
                 </div>
             </div>
 
-            <div class="toggle-row">
+            <div class="toggle-row" id="row-toggle-advanced">
                 <label class="toggle-label-wrap" for="cfg-advanced-toggle">
                     <span>Imposta tempi diversi per ogni set</span>
                     <div class="switch">
@@ -660,7 +767,7 @@
                 <div class="rounds-list" id="rounds-inputs-container"></div>
             </div>
 
-            <div class="summary-card">
+            <div class="summary-card" id="row-summary">
                 <div class="summary-stat">
                     <div class="val" id="sum-rounds">8</div>
                     <div class="lbl">Round</div>
@@ -678,18 +785,33 @@
             <div class="phase-badge" id="phase-badge">PREPARE</div>
 
             <div class="main-display">
-                <div class="round-display">
+                <div class="round-display" id="active-round-box">
                     <div class="round-num" id="round-num">1</div>
                     <div class="round-label" id="round-label">/ 8 round</div>
                 </div>
-                <div class="display-divider">|</div>
+
+                <div class="display-divider" id="active-divider-box">|</div>
+
                 <div class="timer-display">
                     <div class="time-val" id="time-val">00:10</div>
                     <div class="time-label" id="time-label">tempo</div>
+                    <div class="time-cap-subinfo" id="active-timecap-subinfo">
+                        Cap: <span id="timecap-target-val">10:00</span>
+                    </div>
                 </div>
             </div>
 
-            <div class="progress-wrap" style="width: 100%">
+            <div class="workout-modifiers-zone" id="active-modifiers-zone">
+                <button
+                    type="button"
+                    class="extratime-action-btn"
+                    id="btn-add-extratime"
+                >
+                    + Extra Time
+                </button>
+            </div>
+
+            <div class="progress-wrap" id="active-progress-wrap">
                 <div class="progress-bar" id="progress-bar"></div>
             </div>
 
@@ -706,25 +828,33 @@
         </div>
 
         <script>
-            // ── Variabili di Stato Configurazione ──
+            let currentMode = "hiit";
             let roundTimes = [40, 40, 40, 40, 40, 40, 40, 40];
-            const DEFAULTS = { prepare: 10, work: 40, warning: 5, rest: 20 };
+            const DEFAULTS = {
+                prepare: 10,
+                work: 40,
+                warning: 5,
+                rest: 20,
+                extradelta: 60,
+            };
 
-            // Converte i secondi nel formato stringa mm:ss
+            const modeCacheValues = {
+                hiit: { work: 40 },
+                amrap: { work: 1200 },
+                fortime: { work: 600 },
+            };
+
             function formatSecondsToMMSS(totalSeconds) {
                 const m = Math.floor(totalSeconds / 60);
                 const s = totalSeconds % 60;
                 return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
             }
 
-            // ── FUNZIONE DI SANIFICAZIONE AVANZATA ──
-            // Accetta testi liberi (es: "40", "1:20", "02:05", "90") e restituisce i secondi puri corretti
             function parseAndSanitizeTimeToSeconds(
                 inputStr,
                 fallbackValue = 10,
                 isWorkField = false,
             ) {
-                // Rimuove tutto tranne numeri e i due punti
                 let clean = inputStr.replace(/[^0-9:]/g, "").trim();
                 if (!clean) return fallbackValue;
 
@@ -735,41 +865,122 @@
                     const secs = parseInt(parts[1]) || 0;
                     seconds = mins * 60 + secs;
                 } else {
-                    // Se inserisce solo un numero puro (es: "40" o "90")
                     seconds = parseInt(clean) || fallbackValue;
                 }
 
-                // Vincoli minimi e massimi di sicurezza
                 const minAllowed = isWorkField ? 5 : 0;
                 if (seconds < minAllowed) seconds = minAllowed;
-                if (seconds > 3600) seconds = 3600; // Massimo 1 ora
+                if (seconds > 7200) seconds = 7200;
 
                 return seconds;
             }
 
+            document.querySelectorAll(".mode-tab").forEach((tab) => {
+                tab.addEventListener("click", () => {
+                    modeCacheValues[currentMode].work = getRawValue("work");
+                    document
+                        .querySelectorAll(".mode-tab")
+                        .forEach((t) => t.classList.remove("active"));
+                    tab.classList.add("active");
+                    currentMode = tab.dataset.mode;
+                    adaptUIForMode();
+                });
+            });
+
+            function adaptUIForMode() {
+                const rowRounds = document.getElementById("row-rounds");
+                const rowWarning = document.getElementById("row-warning");
+                const rowRest = document.getElementById("row-rest");
+                const rowToggle = document.getElementById(
+                    "row-toggle-advanced",
+                );
+                const rowSummary = document.getElementById("row-summary");
+                const rowExtraDelta =
+                    document.getElementById("row-extra-delta");
+                const lblWorkMain = document.getElementById("lbl-work-main");
+                const lblWorkSub = document.getElementById("lbl-work-sub");
+
+                setRawValue("work", modeCacheValues[currentMode].work);
+
+                if (currentMode === "hiit") {
+                    rowRounds.classList.remove("hidden");
+                    rowWarning.classList.remove("hidden");
+                    rowRest.classList.remove("hidden");
+                    rowToggle.classList.remove("hidden");
+                    rowSummary.classList.remove("hidden");
+                    rowExtraDelta.classList.add("hidden");
+                    lblWorkMain.textContent = "Durata round";
+                    lblWorkSub.textContent =
+                        "Tempo di lavoro (uguale per tutti i round)";
+                    toggleAdvancedMode();
+                } else if (currentMode === "amrap") {
+                    rowRounds.classList.add("hidden");
+                    rowWarning.classList.add("hidden");
+                    rowRest.classList.add("hidden");
+                    rowToggle.classList.add("hidden");
+                    rowSummary.classList.add("hidden");
+                    rowExtraDelta.classList.remove("hidden");
+                    document
+                        .getElementById("rounds-inputs-container-wrap")
+                        .classList.remove("visible");
+                    lblWorkMain.textContent = "Durata totale AMRAP";
+                    lblWorkSub.textContent =
+                        "Tempo totale limite dell'allenamento";
+                    updateSummary();
+                } else if (currentMode === "fortime") {
+                    rowRounds.classList.add("hidden");
+                    rowWarning.classList.add("hidden");
+                    rowRest.classList.add("hidden");
+                    rowToggle.classList.add("hidden");
+                    rowSummary.classList.add("hidden");
+                    rowExtraDelta.classList.remove("hidden");
+                    document
+                        .getElementById("rounds-inputs-container-wrap")
+                        .classList.remove("visible");
+                    lblWorkMain.textContent = "Time Cap (Massimo)";
+                    lblWorkSub.textContent =
+                        "Interruzione forzata dopo questo tempo";
+                    updateSummary();
+                }
+            }
+
             function loadConfig() {
-                const saved = localStorage.getItem("hiit-config-v6");
+                const saved = localStorage.getItem("hiit-config-v10");
                 if (!saved) {
                     setRawValue("prepare", DEFAULTS.prepare);
                     setRawValue("work", DEFAULTS.work);
                     setRawValue("rest", DEFAULTS.rest);
+                    setRawValue("extradelta", DEFAULTS.extradelta);
                     document.getElementById("cfg-warning").value =
                         DEFAULTS.warning;
                     syncRoundsArray(
                         parseInt(document.getElementById("cfg-rounds").value),
                     );
+                    adaptUIForMode();
                     return;
                 }
                 try {
                     const parsed = JSON.parse(saved);
+                    currentMode = parsed.currentMode || "hiit";
+                    document.querySelectorAll(".mode-tab").forEach((t) => {
+                        t.classList.toggle(
+                            "active",
+                            t.dataset.mode === currentMode,
+                        );
+                    });
                     setRawValue("prepare", parsed.prepare ?? DEFAULTS.prepare);
                     setRawValue("work", parsed.work ?? DEFAULTS.work);
                     setRawValue("rest", parsed.rest ?? DEFAULTS.rest);
+                    setRawValue(
+                        "extradelta",
+                        parsed.extradelta ?? DEFAULTS.extradelta,
+                    );
                     document.getElementById("cfg-warning").value =
                         parsed.warning ?? DEFAULTS.warning;
                     document.getElementById("cfg-advanced-toggle").checked =
                         parsed.advancedMode ?? false;
-
+                    if (parsed.modeCacheValues)
+                        Object.assign(modeCacheValues, parsed.modeCacheValues);
                     if (
                         Array.isArray(parsed.roundTimes) &&
                         parsed.roundTimes.length > 0
@@ -779,12 +990,12 @@
                 } catch (e) {
                     console.error(e);
                 }
-
-                toggleAdvancedMode();
+                adaptUIForMode();
             }
 
             function saveConfig() {
                 const cfg = {
+                    currentMode: currentMode,
                     prepare: getRawValue("prepare"),
                     work: getRawValue("work"),
                     warning:
@@ -792,11 +1003,13 @@
                             document.getElementById("cfg-warning").value,
                         ) || DEFAULTS.warning,
                     rest: getRawValue("rest"),
+                    extradelta: getRawValue("extradelta"),
                     advancedMode: document.getElementById("cfg-advanced-toggle")
                         .checked,
                     roundTimes: roundTimes,
+                    modeCacheValues: modeCacheValues,
                 };
-                localStorage.setItem("hiit-config-v6", JSON.stringify(cfg));
+                localStorage.setItem("hiit-config-v10", JSON.stringify(cfg));
             }
 
             function getRawValue(idPart) {
@@ -825,6 +1038,7 @@
             }
 
             function toggleAdvancedMode() {
+                if (currentMode !== "hiit") return;
                 const isAdvanced = document.getElementById(
                     "cfg-advanced-toggle",
                 ).checked;
@@ -844,7 +1058,6 @@
                     const standardValue = getRawValue("work") || DEFAULTS.work;
                     roundTimes = Array(totalRounds).fill(standardValue);
                 }
-
                 buildRoundInputs();
             }
 
@@ -869,7 +1082,6 @@
                     container.appendChild(row);
                 });
 
-                // Eventi pulsanti dei singoli set
                 container.querySelectorAll(".btn-time-minus").forEach((b) => {
                     b.addEventListener("click", () =>
                         modifyRoundTime(parseInt(b.dataset.idx), -5),
@@ -881,7 +1093,6 @@
                     );
                 });
 
-                // Gestione della digitazione manuale sui singoli Set
                 container
                     .querySelectorAll(".cfg-single-work")
                     .forEach((input) => {
@@ -896,15 +1107,11 @@
                             input.value = formatSecondsToMMSS(sanitizedSec);
                             updateSummary();
                         };
-
                         input.addEventListener("blur", handleSingleBlur);
                         input.addEventListener("keydown", (e) => {
-                            if (e.key === "Enter") {
-                                input.blur();
-                            }
+                            if (e.key === "Enter") input.blur();
                         });
                     });
-
                 updateSummary();
             }
 
@@ -913,13 +1120,11 @@
                 buildRoundInputs();
             }
 
-            // Gestione manuale e sanificazione sui 3 campi principali (Prepare, Work, Rest)
-            ["prepare", "work", "rest"].forEach((field) => {
+            ["prepare", "work", "rest", "extradelta"].forEach((field) => {
                 const input = document.getElementById("cfg-" + field);
-
                 const handleMainBlur = () => {
                     const def = DEFAULTS[field];
-                    const isWork = field === "work";
+                    const isWork = field === "work" || field === "extradelta";
                     const sanitizedSec = parseAndSanitizeTimeToSeconds(
                         input.value,
                         def,
@@ -928,16 +1133,12 @@
                     setRawValue(field, sanitizedSec);
                     updateSummary();
                 };
-
                 input.addEventListener("blur", handleMainBlur);
                 input.addEventListener("keydown", (e) => {
-                    if (e.key === "Enter") {
-                        input.blur();
-                    }
+                    if (e.key === "Enter") input.blur();
                 });
             });
 
-            // Pulsanti generali + e - per il numero di Round totali
             document
                 .getElementById("btn-round-plus")
                 .addEventListener("click", () => {
@@ -963,7 +1164,6 @@
                     buildRoundInputs();
                 });
 
-            // Pulsanti Warning pre-fine
             document
                 .getElementById("btn-warning-plus")
                 .addEventListener("click", () => {
@@ -986,23 +1186,31 @@
                 .getElementById("cfg-advanced-toggle")
                 .addEventListener("change", toggleAdvancedMode);
 
-            // Aggiorna il sommario complessivo dell'allenamento
             function updateSummary() {
                 const prepare = getRawValue("prepare");
                 const rest = getRawValue("rest");
                 const totalRounds = roundTimes.length;
 
                 let workTotal = 0;
-                if (document.getElementById("cfg-advanced-toggle").checked) {
-                    workTotal = roundTimes.reduce((a, b) => a + b, 0);
+                if (currentMode === "hiit") {
+                    if (
+                        document.getElementById("cfg-advanced-toggle").checked
+                    ) {
+                        workTotal = roundTimes.reduce((a, b) => a + b, 0);
+                    } else {
+                        const standardValue =
+                            getRawValue("work") || DEFAULTS.work;
+                        workTotal = totalRounds * standardValue;
+                        roundTimes = Array(totalRounds).fill(standardValue);
+                    }
                 } else {
-                    const standardValue = getRawValue("work") || DEFAULTS.work;
-                    workTotal = totalRounds * standardValue;
-                    roundTimes = Array(totalRounds).fill(standardValue);
+                    workTotal = getRawValue("work");
                 }
 
                 const restTotal =
-                    totalRounds > 1 ? (totalRounds - 1) * rest : 0;
+                    currentMode === "hiit" && totalRounds > 1
+                        ? (totalRounds - 1) * rest
+                        : 0;
                 const totalDuration = prepare + workTotal + restTotal;
 
                 document.getElementById("sum-rounds").textContent = totalRounds;
@@ -1017,7 +1225,6 @@
                 return m > 0 ? `${m}:${String(s).padStart(2, "0")}` : `${s}s`;
             }
 
-            // Eventi pulsanti incremento/decremento dei campi principali
             document.querySelectorAll("[data-field]").forEach((btn) => {
                 btn.addEventListener("click", () => {
                     const field = btn.dataset.field;
@@ -1026,9 +1233,17 @@
                     let currentSec = getRawValue(field);
                     let newSec = currentSec + delta;
 
-                    if (field === "work" && newSec < 5) newSec = 5;
-                    if (field !== "work" && newSec < 0) newSec = 0;
-                    if (newSec > 3600) newSec = 3600;
+                    if (
+                        (field === "work" || field === "extradelta") &&
+                        newSec < 5
+                    )
+                        newSec = 5;
+                    if (
+                        field !== "work" &&
+                        field !== "extradelta" &&
+                        newSec < 0
+                    )
+                        newSec = 0;
 
                     setRawValue(field, newSec);
                     updateSummary();
@@ -1044,7 +1259,6 @@
                     )();
                 return audioCtx;
             }
-
             function playBeep(frequency, duration) {
                 try {
                     const ctx = getAudioCtx();
@@ -1054,12 +1268,10 @@
                     osc.type = "sine";
                     osc.frequency.value = frequency;
                     const now = ctx.currentTime;
-
                     gainNode.gain.setValueAtTime(0, now);
                     gainNode.gain.linearRampToValueAtTime(0.8, now + 0.005);
                     gainNode.gain.setValueAtTime(0.8, now + duration - 0.01);
                     gainNode.gain.linearRampToValueAtTime(0, now + duration);
-
                     osc.connect(gainNode);
                     gainNode.connect(ctx.destination);
                     osc.start(now);
@@ -1068,16 +1280,11 @@
                     console.error(e);
                 }
             }
-
             function playLowBeep() {
                 playBeep(900, 0.25);
             }
             function playHighBeep() {
                 playBeep(2300, 0.7);
-            }
-            function playWarning() {
-                playBeep(1200, 0.08);
-                setTimeout(() => playBeep(1200, 0.08), 150);
             }
 
             // ── Wake Lock ──
@@ -1102,9 +1309,8 @@
 
             function buildSequence() {
                 const prepare = getRawValue("prepare");
+                const workDuration = getRawValue("work");
                 const rest = getRawValue("rest");
-                const warning =
-                    parseInt(document.getElementById("cfg-warning").value) || 0;
 
                 const seq = [];
                 if (prepare > 0)
@@ -1112,26 +1318,34 @@
                         phase: "prepare",
                         duration: prepare,
                         round: null,
-                        warning: 0,
                     });
 
-                roundTimes.forEach((workDuration, index) => {
-                    const rNumber = index + 1;
+                if (currentMode === "hiit") {
+                    roundTimes.forEach((wTime, index) => {
+                        const rNumber = index + 1;
+                        seq.push({
+                            phase: "work",
+                            duration: wTime,
+                            round: rNumber,
+                        });
+                        if (rNumber < roundTimes.length && rest > 0) {
+                            seq.push({
+                                phase: "rest",
+                                duration: rest,
+                                round: rNumber,
+                            });
+                        }
+                    });
+                } else if (
+                    currentMode === "amrap" ||
+                    currentMode === "fortime"
+                ) {
                     seq.push({
                         phase: "work",
                         duration: workDuration,
-                        round: rNumber,
-                        warning: warning,
+                        round: null,
                     });
-                    if (rNumber < roundTimes.length && rest > 0) {
-                        seq.push({
-                            phase: "rest",
-                            duration: rest,
-                            round: rNumber,
-                            warning: 0,
-                        });
-                    }
-                });
+                }
                 return seq;
             }
 
@@ -1140,26 +1354,32 @@
                 const seq = buildSequence();
 
                 state = {
+                    mode: currentMode,
                     seq,
                     idx: 0,
                     remaining: seq[0].duration,
+                    elapsedInPhase: 0,
                     paused: false,
-                    warningFired: false,
                     beepsFired: new Set(),
                     lastTick: performance.now(),
                     totalRounds: roundTimes.length,
                 };
 
+                const extraDeltaSec = getRawValue("extradelta");
+                document.getElementById("btn-add-extratime").textContent =
+                    `+ ${formatSecondsToMMSS(extraDeltaSec)}`;
+
                 showActive();
                 acquireWakeLock();
                 renderActive();
-                onPhaseStart();
+
+                // RIMOSSO IL BEEP DALLA PRIMA FASE (PREPARE)
+                state.beepsFired = new Set();
 
                 interval = setInterval(tick, 50);
             }
 
             function onPhaseStart() {
-                state.warningFired = false;
                 state.beepsFired = new Set();
                 playHighBeep();
             }
@@ -1171,31 +1391,32 @@
                 const delta = (now - state.lastTick) / 1000;
                 state.lastTick = now;
 
-                state.remaining -= delta;
                 const seg = state.seq[state.idx];
-                const currentSecCeil = Math.max(0, Math.ceil(state.remaining));
 
-                if (
-                    seg.phase === "work" &&
-                    !state.warningFired &&
-                    seg.warning > 0
-                ) {
-                    if (state.remaining <= seg.warning) {
-                        state.warningFired = true;
-                        playWarning();
+                if (state.mode === "fortime" && seg.phase === "work") {
+                    state.elapsedInPhase += delta;
+                    state.remaining = seg.duration - state.elapsedInPhase;
+
+                    if (state.elapsedInPhase >= seg.duration) {
+                        finish();
+                        return;
+                    }
+                } else {
+                    state.remaining -= delta;
+                    if (state.remaining <= 0) {
+                        advancePhase();
+                        return;
                     }
                 }
 
-                if (currentSecCeil <= 3 && currentSecCeil >= 1) {
-                    if (!state.beepsFired.has(currentSecCeil)) {
-                        state.beepsFired.add(currentSecCeil);
-                        playLowBeep();
+                if (!(state.mode === "fortime" && seg.phase === "work")) {
+                    const triggerBeepVal = Math.ceil(state.remaining);
+                    if (triggerBeepVal <= 3 && triggerBeepVal >= 1) {
+                        if (!state.beepsFired.has(triggerBeepVal)) {
+                            state.beepsFired.add(triggerBeepVal);
+                            playLowBeep();
+                        }
                     }
-                }
-
-                if (state.remaining <= 0) {
-                    advancePhase();
-                    return;
                 }
 
                 renderActive();
@@ -1210,7 +1431,7 @@
 
                 const next = state.seq[state.idx];
                 state.remaining = next.duration;
-                state.warningFired = false;
+                state.elapsedInPhase = 0;
                 state.beepsFired = new Set();
                 state.lastTick = performance.now();
 
@@ -1218,14 +1439,43 @@
                 onPhaseStart();
             }
 
+            // ── EXTRA TIME SEAMLESS ──
+            document
+                .getElementById("btn-add-extratime")
+                .addEventListener("click", () => {
+                    if (!state) return;
+                    const seg = state.seq[state.idx];
+                    if (seg.phase !== "work") return;
+
+                    const amountToAdd = getRawValue("extradelta");
+                    seg.duration += amountToAdd;
+
+                    if (state.mode === "fortime") {
+                        // Estende il Cap massimo. state.remaining si ricalcolerà da solo.
+                    } else {
+                        state.remaining += amountToAdd;
+                    }
+
+                    state.beepsFired.clear();
+                    renderActive();
+                });
+
             function finish() {
                 clearInterval(interval);
                 releaseWakeLock();
                 playHighBeep();
                 setTimeout(playHighBeep, 400);
 
-                document.getElementById("finished-msg").textContent =
-                    `${state.totalRounds} round completati!`;
+                if (state.mode === "hiit") {
+                    document.getElementById("finished-msg").textContent =
+                        `${state.totalRounds} round completati!`;
+                } else if (state.mode === "amrap") {
+                    document.getElementById("finished-msg").textContent =
+                        `Tempo scaduto! Allenamento AMRAP completato.`;
+                } else if (state.mode === "fortime") {
+                    document.getElementById("finished-msg").textContent =
+                        `Time cap raggiunto a ${formatSecondsToMMSS(Math.floor(state.elapsedInPhase))}!`;
+                }
                 document
                     .getElementById("finished-overlay")
                     .classList.add("visible");
@@ -1233,44 +1483,97 @@
 
             function renderActive() {
                 const seg = state.seq[state.idx];
-                const rem = Math.max(0, Math.ceil(state.remaining));
-                const isWarning =
-                    seg.phase === "work" &&
-                    seg.warning > 0 &&
-                    rem <= seg.warning;
-                const displayPhase = isWarning ? "warning" : seg.phase;
+
+                let displaySeconds = Math.max(0, Math.ceil(state.remaining));
+                if (state.mode === "fortime" && seg.phase === "work") {
+                    displaySeconds = Math.floor(state.elapsedInPhase);
+                }
 
                 const badge = document.getElementById("phase-badge");
-                badge.className = "phase-badge " + displayPhase;
+                badge.className = "phase-badge " + seg.phase;
                 badge.textContent = {
                     prepare: "PREPARE",
-                    work: "WORK",
+                    work:
+                        state.mode === "amrap"
+                            ? "AMRAP"
+                            : state.mode === "fortime"
+                              ? "FOR TIME"
+                              : "WORK",
                     rest: "REST",
-                    warning: "WARNING",
-                }[displayPhase];
+                }[seg.phase];
 
-                const roundNum = document.getElementById("round-num");
-                const roundLabel = document.getElementById("round-label");
-                const totalRoundsText = state.totalRounds;
+                const roundBox = document.getElementById("active-round-box");
+                const dividerBox =
+                    document.getElementById("active-divider-box");
+                const progressWrap = document.getElementById(
+                    "active-progress-wrap",
+                );
+                const modifiersZone = document.getElementById(
+                    "active-modifiers-zone",
+                );
+                const timecapSubinfo = document.getElementById(
+                    "active-timecap-subinfo",
+                );
 
                 if (seg.phase === "prepare") {
-                    roundNum.textContent = "—";
-                    roundLabel.textContent = `${totalRoundsText} round`;
+                    roundBox.classList.remove("hidden");
+                    dividerBox.classList.remove("hidden");
+                    progressWrap.classList.remove("hidden");
+                    modifiersZone.classList.remove("visible");
+                    timecapSubinfo.classList.remove("visible");
+
+                    document.getElementById("round-num").textContent = "—";
+                    document.getElementById("round-label").textContent =
+                        state.mode === "hiit"
+                            ? `${state.totalRounds} round`
+                            : "Pronto";
                     document.getElementById("time-label").textContent =
                         "prepare";
                 } else {
-                    roundNum.textContent = seg.round;
-                    roundLabel.textContent = `/ ${totalRoundsText} round`;
-                    document.getElementById("time-label").textContent =
-                        seg.phase === "rest" ? "rest" : "lavoro";
+                    if (state.mode === "hiit") {
+                        roundBox.classList.remove("hidden");
+                        dividerBox.classList.remove("hidden");
+                        progressWrap.classList.remove("hidden");
+                        modifiersZone.classList.remove("visible");
+                        timecapSubinfo.classList.remove("visible");
+
+                        document.getElementById("round-num").textContent =
+                            seg.round;
+                        document.getElementById("round-label").textContent =
+                            `/ ${state.totalRounds} round`;
+                        document.getElementById("time-label").textContent =
+                            seg.phase === "rest" ? "rest" : "lavoro";
+                    } else {
+                        // AMRAP o FOR TIME attivi - Nasconde la colonna di sinistra per la massima pulizia sul monitor
+                        roundBox.classList.add("hidden");
+                        dividerBox.classList.add("hidden");
+                        modifiersZone.classList.add("visible");
+
+                        if (state.mode === "amrap") {
+                            timecapSubinfo.classList.remove("visible");
+                            progressWrap.classList.remove("hidden");
+                            document.getElementById("time-label").textContent =
+                                "tempo rimanente";
+                        } else {
+                            // For Time active
+                            timecapSubinfo.classList.add("visible");
+                            document.getElementById(
+                                "timecap-target-val",
+                            ).textContent = formatSecondsToMMSS(seg.duration);
+                            progressWrap.classList.add("hidden");
+                            document.getElementById("time-label").textContent =
+                                "tempo trascorso";
+                        }
+                    }
                 }
 
                 document.getElementById("time-val").textContent =
-                    formatSecondsToMMSS(rem);
-                const pct = (state.remaining / seg.duration) * 100;
+                    formatSecondsToMMSS(displaySeconds);
+
+                let pct = (state.remaining / seg.duration) * 100;
                 document.getElementById("progress-bar").style.width =
                     Math.max(0, pct) + "%";
-                document.body.className = "phase-" + displayPhase;
+                document.body.className = "phase-" + seg.phase;
             }
 
             function showActive() {
@@ -1320,7 +1623,6 @@
                     showSetup();
                 });
 
-            // Avvio iniziale
             loadConfig();
         </script>
     </body>
