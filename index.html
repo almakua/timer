@@ -1,724 +1,1095 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="it">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>HIIT Timer Pro</title>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    :root {
-      --bg: #0a0a0a;
-      --surface: #141414;
-      --border: #2a2a2a;
-      --text: #f0f0f0;
-      --muted: #666;
-      --prepare: #f59e0b;
-      --work: #22c55e;
-      --rest: #3b82f6;
-      --warning: #ef4444;
-      --btn-primary: #f0f0f0;
-      --btn-primary-text: #0a0a0a;
-      --radius: 12px;
-    }
-
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      min-height: 100dvh;
-      display: flex;
-      flex-direction: column;
-    }
-
-    /* ── TAB SELEZIONE MODALITÀ ── */
-    .mode-selector {
-      display: flex;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 4px;
-      margin-bottom: 20px;
-      gap: 4px;
-    }
-
-    .mode-tab {
-      flex: 1;
-      background: transparent;
-      border: none;
-      color: var(--muted);
-      font-weight: 700;
-      font-size: 0.95rem;
-      padding: 12px 8px;
-      border-radius: calc(var(--radius) - 4px);
-      cursor: pointer;
-      transition: background 0.2s, color 0.2s;
-    }
-
-    .mode-tab.active {
-      background: var(--border);
-      color: var(--text);
-    }
-
-    /* ── SETUP SCREEN ── */
-    #setup-screen {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 0;
-      max-width: 520px;
-      width: 100%;
-      margin: 0 auto;
-      padding: 24px 16px 32px;
-    }
-
-    #setup-screen h1 {
-      font-size: clamp(1.6rem, 5vw, 2.2rem);
-      font-weight: 800;
-      letter-spacing: -0.03em;
-      margin-bottom: 20px;
-    }
-
-    .config-grid {
-      display: grid;
-      gap: 12px;
-      margin-bottom: 12px;
-    }
-
-    .config-row {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 14px 16px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      transition: opacity 0.2s ease, max-height 0.2s ease, padding 0.2s ease, margin 0.2s ease;
-    }
-
-    .config-row.hidden, .toggle-row.hidden, .rounds-list-container.hidden, .summary-card.hidden {
-      opacity: 0;
-      max-height: 0;
-      padding-top: 0;
-      padding-bottom: 0;
-      margin: 0;
-      border: none;
-      overflow: hidden;
-      pointer-events: none;
-    }
-
-    .config-row label {
-      font-size: 0.9rem;
-      color: var(--muted);
-      flex: 1;
-      line-height: 1.3;
-    }
-
-    .config-row .label-main {
-      display: block;
-      font-size: 1rem;
-      color: var(--text);
-      font-weight: 600;
-    }
-
-    .stepper input[type="text"], .stepper input[type="number"] {
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      color: var(--text);
-      font-size: 1.1rem;
-      font-weight: 700;
-      width: 80px;
-      text-align: center;
-      padding: 8px 6px;
-      -moz-appearance: textfield;
-      appearance: textfield;
-    }
-
-    .stepper input[type="number"]::-webkit-inner-spin-button,
-    .stepper input[type="number"]::-webkit-outer-spin-button { display: none; }
-    .stepper input:focus { outline: 2px solid var(--btn-primary); outline-offset: 2px; }
-
-    .stepper { display: flex; align-items: center; gap: 6px; }
-
-    .stepper button {
-      background: var(--border);
-      border: none;
-      border-radius: 6px;
-      color: var(--text);
-      font-size: 1.2rem;
-      width: 32px;
-      height: 32px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: background 0.15s;
-    }
-    .stepper button:hover { background: #3a3a3a; }
-    .stepper button:active { background: #4a4a4a; }
-
-    /* ── TOGGLE ADVANCED ROW ── */
-    .toggle-row {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      margin-bottom: 12px;
-      cursor: pointer;
-      transition: opacity 0.2s, max-height 0.2s, margin 0.2s;
-    }
-    
-    .toggle-label-wrap {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 14px 16px;
-      width: 100%;
-      cursor: pointer;
-      user-select: none;
-    }
-    .toggle-label-wrap span { font-size: 1rem; font-weight: 600; color: var(--text); }
-
-    .switch { position: relative; display: inline-block; width: 50px; height: 26px; pointer-events: none; }
-    .switch input { opacity: 0; width: 0; height: 0; }
-    .slider { position: absolute; inset: 0; background-color: var(--border); transition: .3s; border-radius: 34px; }
-    .slider:before {
-      position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 4px;
-      background-color: var(--muted); transition: .3s; border-radius: 50%;
-    }
-    input:checked + .slider { background-color: var(--work); }
-    input:checked + .slider:before { transform: translateX(24px); background-color: #000; }
-
-    /* ── LISTA DINAMICA ROUND ── */
-    .rounds-list-container { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 24px; display: none; }
-    .rounds-list-container.visible { display: block; }
-    .rounds-list-container h3 { font-size: 1rem; font-weight: 700; margin-bottom: 12px; color: var(--text); }
-    .rounds-list { display: grid; gap: 8px; max-height: 200px; overflow-y: auto; padding-right: 4px; }
-    .round-item { display: flex; align-items: center; justify-content: space-between; background: var(--bg); border: 1px solid var(--border); padding: 8px 12px; border-radius: 8px; }
-    .round-item span { font-size: 0.9rem; font-weight: 600; }
-
-    /* Summary Card */
-    .summary-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; transition: opacity 0.2s, max-height 0.2s, margin 0.2s; }
-    .summary-stat { text-align: center; }
-    .summary-stat .val { font-size: clamp(1.8rem, 6vw, 2.4rem); font-weight: 900; letter-spacing: -0.04em; line-height: 1; }
-    .summary-stat .lbl { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 4px; }
-
-    .start-btn { background: var(--btn-primary); color: var(--btn-primary-text); border: none; border-radius: var(--radius); font-size: 1.1rem; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; padding: 18px; width: 100%; cursor: pointer; transition: opacity 0.15s; }
-    .start-btn:hover { opacity: 0.9; }
-    .start-btn:active { opacity: 0.75; }
-
-    /* ── ACTIVE SCREEN ── */
-    #active-screen {
-      display: none;
-      flex: 1;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-      gap: 24px;
-      padding: 24px 24px 40px;
-      max-width: 1100px;
-      width: 100%;
-      margin: 0 auto;
-    }
-    #active-screen.visible { display: flex; }
-
-    .phase-badge {
-      font-size: 0.8rem;
-      font-weight: 800;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      padding: 6px 16px;
-      border-radius: 99px;
-      background: var(--surface);
-      color: var(--muted);
-      transition: background 0.3s, color 0.3s;
-    }
-    .phase-badge.prepare { background: var(--prepare); color: #000; }
-    .phase-badge.work    { background: var(--work);    color: #000; }
-    .phase-badge.rest    { background: var(--rest);    color: #fff; }
-
-    .main-display {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: clamp(12px, 4vw, 32px);
-      width: 100%;
-      flex: 1;
-    }
-
-    /* Struttura Box Display */
-    .round-display { text-align: center; flex: 1; }
-    .round-display.hidden { display: none; }
-
-    .display-divider {
-      font-size: clamp(4rem, 10vw, 12rem);
-      font-weight: 200;
-      color: var(--border);
-      line-height: 1;
-      padding-bottom: 0.1em;
-      flex-shrink: 0;
-    }
-    .display-divider.hidden { display: none; }
-
-    .round-num {
-      font-size: clamp(5rem, 15vw, 14rem);
-      font-weight: 900;
-      line-height: 1;
-      letter-spacing: -0.05em;
-      transition: color 0.3s;
-    }
-    .round-label {
-      font-size: 0.8rem;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      margin-top: 4px;
-    }
-
-    .timer-display { text-align: center; flex: 1; position: relative; }
-    .timer-display .time-val {
-      font-size: clamp(6rem, 18vw, 16rem);
-      font-weight: 900;
-      font-variant-numeric: tabular-nums;
-      letter-spacing: -0.04em;
-      line-height: 1;
-      transition: color 0.3s;
-    }
-    .timer-display .time-label {
-      font-size: 0.8rem;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      margin-top: 4px;
-    }
-
-    .time-cap-subinfo {
-      display: none;
-      font-size: 1.1rem;
-      font-weight: 700;
-      color: var(--muted);
-      margin-top: 8px;
-      letter-spacing: 0.05em;
-    }
-    .time-cap-subinfo.visible { display: block; }
-    .time-cap-subinfo span { color: var(--prepare); }
-
-    /* ── EXTRA TIME BUTTON ZONE (MODIFICATORI) ── */
-    .workout-modifiers-zone {
-      display: none;
-      width: 100%;
-      max-width: 320px;
-      margin-top: -10px;
-      gap: 12px;
-    }
-    .workout-modifiers-zone.visible { display: flex; justify-content: center; }
-
-    .extratime-btn {
-      flex: 1;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      color: var(--text);
-      padding: 14px;
-      border-radius: var(--radius);
-      font-size: 0.95rem;
-      font-weight: 800;
-      cursor: pointer;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      text-align: center;
-      transition: background 0.15s, border-color 0.15s;
-    }
-    .extratime-btn.add { border-color: var(--work); color: var(--work); background: #122716; }
-    .extratime-btn.remove { border-color: var(--warning); color: var(--warning); background: #241212; }
-    .extratime-btn:hover { filter: brightness(1.2); }
-    .extratime-btn:active { filter: brightness(0.9); }
-
-    /* Progress bar */
-    .progress-wrap { width: 100%; height: 6px; background: var(--border); border-radius: 99px; overflow: hidden; margin-top: 12px; }
-    .progress-wrap.hidden { display: none; }
-    .progress-bar { height: 100%; border-radius: 99px; background: var(--phase-color, var(--work)); transition: width 0.5s linear, background 0.3s; width: 100%; }
-
-    /* ── RECAP IN BASSO (HIIT) ── */
-    .hiit-recap-ticker {
-      display: none;
-      width: 100%;
-      justify-content: center;
-      gap: 16px;
-      font-size: 0.85rem;
-      color: var(--muted);
-      font-weight: 600;
-      letter-spacing: 0.03em;
-      margin-top: 4px;
-      text-transform: uppercase;
-    }
-    .hiit-recap-ticker.visible { display: flex; }
-    .hiit-recap-ticker span strong { color: var(--text); }
-
-    /* Controls */
-    .controls { display: flex; gap: 12px; width: 100%; margin-top: auto; }
-    .ctrl-btn { flex: 1; border: none; border-radius: var(--radius); font-size: 1rem; font-weight: 700; padding: 16px; cursor: pointer; transition: opacity 0.15s; }
-    .ctrl-btn:hover { opacity: 0.85; }
-    .ctrl-btn:active { opacity: 0.65; }
-    #btn-pause { background: var(--surface); border: 1px solid var(--border); color: var(--text); }
-    #btn-stop { background: #1a0000; border: 1px solid #3a0000; color: var(--warning); }
-    #btn-active-start { background: var(--work); color: #000; font-weight: 800; display: block; }
-
-    /* Finished Overlay */
-    #finished-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.92); flex-direction: column; align-items: center; justify-content: center; gap: 16px; z-index: 100; }
-    #finished-overlay.visible { display: flex; }
-    #finished-overlay h2 { font-size: clamp(2rem, 8vw, 3.5rem); font-weight: 900; letter-spacing: -0.03em; }
-    #finished-overlay p { color: var(--muted); font-size: 1rem; }
-    #btn-done { background: var(--btn-primary); color: var(--btn-primary-text); border: none; border-radius: var(--radius); font-size: 1rem; font-weight: 800; padding: 16px 40px; margin-top: 8px; cursor: pointer; }
-
-    body.phase-prepare { --phase-color: var(--prepare); }
-    body.phase-work    { --phase-color: var(--work); }
-    body.phase-rest    { --phase-color: var(--rest); }
-    .round-display .round-num, .timer-display .time-val { color: var(--phase-color, var(--text)); }
-  </style>
-</head>
-<body>
-
-<!-- ── SETUP SCREEN ── -->
-<div id="setup-screen">
-  <h1>HIIT Timer Pro</h1>
-
-  <div class="mode-selector">
-    <button type="button" class="mode-tab active" data-mode="hiit">HIIT</button>
-    <button type="button" class="mode-tab" data-mode="amrap">AMRAP</button>
-    <button type="button" class="mode-tab" data-mode="fortime">FOR TIME</button>
-  </div>
-
-  <div class="config-grid">
-    <!-- ROUND TOTALI (HIIT) -->
-    <div class="config-row" id="row-rounds">
-      <label>
-        <span class="label-main">Round totali</span>
-        Numero di round totali
-      </label>
-      <div class="stepper">
-        <button id="btn-round-minus">−</button>
-        <input type="number" id="cfg-rounds" min="1" max="30" value="8" readonly />
-        <button id="btn-round-plus">+</button>
-      </div>
-    </div>
-
-    <!-- PREPARE -->
-    <div class="config-row" id="row-prepare">
-      <label>
-        <span class="label-main">Prepare</span>
-        Conto alla rovescia iniziale
-      </label>
-      <div class="stepper">
-        <button data-field="prepare" data-delta="-5">−</button>
-        <input type="text" id="cfg-prepare" data-value="10" inputmode="numeric" />
-        <button data-field="prepare" data-delta="5">+</button>
-      </div>
-    </div>
-
-    <!-- DURATA LAVORO -->
-    <div class="config-row" id="row-standard-work">
-      <label>
-        <span class="label-main" id="lbl-work-main">Durata round</span>
-        <span id="lbl-work-sub">Tempo di lavoro (uguale per tutti i round)</span>
-      </label>
-      <div class="stepper">
-        <button data-field="work" data-delta="-5">−</button>
-        <input type="text" id="cfg-work" data-value="40" inputmode="numeric" />
-        <button data-field="work" data-delta="5">+</button>
-      </div>
-    </div>
-
-    <!-- WARNING PRE-FINE (HIIT) -->
-    <div class="config-row" id="row-warning">
-      <label>
-        <span class="label-main">Warning pre-fine</span>
-        Allarme X secondi prima della fine del blocco
-      </label>
-      <div class="stepper">
-        <button id="btn-warning-minus">−</button>
-        <input type="number" id="cfg-warning" min="0" max="30" value="5" readonly />
-        <button id="btn-warning-plus">+</button>
-      </div>
-    </div>
-
-    <!-- REST (HIIT) -->
-    <div class="config-row" id="row-rest">
-      <label>
-        <span class="label-main">Rest</span>
-        Recupero tra i round
-      </label>
-      <div class="stepper">
-        <button data-field="rest" data-delta="-5">−</button>
-        <input type="text" id="cfg-rest" data-value="20" inputmode="numeric" />
-        <button data-field="rest" data-delta="5">+</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="toggle-row" id="row-toggle-advanced">
-    <label class="toggle-label-wrap" for="cfg-advanced-toggle">
-      <span>Imposta tempi diversi per ogni set</span>
-      <div class="switch">
-        <input type="checkbox" id="cfg-advanced-toggle" />
-        <span class="slider"></span>
-      </div>
-    </label>
-  </div>
-
-  <div class="rounds-list-container" id="rounds-inputs-container-wrap">
-    <h3>Personalizza durata singoli Set (mm:ss)</h3>
-    <div class="rounds-list" id="rounds-inputs-container"></div>
-  </div>
-
-  <div class="summary-card" id="row-summary">
-    <div class="summary-stat">
-      <div class="val" id="sum-rounds">8</div>
-      <div class="lbl">Round</div>
-    </div>
-    <div class="summary-stat">
-      <div class="val" id="sum-total">—</div>
-      <div class="lbl">Durata totale</div>
-    </div>
-  </div>
-
-  <button class="start-btn" id="btn-apply">✓ Applica</button>
-</div>
-
-<!-- ── ACTIVE SCREEN ── -->
-<div id="active-screen">
-  <div class="phase-badge" id="phase-badge">PREPARE</div>
-
-  <div class="main-display">
-    <!-- Box Round Standard (HIIT e Prepare) -->
-    <div class="round-display" id="active-round-box">
-      <div class="round-num" id="round-num">1</div>
-      <div class="round-label" id="round-label">/ 8 round</div>
-    </div>
-
-    <div class="display-divider" id="active-divider-box">|</div>
-    
-    <!-- Box Timer Orologio Principale -->
-    <div class="timer-display">
-      <div class="time-val" id="time-val">00:10</div>
-      <div class="time-label" id="time-label">tempo</div>
-      <!-- Sotto-pannello info per il Time Cap concesso nel For Time -->
-      <div class="time-cap-subinfo" id="active-timecap-subinfo">Cap: <span id="timecap-target-val">10:00</span></div>
-    </div>
-  </div>
-
-  <!-- BOTTONI SCOMPOSIZIONE EXTRA TIME (+1m / -1m) -->
-  <div class="workout-modifiers-zone" id="active-modifiers-zone">
-    <button type="button" class="extratime-btn remove" id="btn-remove-extratime">- 1 Min</button>
-    <button type="button" class="extratime-btn add" id="btn-add-extratime">+ 1 Min</button>
-  </div>
-
-  <div class="progress-wrap" id="active-progress-wrap">
-    <div class="progress-bar" id="progress-bar"></div>
-  </div>
-
-  <!-- RECAP STRUTTURA IN BASSO (HIIT) -->
-  <div class="hiit-recap-ticker" id="active-hiit-recap">
-    <span>Lavoro: <strong id="rcp-work">—</strong></span>
-    <span>Rest: <strong id="rcp-rest">—</strong></span>
-    <span>Round Totali: <strong id="rcp-rounds">—</strong></span>
-    <span>Warning: <strong id="rcp-warning">—</strong></span>
-  </div>
-
-  <div class="controls">
-    <button class="ctrl-btn" id="btn-active-start">▶ Inizia Allenamento</button>
-    <button class="ctrl-btn" id="btn-pause" style="display:none;">⏸ Pausa</button>
-    <button class="ctrl-btn" id="btn-stop">■ Indietro / Reset</button>
-  </div>
-</div>
-
-<!-- ── FINISHED OVERLAY ── -->
-<div id="finished-overlay">
-  <h2>💪 Fatto!</h2>
-  <p id="finished-msg">Allenamento completato</p>
-  <button id="btn-done">Ricomincia</button>
-</div>
-
-<script>
-let currentMode = 'hiit';
-let roundTimes = [40, 40, 40, 40, 40, 40, 40, 40];
-let originalBaseTimes = []; // Per tenere traccia dei tempi minimi invalicabili
-const DEFAULTS = { prepare: 10, work: 40, warning: 5, rest: 20 };
-
-const modeCacheValues = {
-  hiit: { work: 40 },
-  amrap: { work: 1200 },
-  fortime: { work: 600 }
-};
-
-function formatSecondsToMMSS(totalSeconds) {
-  const m = Math.floor(totalSeconds / 60);
-  const s = totalSeconds % 60;
-  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-}
-
-function parseAndSanitizeTimeToSeconds(inputStr, fallbackValue = 10, isWorkField = false) {
-  let clean = inputStr.replace(/[^0-9:]/g, '').trim();
-  if (!clean) return fallbackValue;
-
-  let seconds = 0;
-  if (clean.includes(':')) {
-    const parts = clean.split(':');
-    const mins = parseInt(parts[0]) || 0;
-    const secs = parseInt(parts[1]) || 0;
-    seconds = (mins * 60) + secs;
-  } else {
-    seconds = parseInt(clean) || fallbackValue;
-  }
-
-  const minAllowed = isWorkField ? 5 : 0;
-  if (seconds < minAllowed) seconds = minAllowed;
-  if (seconds > 7200) seconds = 7200;
-
-  return seconds;
-}
-
-document.querySelectorAll('.mode-tab').forEach(tab => {
-  tab.addEventListener('click', () => {
-    modeCacheValues[currentMode].work = getRawValue('work');
-    document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
-    tab.classList.add('active');
-    currentMode = tab.dataset.mode;
-    adaptUIForMode();
-  });
-});
-
-function adaptUIForMode() {
-  const rowRounds = document.getElementById('row-rounds');
-  const rowWarning = document.getElementById('row-warning');
-  const rowRest = document.getElementById('row-rest');
-  const rowToggle = document.getElementById('row-toggle-advanced');
-  const rowSummary = document.getElementById('row-summary');
-  const lblWorkMain = document.getElementById('lbl-work-main');
-  const lblWorkSub = document.getElementById('lbl-work-sub');
-
-  setRawValue('work', modeCacheValues[currentMode].work);
-
-  if (currentMode === 'hiit') {
-    rowRounds.classList.remove('hidden');
-    rowWarning.classList.remove('hidden');
-    rowRest.classList.remove('hidden');
-    rowToggle.classList.remove('hidden');
-    rowSummary.classList.remove('hidden');
-    lblWorkMain.textContent = "Durata round";
-    lblWorkSub.textContent = "Tempo di lavoro (uguale per tutti i round)";
-    toggleAdvancedMode();
-  } else if (currentMode === 'amrap') {
-    rowRounds.classList.add('hidden');
-    rowWarning.classList.add('hidden');
-    rowRest.classList.add('hidden');
-    rowToggle.classList.add('hidden');
-    rowSummary.classList.add('hidden');
-    document.getElementById('rounds-inputs-container-wrap').classList.remove('visible');
-    lblWorkMain.textContent = "Durata totale AMRAP";
-    lblWorkSub.textContent = "Tempo totale limite dell'allenamento";
-    updateSummary();
-  } else if (currentMode === 'fortime') {
-    rowRounds.classList.add('hidden');
-    rowWarning.classList.add('hidden');
-    rowRest.classList.add('hidden');
-    rowToggle.classList.add('hidden');
-    rowSummary.classList.add('hidden');
-    document.getElementById('rounds-inputs-container-wrap').classList.remove('visible');
-    lblWorkMain.textContent = "Time Cap (Massimo)";
-    lblWorkSub.textContent = "Interruzione forzata dopo questo tempo";
-    updateSummary();
-  }
-}
-
-function loadConfig() {
-  const saved = localStorage.getItem('hiit-config-v11');
-  if (!saved) {
-    setRawValue('prepare', DEFAULTS.prepare);
-    setRawValue('work', DEFAULTS.work);
-    setRawValue('rest', DEFAULTS.rest);
-    document.getElementById('cfg-warning').value = DEFAULTS.warning;
-    syncRoundsArray(parseInt(document.getElementById('cfg-rounds').value));
-    adaptUIForMode();
-    return;
-  }
-  try {
-    const parsed = JSON.parse(saved);
-    currentMode = parsed.currentMode || 'hiit';
-    document.querySelectorAll('.mode-tab').forEach(t => {
-      t.classList.toggle('active', t.dataset.mode === currentMode);
-    });
-    setRawValue('prepare', parsed.prepare ?? DEFAULTS.prepare);
-    setRawValue('work', parsed.work ?? DEFAULTS.work);
-    setRawValue('rest', parsed.rest ?? DEFAULTS.rest);
-    document.getElementById('cfg-warning').value = parsed.warning ?? DEFAULTS.warning;
-    document.getElementById('cfg-advanced-toggle').checked = parsed.advancedMode ?? false;
-    if (parsed.modeCacheValues) Object.assign(modeCacheValues, parsed.modeCacheValues);
-    if (Array.isArray(parsed.roundTimes) && parsed.roundTimes.length > 0) {
-      roundTimes = parsed.roundTimes;
-    }
-  } catch (e) { console.error(e); }
-  adaptUIForMode();
-}
-
-function saveConfig() {
-  const cfg = {
-    currentMode: currentMode,
-    prepare: getRawValue('prepare'),
-    work: getRawValue('work'),
-    warning: parseInt(document.getElementById('cfg-warning').value) || DEFAULTS.warning,
-    rest: getRawValue('rest'),
-    advancedMode: document.getElementById('cfg-advanced-toggle').checked,
-    roundTimes: roundTimes,
-    modeCacheValues: modeCacheValues
-  };
-  localStorage.setItem('hiit-config-v11', JSON.stringify(cfg));
-}
-
-function getRawValue(idPart) { return parseInt(document.getElementById('cfg-' + idPart).dataset.value) || 0; }
-function setRawValue(idPart, seconds) {
-  const input = document.getElementById('cfg-' + idPart);
-  input.dataset.value = seconds;
-  input.value = formatSecondsToMMSS(seconds);
-}
-
-function syncRoundsArray(targetLength) {
-  const currentWorkDefault = getRawValue('work') || DEFAULTS.work;
-  while (roundTimes.length < targetLength) {
-    const lastVal = roundTimes[roundTimes.length - 1] || currentWorkDefault;
-    roundTimes.push(lastVal);
-  }
-  while (roundTimes.length > targetLength) { roundTimes.pop(); }
-}
-
-function toggleAdvancedMode() {
-  if (currentMode !== 'hiit') return;
-  const isAdvanced = document.getElementById('cfg-advanced-toggle').checked;
-  const rowStandard = document.getElementById('row-standard-work');
-  const containerWrap = document.getElementById('rounds-inputs-container-wrap');
-  const totalRounds = roundTimes.length;
-
-  if (isAdvanced) {
-    rowStandard.classList.add('hidden');
-    containerWrap.classList.add('visible');
-  } else {
-    rowStandard.classList.remove('hidden');
-    containerWrap.classList.remove('visible');
-    const standardValue = getRawValue('work') || DEFAULTS.work;
-    roundTimes = Array(totalRounds).fill(standardValue);
-  }
-  buildRoundInputs();
-}
-
-function buildRoundInputs() {
-  document.getElementById('cfg-rounds').value = roundTimes.length;
-  const container = document.getElementById('rounds-inputs-container');
-  container.innerHTML = '';
-
-  roundTimes.forEach((time, index) => {
-    const row = document.createElement('div');
-    row.className = 'round-item';
-    row.innerHTML = `
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>HIIT Timer Pro</title>
+        <style>
+            *,
+            *::before,
+            *::after {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+            }
+
+            :root {
+                --bg: #0a0a0a;
+                --surface: #141414;
+                --border: #2a2a2a;
+                --text: #f0f0f0;
+                --muted: #666;
+                --prepare: #f59e0b;
+                --work: #22c55e;
+                --rest: #3b82f6;
+                --warning: #ef4444;
+                --btn-primary: #f0f0f0;
+                --btn-primary-text: #0a0a0a;
+                --radius: 12px;
+            }
+
+            body {
+                background: var(--bg);
+                color: var(--text);
+                font-family:
+                    -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+                min-height: 100dvh;
+                display: flex;
+                flex-direction: column;
+            }
+
+            /* ── TAB SELEZIONE MODALITÀ ── */
+            .mode-selector {
+                display: flex;
+                background: var(--surface);
+                border: 1px solid var(--border);
+                border-radius: var(--radius);
+                padding: 4px;
+                margin-bottom: 20px;
+                gap: 4px;
+            }
+
+            .mode-tab {
+                flex: 1;
+                background: transparent;
+                border: none;
+                color: var(--muted);
+                font-weight: 700;
+                font-size: 0.95rem;
+                padding: 12px 8px;
+                border-radius: calc(var(--radius) - 4px);
+                cursor: pointer;
+                transition:
+                    background 0.2s,
+                    color 0.2s;
+            }
+
+            .mode-tab.active {
+                background: var(--border);
+                color: var(--text);
+            }
+
+            /* ── SETUP SCREEN ── */
+            #setup-screen {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                gap: 0;
+                max-width: 520px;
+                width: 100%;
+                margin: 0 auto;
+                padding: 24px 16px 32px;
+            }
+
+            #setup-screen h1 {
+                font-size: clamp(1.6rem, 5vw, 2.2rem);
+                font-weight: 800;
+                letter-spacing: -0.03em;
+                margin-bottom: 20px;
+            }
+
+            .config-grid {
+                display: grid;
+                gap: 12px;
+                margin-bottom: 12px;
+            }
+
+            .config-row {
+                background: var(--surface);
+                border: 1px solid var(--border);
+                border-radius: var(--radius);
+                padding: 14px 16px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 12px;
+                transition:
+                    opacity 0.2s ease,
+                    max-height 0.2s ease,
+                    padding 0.2s ease,
+                    margin 0.2s ease;
+            }
+
+            .config-row.hidden,
+            .toggle-row.hidden,
+            .rounds-list-container.hidden,
+            .summary-card.hidden {
+                opacity: 0;
+                max-height: 0;
+                padding-top: 0;
+                padding-bottom: 0;
+                margin: 0;
+                border: none;
+                overflow: hidden;
+                pointer-events: none;
+            }
+
+            .config-row label {
+                font-size: 0.9rem;
+                color: var(--muted);
+                flex: 1;
+                line-height: 1.3;
+            }
+
+            .config-row .label-main {
+                display: block;
+                font-size: 1rem;
+                color: var(--text);
+                font-weight: 600;
+            }
+
+            .stepper input[type="text"],
+            .stepper input[type="number"] {
+                background: var(--bg);
+                border: 1px solid var(--border);
+                border-radius: 8px;
+                color: var(--text);
+                font-size: 1.1rem;
+                font-weight: 700;
+                width: 80px;
+                text-align: center;
+                padding: 8px 6px;
+                -moz-appearance: textfield;
+                appearance: textfield;
+            }
+
+            .stepper input[type="number"]::-webkit-inner-spin-button,
+            .stepper input[type="number"]::-webkit-outer-spin-button {
+                display: none;
+            }
+            .stepper input:focus {
+                outline: 2px solid var(--btn-primary);
+                outline-offset: 2px;
+            }
+
+            .stepper {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+            }
+
+            .stepper button {
+                background: var(--border);
+                border: none;
+                border-radius: 6px;
+                color: var(--text);
+                font-size: 1.2rem;
+                width: 32px;
+                height: 32px;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: background 0.15s;
+            }
+            .stepper button:hover {
+                background: #3a3a3a;
+            }
+            .stepper button:active {
+                background: #4a4a4a;
+            }
+
+            /* ── TOGGLE ADVANCED ROW ── */
+            .toggle-row {
+                background: var(--surface);
+                border: 1px solid var(--border);
+                border-radius: var(--radius);
+                margin-bottom: 12px;
+                cursor: pointer;
+                transition:
+                    opacity 0.2s,
+                    max-height 0.2s,
+                    margin 0.2s;
+            }
+
+            .toggle-label-wrap {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 14px 16px;
+                width: 100%;
+                cursor: pointer;
+                user-select: none;
+            }
+            .toggle-label-wrap span {
+                font-size: 1rem;
+                font-weight: 600;
+                color: var(--text);
+            }
+
+            .switch {
+                position: relative;
+                display: inline-block;
+                width: 50px;
+                height: 26px;
+                pointer-events: none;
+            }
+            .switch input {
+                opacity: 0;
+                width: 0;
+                height: 0;
+            }
+            .slider {
+                position: absolute;
+                inset: 0;
+                background-color: var(--border);
+                transition: 0.3s;
+                border-radius: 34px;
+            }
+            .slider:before {
+                position: absolute;
+                content: "";
+                height: 18px;
+                width: 18px;
+                left: 4px;
+                bottom: 4px;
+                background-color: var(--muted);
+                transition: 0.3s;
+                border-radius: 50%;
+            }
+            input:checked + .slider {
+                background-color: var(--work);
+            }
+            input:checked + .slider:before {
+                transform: translateX(24px);
+                background-color: #000;
+            }
+
+            /* ── LISTA DINAMICA ROUND ── */
+            .rounds-list-container {
+                background: var(--surface);
+                border: 1px solid var(--border);
+                border-radius: var(--radius);
+                padding: 16px;
+                margin-bottom: 24px;
+                display: none;
+            }
+            .rounds-list-container.visible {
+                display: block;
+            }
+            .rounds-list-container h3 {
+                font-size: 1rem;
+                font-weight: 700;
+                margin-bottom: 12px;
+                color: var(--text);
+            }
+            .rounds-list {
+                display: grid;
+                gap: 8px;
+                max-height: 200px;
+                overflow-y: auto;
+                padding-right: 4px;
+            }
+            .round-item {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                background: var(--bg);
+                border: 1px solid var(--border);
+                padding: 8px 12px;
+                border-radius: 8px;
+            }
+            .round-item span {
+                font-size: 0.9rem;
+                font-weight: 600;
+            }
+
+            /* Summary Card */
+            .summary-card {
+                background: var(--surface);
+                border: 1px solid var(--border);
+                border-radius: var(--radius);
+                padding: 16px;
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 12px;
+                margin-bottom: 24px;
+                transition:
+                    opacity 0.2s,
+                    max-height 0.2s,
+                    margin 0.2s;
+            }
+            .summary-stat {
+                text-align: center;
+            }
+            .summary-stat .val {
+                font-size: clamp(1.8rem, 6vw, 2.4rem);
+                font-weight: 900;
+                letter-spacing: -0.04em;
+                line-height: 1;
+            }
+            .summary-stat .lbl {
+                font-size: 0.75rem;
+                color: var(--muted);
+                text-transform: uppercase;
+                letter-spacing: 0.08em;
+                margin-top: 4px;
+            }
+
+            .start-btn {
+                background: var(--btn-primary);
+                color: var(--btn-primary-text);
+                border: none;
+                border-radius: var(--radius);
+                font-size: 1.1rem;
+                font-weight: 800;
+                letter-spacing: 0.04em;
+                text-transform: uppercase;
+                padding: 18px;
+                width: 100%;
+                cursor: pointer;
+                transition: opacity 0.15s;
+            }
+            .start-btn:hover {
+                opacity: 0.9;
+            }
+            .start-btn:active {
+                opacity: 0.75;
+            }
+
+            /* ── ACTIVE SCREEN ── */
+            #active-screen {
+                display: none;
+                flex: 1;
+                flex-direction: column;
+                align-items: center;
+                justify-content: flex-start;
+                gap: 24px;
+                padding: 24px 24px 40px;
+                max-width: 1100px;
+                width: 100%;
+                margin: 0 auto;
+            }
+            #active-screen.visible {
+                display: flex;
+            }
+
+            .phase-badge {
+                font-size: 0.8rem;
+                font-weight: 800;
+                letter-spacing: 0.14em;
+                text-transform: uppercase;
+                padding: 6px 16px;
+                border-radius: 99px;
+                background: var(--surface);
+                color: var(--muted);
+                transition:
+                    background 0.3s,
+                    color 0.3s;
+            }
+            .phase-badge.prepare {
+                background: var(--prepare);
+                color: #000;
+            }
+            .phase-badge.work {
+                background: var(--work);
+                color: #000;
+            }
+            .phase-badge.rest {
+                background: var(--rest);
+                color: #fff;
+            }
+
+            .main-display {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: clamp(12px, 4vw, 32px);
+                width: 100%;
+                flex: 1;
+            }
+
+            /* Struttura Box Display */
+            .round-display {
+                text-align: center;
+                flex: 1;
+            }
+            .round-display.hidden {
+                display: none;
+            }
+
+            .display-divider {
+                font-size: clamp(4rem, 10vw, 12rem);
+                font-weight: 200;
+                color: var(--border);
+                line-height: 1;
+                padding-bottom: 0.1em;
+                flex-shrink: 0;
+            }
+            .display-divider.hidden {
+                display: none;
+            }
+
+            .round-num {
+                font-size: clamp(5rem, 15vw, 14rem);
+                font-weight: 900;
+                line-height: 1;
+                letter-spacing: -0.05em;
+                transition: color 0.3s;
+            }
+            .round-label {
+                font-size: 0.8rem;
+                color: var(--muted);
+                text-transform: uppercase;
+                letter-spacing: 0.1em;
+                margin-top: 4px;
+            }
+
+            .timer-display {
+                text-align: center;
+                flex: 1;
+                position: relative;
+            }
+            .timer-display .time-val {
+                font-size: clamp(6rem, 18vw, 16rem);
+                font-weight: 900;
+                font-variant-numeric: tabular-nums;
+                letter-spacing: -0.04em;
+                line-height: 1;
+                transition: color 0.3s;
+            }
+            .timer-display .time-label {
+                font-size: 0.8rem;
+                color: var(--muted);
+                text-transform: uppercase;
+                letter-spacing: 0.1em;
+                margin-top: 4px;
+            }
+
+            .time-cap-subinfo {
+                display: none;
+                font-size: 1.1rem;
+                font-weight: 700;
+                color: var(--muted);
+                margin-top: 8px;
+                letter-spacing: 0.05em;
+            }
+            .time-cap-subinfo.visible {
+                display: block;
+            }
+            .time-cap-subinfo span {
+                color: var(--prepare);
+            }
+
+            /* ── EXTRA TIME BUTTON ZONE (MODIFICATORI) ── */
+            .workout-modifiers-zone {
+                display: none;
+                width: 100%;
+                max-width: 320px;
+                margin-top: -10px;
+                gap: 12px;
+            }
+            .workout-modifiers-zone.visible {
+                display: flex;
+                justify-content: center;
+            }
+
+            .extratime-btn {
+                flex: 1;
+                background: var(--surface);
+                border: 1px solid var(--border);
+                color: var(--text);
+                padding: 14px;
+                border-radius: var(--radius);
+                font-size: 0.95rem;
+                font-weight: 800;
+                cursor: pointer;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+                text-align: center;
+                transition:
+                    background 0.15s,
+                    border-color 0.15s;
+            }
+            .extratime-btn.add {
+                border-color: var(--work);
+                color: var(--work);
+                background: #122716;
+            }
+            .extratime-btn.remove {
+                border-color: var(--warning);
+                color: var(--warning);
+                background: #241212;
+            }
+            .extratime-btn:hover {
+                filter: brightness(1.2);
+            }
+            .extratime-btn:active {
+                filter: brightness(0.9);
+            }
+
+            /* Progress bar */
+            .progress-wrap {
+                width: 100%;
+                height: 6px;
+                background: var(--border);
+                border-radius: 99px;
+                overflow: hidden;
+                margin-top: 12px;
+            }
+            .progress-wrap.hidden {
+                display: none;
+            }
+            .progress-bar {
+                height: 100%;
+                border-radius: 99px;
+                background: var(--phase-color, var(--work));
+                transition:
+                    width 0.5s linear,
+                    background 0.3s;
+                width: 100%;
+            }
+
+            /* ── RECAP IN BASSO (HIIT) ── */
+            .hiit-recap-ticker {
+                display: none;
+                width: 100%;
+                justify-content: center;
+                gap: 16px;
+                font-size: 0.85rem;
+                color: var(--muted);
+                font-weight: 600;
+                letter-spacing: 0.03em;
+                margin-top: 4px;
+                text-transform: uppercase;
+            }
+            .hiit-recap-ticker.visible {
+                display: flex;
+            }
+            .hiit-recap-ticker span strong {
+                color: var(--text);
+            }
+
+            /* Controls */
+            .controls {
+                display: flex;
+                gap: 12px;
+                width: 100%;
+                margin-top: auto;
+            }
+            .ctrl-btn {
+                flex: 1;
+                border: none;
+                border-radius: var(--radius);
+                font-size: 1rem;
+                font-weight: 700;
+                padding: 16px;
+                cursor: pointer;
+                transition: opacity 0.15s;
+            }
+            .ctrl-btn:hover {
+                opacity: 0.85;
+            }
+            .ctrl-btn:active {
+                opacity: 0.65;
+            }
+            #btn-pause {
+                background: var(--surface);
+                border: 1px solid var(--border);
+                color: var(--text);
+            }
+            #btn-stop {
+                background: #1a0000;
+                border: 1px solid #3a0000;
+                color: var(--warning);
+            }
+            #btn-active-start {
+                background: var(--work);
+                color: #000;
+                font-weight: 800;
+                display: block;
+            }
+
+            /* Finished Overlay */
+            #finished-overlay {
+                display: none;
+                position: fixed;
+                inset: 0;
+                background: rgba(0, 0, 0, 0.92);
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                gap: 16px;
+                z-index: 100;
+            }
+            #finished-overlay.visible {
+                display: flex;
+            }
+            #finished-overlay h2 {
+                font-size: clamp(2rem, 8vw, 3.5rem);
+                font-weight: 900;
+                letter-spacing: -0.03em;
+            }
+            #finished-overlay p {
+                color: var(--muted);
+                font-size: 1rem;
+            }
+            #btn-done {
+                background: var(--btn-primary);
+                color: var(--btn-primary-text);
+                border: none;
+                border-radius: var(--radius);
+                font-size: 1rem;
+                font-weight: 800;
+                padding: 16px 40px;
+                margin-top: 8px;
+                cursor: pointer;
+            }
+
+            body.phase-prepare {
+                --phase-color: var(--prepare);
+            }
+            body.phase-work {
+                --phase-color: var(--work);
+            }
+            body.phase-rest {
+                --phase-color: var(--rest);
+            }
+            .round-display .round-num,
+            .timer-display .time-val {
+                color: var(--phase-color, var(--text));
+            }
+        </style>
+    </head>
+    <body>
+        <div id="setup-screen">
+            <h1>HIIT Timer Pro</h1>
+
+            <div class="mode-selector">
+                <button type="button" class="mode-tab active" data-mode="hiit">
+                    HIIT
+                </button>
+                <button type="button" class="mode-tab" data-mode="amrap">
+                    AMRAP
+                </button>
+                <button type="button" class="mode-tab" data-mode="fortime">
+                    FOR TIME
+                </button>
+            </div>
+
+            <div class="config-grid">
+                <div class="config-row" id="row-rounds">
+                    <label>
+                        <span class="label-main">Round totali</span>
+                        Numero di round totali
+                    </label>
+                    <div class="stepper">
+                        <button id="btn-round-minus">−</button>
+                        <input
+                            type="number"
+                            id="cfg-rounds"
+                            min="1"
+                            max="30"
+                            value="8"
+                            readonly
+                        />
+                        <button id="btn-round-plus">+</button>
+                    </div>
+                </div>
+
+                <div class="config-row" id="row-prepare">
+                    <label>
+                        <span class="label-main">Prepare</span>
+                        Conto alla rovescia iniziale
+                    </label>
+                    <div class="stepper">
+                        <button data-field="prepare" data-delta="-5">−</button>
+                        <input
+                            type="text"
+                            id="cfg-prepare"
+                            data-value="10"
+                            inputmode="numeric"
+                        />
+                        <button data-field="prepare" data-delta="5">+</button>
+                    </div>
+                </div>
+
+                <div class="config-row" id="row-standard-work">
+                    <label>
+                        <span class="label-main" id="lbl-work-main"
+                            >Durata round</span
+                        >
+                        <span id="lbl-work-sub"
+                            >Tempo di lavoro (uguale per tutti i round)</span
+                        >
+                    </label>
+                    <div class="stepper">
+                        <button data-field="work" data-delta="-5">−</button>
+                        <input
+                            type="text"
+                            id="cfg-work"
+                            data-value="40"
+                            inputmode="numeric"
+                        />
+                        <button data-field="work" data-delta="5">+</button>
+                    </div>
+                </div>
+
+                <div class="config-row" id="row-warning">
+                    <label>
+                        <span class="label-main">Warning pre-fine</span>
+                        Allarme X secondi prima della fine del blocco
+                    </label>
+                    <div class="stepper">
+                        <button id="btn-warning-minus">−</button>
+                        <input
+                            type="number"
+                            id="cfg-warning"
+                            min="0"
+                            max="30"
+                            value="5"
+                            readonly
+                        />
+                        <button id="btn-warning-plus">+</button>
+                    </div>
+                </div>
+
+                <div class="config-row" id="row-rest">
+                    <label>
+                        <span class="label-main">Rest</span>
+                        Recupero tra i round
+                    </label>
+                    <div class="stepper">
+                        <button data-field="rest" data-delta="-5">−</button>
+                        <input
+                            type="text"
+                            id="cfg-rest"
+                            data-value="20"
+                            inputmode="numeric"
+                        />
+                        <button data-field="rest" data-delta="5">+</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="toggle-row" id="row-toggle-advanced">
+                <label class="toggle-label-wrap" for="cfg-advanced-toggle">
+                    <span>Imposta tempi diversi per ogni set</span>
+                    <div class="switch">
+                        <input type="checkbox" id="cfg-advanced-toggle" />
+                        <span class="slider"></span>
+                    </div>
+                </label>
+            </div>
+
+            <div
+                class="rounds-list-container"
+                id="rounds-inputs-container-wrap"
+            >
+                <h3>Personalizza durata singoli Set (mm:ss)</h3>
+                <div class="rounds-list" id="rounds-inputs-container"></div>
+            </div>
+
+            <div class="summary-card" id="row-summary">
+                <div class="summary-stat">
+                    <div class="val" id="sum-rounds">8</div>
+                    <div class="lbl">Round</div>
+                </div>
+                <div class="summary-stat">
+                    <div class="val" id="sum-total">—</div>
+                    <div class="lbl">Durata totale</div>
+                </div>
+            </div>
+
+            <button class="start-btn" id="btn-apply">✓ Applica</button>
+        </div>
+
+        <div id="active-screen">
+            <div class="phase-badge" id="phase-badge">PREPARE</div>
+
+            <div class="main-display">
+                <div class="round-display" id="active-round-box">
+                    <div class="round-num" id="round-num">1</div>
+                    <div class="round-label" id="round-label">/ 8 round</div>
+                </div>
+
+                <div class="display-divider" id="active-divider-box">|</div>
+
+                <div class="timer-display">
+                    <div class="time-val" id="time-val">00:10</div>
+                    <div class="time-label" id="time-label">tempo</div>
+                    <div class="time-cap-subinfo" id="active-timecap-subinfo">
+                        Cap: <span id="timecap-target-val">10:00</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="workout-modifiers-zone" id="active-modifiers-zone">
+                <button
+                    type="button"
+                    class="extratime-btn remove"
+                    id="btn-remove-extratime"
+                >
+                    - 1 Min
+                </button>
+                <button
+                    type="button"
+                    class="extratime-btn add"
+                    id="btn-add-extratime"
+                >
+                    + 1 Min
+                </button>
+            </div>
+
+            <div class="progress-wrap" id="active-progress-wrap">
+                <div class="progress-bar" id="progress-bar"></div>
+            </div>
+
+            <div class="hiit-recap-ticker" id="active-hiit-recap">
+                <span>Lavoro: <strong id="rcp-work">—</strong></span>
+                <span>Rest: <strong id="rcp-rest">—</strong></span>
+                <span>Round Totali: <strong id="rcp-rounds">—</strong></span>
+                <span>Warning: <strong id="rcp-warning">—</strong></span>
+            </div>
+
+            <div class="controls">
+                <button class="ctrl-btn" id="btn-active-start">
+                    ▶ Inizia Allenamento
+                </button>
+                <button class="ctrl-btn" id="btn-pause" style="display: none">
+                    ⏸ Pausa
+                </button>
+                <button class="ctrl-btn" id="btn-stop">
+                    ■ Indietro / Reset
+                </button>
+            </div>
+        </div>
+
+        <div id="finished-overlay">
+            <h2>💪 Fatto!</h2>
+            <p id="finished-msg">Allenamento completato</p>
+            <button id="btn-done">Ricomincia</button>
+        </div>
+
+        <script>
+            let currentMode = "hiit";
+            let roundTimes = [40, 40, 40, 40, 40, 40, 40, 40];
+            let originalBaseTimes = [];
+            const DEFAULTS = { prepare: 10, work: 40, warning: 5, rest: 20 };
+
+            const modeCacheValues = {
+                hiit: { work: 40 },
+                amrap: { work: 1200 },
+                fortime: { work: 600 },
+            };
+
+            function formatSecondsToMMSS(totalSeconds) {
+                const m = Math.floor(totalSeconds / 60);
+                const s = totalSeconds % 60;
+                return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+            }
+
+            function parseAndSanitizeTimeToSeconds(
+                inputStr,
+                fallbackValue = 10,
+                isWorkField = false,
+            ) {
+                let clean = inputStr.replace(/[^0-9:]/g, "").trim();
+                if (!clean) return fallbackValue;
+
+                let seconds = 0;
+                if (clean.includes(":")) {
+                    const parts = clean.split(":");
+                    const mins = parseInt(parts[0]) || 0;
+                    const secs = parseInt(parts[1]) || 0;
+                    seconds = mins * 60 + secs;
+                } else {
+                    seconds = parseInt(clean) || fallbackValue;
+                }
+
+                const minAllowed = isWorkField ? 5 : 0;
+                if (seconds < minAllowed) seconds = minAllowed;
+                if (seconds > 7200) seconds = 7200;
+
+                return seconds;
+            }
+
+            document.querySelectorAll(".mode-tab").forEach((tab) => {
+                tab.addEventListener("click", () => {
+                    modeCacheValues[currentMode].work = getRawValue("work");
+                    document
+                        .querySelectorAll(".mode-tab")
+                        .forEach((t) => t.classList.remove("active"));
+                    tab.classList.add("active");
+                    currentMode = tab.dataset.mode;
+                    adaptUIForMode();
+                });
+            });
+
+            function adaptUIForMode() {
+                const rowRounds = document.getElementById("row-rounds");
+                const rowWarning = document.getElementById("row-warning");
+                const rowRest = document.getElementById("row-rest");
+                const rowToggle = document.getElementById(
+                    "row-toggle-advanced",
+                );
+                const rowSummary = document.getElementById("row-summary");
+                const lblWorkMain = document.getElementById("lbl-work-main");
+                const lblWorkSub = document.getElementById("lbl-work-sub");
+
+                setRawValue("work", modeCacheValues[currentMode].work);
+
+                if (currentMode === "hiit") {
+                    rowRounds.classList.remove("hidden");
+                    rowWarning.classList.remove("hidden");
+                    rowRest.classList.remove("hidden");
+                    rowToggle.classList.remove("hidden");
+                    rowSummary.classList.remove("hidden");
+                    lblWorkMain.textContent = "Durata round";
+                    lblWorkSub.textContent =
+                        "Tempo di lavoro (uguale per tutti i round)";
+                    toggleAdvancedMode();
+                } else if (currentMode === "amrap") {
+                    rowRounds.classList.add("hidden");
+                    rowWarning.classList.add("hidden");
+                    rowRest.classList.add("hidden");
+                    rowToggle.classList.add("hidden");
+                    rowSummary.classList.add("hidden");
+                    document
+                        .getElementById("rounds-inputs-container-wrap")
+                        .classList.remove("visible");
+                    lblWorkMain.textContent = "Durata totale AMRAP";
+                    lblWorkSub.textContent =
+                        "Tempo totale limite dell'allenamento";
+                    updateSummary();
+                } else if (currentMode === "fortime") {
+                    rowRounds.classList.add("hidden");
+                    rowWarning.classList.add("hidden");
+                    rowRest.classList.add("hidden");
+                    rowToggle.classList.add("hidden");
+                    rowSummary.classList.add("hidden");
+                    document
+                        .getElementById("rounds-inputs-container-wrap")
+                        .classList.remove("visible");
+                    lblWorkMain.textContent = "Time Cap (Massimo)";
+                    lblWorkSub.textContent =
+                        "Interruzione forzata dopo questo tempo";
+                    updateSummary();
+                }
+            }
+
+            function loadConfig() {
+                const saved = localStorage.getItem("hiit-config-v11");
+                if (!saved) {
+                    setRawValue("prepare", DEFAULTS.prepare);
+                    setRawValue("work", DEFAULTS.work);
+                    setRawValue("rest", DEFAULTS.rest);
+                    document.getElementById("cfg-warning").value =
+                        DEFAULTS.warning;
+                    syncRoundsArray(
+                        parseInt(document.getElementById("cfg-rounds").value),
+                    );
+                    adaptUIForMode();
+                    return;
+                }
+                try {
+                    const parsed = JSON.parse(saved);
+                    currentMode = parsed.currentMode || "hiit";
+                    document.querySelectorAll(".mode-tab").forEach((t) => {
+                        t.classList.toggle(
+                            "active",
+                            t.dataset.mode === currentMode,
+                        );
+                    });
+                    setRawValue("prepare", parsed.prepare ?? DEFAULTS.prepare);
+                    setRawValue("work", parsed.work ?? DEFAULTS.work);
+                    setRawValue("rest", parsed.rest ?? DEFAULTS.rest);
+                    document.getElementById("cfg-warning").value =
+                        parsed.warning ?? DEFAULTS.warning;
+                    document.getElementById("cfg-advanced-toggle").checked =
+                        parsed.advancedMode ?? false;
+                    if (parsed.modeCacheValues)
+                        Object.assign(modeCacheValues, parsed.modeCacheValues);
+                    if (
+                        Array.isArray(parsed.roundTimes) &&
+                        parsed.roundTimes.length > 0
+                    ) {
+                        roundTimes = parsed.roundTimes;
+                    }
+                } catch (e) {
+                    console.error(e);
+                }
+                adaptUIForMode();
+            }
+
+            function saveConfig() {
+                const cfg = {
+                    currentMode: currentMode,
+                    prepare: getRawValue("prepare"),
+                    work: getRawValue("work"),
+                    warning:
+                        parseInt(
+                            document.getElementById("cfg-warning").value,
+                        ) || DEFAULTS.warning,
+                    rest: getRawValue("rest"),
+                    advancedMode: document.getElementById("cfg-advanced-toggle")
+                        .checked,
+                    roundTimes: roundTimes,
+                    modeCacheValues: modeCacheValues,
+                };
+                localStorage.setItem("hiit-config-v11", JSON.stringify(cfg));
+            }
+
+            function getRawValue(idPart) {
+                return (
+                    parseInt(
+                        document.getElementById("cfg-" + idPart).dataset.value,
+                    ) || 0
+                );
+            }
+            function setRawValue(idPart, seconds) {
+                const input = document.getElementById("cfg-" + idPart);
+                input.dataset.value = seconds;
+                input.value = formatSecondsToMMSS(seconds);
+            }
+
+            function syncRoundsArray(targetLength) {
+                const currentWorkDefault = getRawValue("work") || DEFAULTS.work;
+                while (roundTimes.length < targetLength) {
+                    const lastVal =
+                        roundTimes[roundTimes.length - 1] || currentWorkDefault;
+                    roundTimes.push(lastVal);
+                }
+                while (roundTimes.length > targetLength) {
+                    roundTimes.pop();
+                }
+            }
+
+            function toggleAdvancedMode() {
+                if (currentMode !== "hiit") return;
+                const isAdvanced = document.getElementById(
+                    "cfg-advanced-toggle",
+                ).checked;
+                const rowStandard =
+                    document.getElementById("row-standard-work");
+                const containerWrap = document.getElementById(
+                    "rounds-inputs-container-wrap",
+                );
+                const totalRounds = roundTimes.length;
+
+                if (isAdvanced) {
+                    rowStandard.classList.add("hidden");
+                    containerWrap.classList.add("visible");
+                } else {
+                    rowStandard.classList.remove("hidden");
+                    containerWrap.classList.remove("visible");
+                    const standardValue = getRawValue("work") || DEFAULTS.work;
+                    roundTimes = Array(totalRounds).fill(standardValue);
+                }
+                buildRoundInputs();
+            }
+
+            function buildRoundInputs() {
+                document.getElementById("cfg-rounds").value = roundTimes.length;
+                const container = document.getElementById(
+                    "rounds-inputs-container",
+                );
+                container.innerHTML = "";
+
+                roundTimes.forEach((time, index) => {
+                    const row = document.createElement("div");
+                    row.className = "round-item";
+                    row.innerHTML = `
       <span>Set ${index + 1}</span>
       <div class="stepper">
         <button type="button" class="btn-time-minus" data-idx="${index}">−</button>
@@ -726,473 +1097,609 @@ function buildRoundInputs() {
         <button type="button" class="btn-time-plus" data-idx="${index}">+</button>
       </div>
     `;
-    container.appendChild(row);
-  });
+                    container.appendChild(row);
+                });
 
-  container.querySelectorAll('.btn-time-minus').forEach(b => { b.addEventListener('click', () => modifyRoundTime(parseInt(b.dataset.idx), -5)); });
-  container.querySelectorAll('.btn-time-plus').forEach(b => { b.addEventListener('click', () => modifyRoundTime(parseInt(b.dataset.idx), 5)); });
+                container.querySelectorAll(".btn-time-minus").forEach((b) => {
+                    b.addEventListener("click", () =>
+                        modifyRoundTime(parseInt(b.dataset.idx), -5),
+                    );
+                });
+                container.querySelectorAll(".btn-time-plus").forEach((b) => {
+                    b.addEventListener("click", () =>
+                        modifyRoundTime(parseInt(b.dataset.idx), 5),
+                    );
+                });
 
-  container.querySelectorAll('.cfg-single-work').forEach(input => {
-    const handleSingleBlur = () => {
-      const idx = parseInt(input.dataset.idx);
-      const sanitizedSec = parseAndSanitizeTimeToSeconds(input.value, DEFAULTS.work, true);
-      roundTimes[idx] = sanitizedSec;
-      input.value = formatSecondsToMMSS(sanitizedSec);
-      updateSummary();
-    };
-    input.addEventListener('blur', handleSingleBlur);
-    input.addEventListener('keydown', (e) => { if (e.key === 'Enter') input.blur(); });
-  });
-  updateSummary();
-}
+                container
+                    .querySelectorAll(".cfg-single-work")
+                    .forEach((input) => {
+                        const handleSingleBlur = () => {
+                            const idx = parseInt(input.dataset.idx);
+                            const sanitizedSec = parseAndSanitizeTimeToSeconds(
+                                input.value,
+                                DEFAULTS.work,
+                                true,
+                            );
+                            roundTimes[idx] = sanitizedSec;
+                            input.value = formatSecondsToMMSS(sanitizedSec);
+                            updateSummary();
+                        };
+                        input.addEventListener("blur", handleSingleBlur);
+                        input.addEventListener("keydown", (e) => {
+                            if (e.key === "Enter") input.blur();
+                        });
+                    });
+                updateSummary();
+            }
 
-function modifyRoundTime(idx, delta) {
-  roundTimes[idx] = Math.max(5, (roundTimes[idx] || 40) + delta);
-  buildRoundInputs();
-}
+            function modifyRoundTime(idx, delta) {
+                roundTimes[idx] = Math.max(5, (roundTimes[idx] || 40) + delta);
+                buildRoundInputs();
+            }
 
-['prepare', 'work', 'rest'].forEach(field => {
-  const input = document.getElementById('cfg-' + field);
-  const handleMainBlur = () => {
-    const def = DEFAULTS[field];
-    const isWork = (field === 'work');
-    const sanitizedSec = parseAndSanitizeTimeToSeconds(input.value, def, isWork);
-    setRawValue(field, sanitizedSec);
-    updateSummary();
-  };
-  input.addEventListener('blur', handleMainBlur);
-  input.addEventListener('keydown', (e) => { if (e.key === 'Enter') input.blur(); });
-});
+            ["prepare", "work", "rest"].forEach((field) => {
+                const input = document.getElementById("cfg-" + field);
+                const handleMainBlur = () => {
+                    const def = DEFAULTS[field];
+                    const isWork = field === "work";
+                    const sanitizedSec = parseAndSanitizeTimeToSeconds(
+                        input.value,
+                        def,
+                        isWork,
+                    );
+                    setRawValue(field, sanitizedSec);
+                    updateSummary();
+                };
+                input.addEventListener("blur", handleMainBlur);
+                input.addEventListener("keydown", (e) => {
+                    if (e.key === "Enter") input.blur();
+                });
+            });
 
-document.getElementById('btn-round-plus').addEventListener('click', () => {
-  let currentRounds = roundTimes.length;
-  if (currentRounds >= 30) return;
-  syncRoundsArray(currentRounds + 1);
-  if (!document.getElementById('cfg-advanced-toggle').checked) {
-    const standardValue = getRawValue('work') || DEFAULTS.work;
-    roundTimes[roundTimes.length - 1] = standardValue;
-  }
-  buildRoundInputs();
-});
+            document
+                .getElementById("btn-round-plus")
+                .addEventListener("click", () => {
+                    let currentRounds = roundTimes.length;
+                    if (currentRounds >= 30) return;
+                    syncRoundsArray(currentRounds + 1);
+                    if (
+                        !document.getElementById("cfg-advanced-toggle").checked
+                    ) {
+                        const standardValue =
+                            getRawValue("work") || DEFAULTS.work;
+                        roundTimes[roundTimes.length - 1] = standardValue;
+                    }
+                    buildRoundInputs();
+                });
 
-document.getElementById('btn-round-minus').addEventListener('click', () => {
-  let currentRounds = roundTimes.length;
-  if (currentRounds <= 1) return;
-  syncRoundsArray(currentRounds - 1);
-  buildRoundInputs();
-});
+            document
+                .getElementById("btn-round-minus")
+                .addEventListener("click", () => {
+                    let currentRounds = roundTimes.length;
+                    if (currentRounds <= 1) return;
+                    syncRoundsArray(currentRounds - 1);
+                    buildRoundInputs();
+                });
 
-document.getElementById('btn-warning-plus').addEventListener('click', () => {
-  const input = document.getElementById('cfg-warning');
-  input.value = Math.min(30, (parseInt(input.value) || 0) + 1);
-  updateSummary();
-});
-document.getElementById('btn-warning-minus').addEventListener('click', () => {
-  const input = document.getElementById('cfg-warning');
-  input.value = Math.max(0, (parseInt(input.value) || 0) - 1);
-  updateSummary();
-});
+            document
+                .getElementById("btn-warning-plus")
+                .addEventListener("click", () => {
+                    const input = document.getElementById("cfg-warning");
+                    input.value = Math.min(
+                        30,
+                        (parseInt(input.value) || 0) + 1,
+                    );
+                    updateSummary();
+                });
+            document
+                .getElementById("btn-warning-minus")
+                .addEventListener("click", () => {
+                    const input = document.getElementById("cfg-warning");
+                    input.value = Math.max(0, (parseInt(input.value) || 0) - 1);
+                    updateSummary();
+                });
 
-document.getElementById('cfg-advanced-toggle').addEventListener('change', toggleAdvancedMode);
+            document
+                .getElementById("cfg-advanced-toggle")
+                .addEventListener("change", toggleAdvancedMode);
 
-function updateSummary() {
-  const prepare = getRawValue('prepare');
-  const rest = getRawValue('rest');
-  const totalRounds = roundTimes.length;
+            function updateSummary() {
+                const prepare = getRawValue("prepare");
+                const rest = getRawValue("rest");
+                const totalRounds = roundTimes.length;
 
-  let workTotal = 0;
-  if (currentMode === 'hiit') {
-    if (document.getElementById('cfg-advanced-toggle').checked) {
-      workTotal = roundTimes.reduce((a, b) => a + b, 0);
-    } else {
-      const standardValue = getRawValue('work') || DEFAULTS.work;
-      workTotal = totalRounds * standardValue;
-      roundTimes = Array(totalRounds).fill(standardValue);
-    }
-  } else {
-    workTotal = getRawValue('work');
-  }
+                let workTotal = 0;
+                if (currentMode === "hiit") {
+                    if (
+                        document.getElementById("cfg-advanced-toggle").checked
+                    ) {
+                        workTotal = roundTimes.reduce((a, b) => a + b, 0);
+                    } else {
+                        const standardValue =
+                            getRawValue("work") || DEFAULTS.work;
+                        workTotal = totalRounds * standardValue;
+                        roundTimes = Array(totalRounds).fill(standardValue);
+                    }
+                } else {
+                    workTotal = getRawValue("work");
+                }
 
-  const restTotal = (currentMode === 'hiit' && totalRounds > 1) ? (totalRounds - 1) * rest : 0;
-  const totalDuration = prepare + workTotal + restTotal;
+                const restTotal =
+                    currentMode === "hiit" && totalRounds > 1
+                        ? (totalRounds - 1) * rest
+                        : 0;
+                const totalDuration = prepare + workTotal + restTotal;
 
-  document.getElementById('sum-rounds').textContent = totalRounds;
-  document.getElementById('sum-total').textContent = fmtTime(totalDuration);
-  saveConfig();
-}
+                document.getElementById("sum-rounds").textContent = totalRounds;
+                document.getElementById("sum-total").textContent =
+                    fmtTime(totalDuration);
+                saveConfig();
+            }
 
-function fmtTime(sec) {
-  const m = Math.floor(sec / 60);
-  const s = sec % 60;
-  return m > 0 ? `${m}:${String(s).padStart(2,'0')}` : `${s}s`;
-}
+            function fmtTime(sec) {
+                const m = Math.floor(sec / 60);
+                const s = sec % 60;
+                return m > 0 ? `${m}:${String(s).padStart(2, "0")}` : `${s}s`;
+            }
 
-document.querySelectorAll('[data-field]').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const field = btn.dataset.field; 
-    const delta = parseInt(btn.dataset.delta);
-    
-    let currentSec = getRawValue(field);
-    let newSec = currentSec + delta;
-    
-    if (field === 'work' && newSec < 5) newSec = 5;
-    if (field !== 'work' && newSec < 0) newSec = 0;
-    
-    setRawValue(field, newSec);
-    updateSummary();
-  });
-});
+            document.querySelectorAll("[data-field]").forEach((btn) => {
+                btn.addEventListener("click", () => {
+                    const field = btn.dataset.field;
+                    const delta = parseInt(btn.dataset.delta);
 
+                    let currentSec = getRawValue(field);
+                    let newSec = currentSec + delta;
 
-// ── Audio Engine ──
-let audioCtx = null;
-function getAudioCtx() {
-  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  return audioCtx;
-}
-function playBeep(frequency, duration) {
-  try {
-    const ctx = getAudioCtx();
-    if (ctx.state === 'suspended') ctx.resume();
-    const osc = ctx.createOscillator();
-    const gainNode = ctx.createGain();
-    osc.type = 'sine';
-    osc.frequency.value = frequency;
-    const now = ctx.currentTime;
-    gainNode.gain.setValueAtTime(0, now);
-    gainNode.gain.linearRampToValueAtTime(0.8, now + 0.005);
-    gainNode.gain.setValueAtTime(0.8, now + duration - 0.01);
-    gainNode.gain.linearRampToValueAtTime(0, now + duration);
-    osc.connect(gainNode);
-    gainNode.connect(ctx.destination);
-    osc.start(now);
-    osc.stop(now + duration);
-  } catch (e) { console.error(e); }
-}
-function playLowBeep() { playBeep(900, 0.25); }
-function playHighBeep() { playBeep(2300, 0.70); }
+                    if (field === "work" && newSec < 5) newSec = 5;
+                    if (field !== "work" && newSec < 0) newSec = 0;
 
-// ── Wake Lock ──
-let wakeLock = null;
-async function acquireWakeLock() { if ('wakeLock' in navigator) { try { wakeLock = await navigator.wakeLock.request('screen'); } catch {} } }
-function releaseWakeLock() { if (wakeLock) { wakeLock.release(); wakeLock = null; } }
+                    setRawValue(field, newSec);
+                    updateSummary();
+                });
+            });
 
+            // ── Audio Engine ──
+            let audioCtx = null;
+            function getAudioCtx() {
+                if (!audioCtx)
+                    audioCtx = new (
+                        window.AudioContext || window.webkitAudioContext
+                    )();
+                return audioCtx;
+            }
+            function playBeep(frequency, duration) {
+                try {
+                    const ctx = getAudioCtx();
+                    if (ctx.state === "suspended") ctx.resume();
+                    const osc = ctx.createOscillator();
+                    const gainNode = ctx.createGain();
+                    osc.type = "sine";
+                    osc.frequency.value = frequency;
+                    const now = ctx.currentTime;
+                    gainNode.gain.setValueAtTime(0, now);
+                    gainNode.gain.linearRampToValueAtTime(0.8, now + 0.005);
+                    gainNode.gain.setValueAtTime(0.8, now + duration - 0.01);
+                    gainNode.gain.linearRampToValueAtTime(0, now + duration);
+                    osc.connect(gainNode);
+                    gainNode.connect(ctx.destination);
+                    osc.start(now);
+                    osc.stop(now + duration);
+                } catch (e) {
+                    console.error(e);
+                }
+            }
+            function playLowBeep() {
+                playBeep(900, 0.25);
+            }
+            function playHighBeep() {
+                playBeep(2300, 0.7);
+            }
 
-// ── Motore Sequenza Timer ──
-let state = null;
-let interval = null;
-let workoutHasStarted = false;
+            // ── Wake Lock ──
+            let wakeLock = null;
+            async function acquireWakeLock() {
+                if ("wakeLock" in navigator) {
+                    try {
+                        wakeLock = await navigator.wakeLock.request("screen");
+                    } catch {}
+                }
+            }
+            function releaseWakeLock() {
+                if (wakeLock) {
+                    wakeLock.release();
+                    wakeLock = null;
+                }
+            }
 
-function setupSequenceStage() {
-  getAudioCtx();
-  const seq = [];
-  const prepare = getRawValue('prepare');
-  const workDuration = getRawValue('work');
-  const rest = getRawValue('rest');
-  
-  // Salviamo lo stato iniziale dei blocchi di tempo base per evitare di scendere sotto nei modificatori
-  originalBaseTimes = [];
+            // ── Motore Sequenza Timer ──
+            let state = null;
+            let interval = null;
+            let workoutHasStarted = false;
 
-  if (prepare > 0) {
-    seq.push({ phase: 'prepare', duration: prepare, round: null });
-    originalBaseTimes.push(prepare);
-  }
-  
-  if (currentMode === 'hiit') {
-    roundTimes.forEach((wTime, index) => {
-      const rNumber = index + 1;
-      seq.push({ phase: 'work', duration: wTime, round: rNumber });
-      originalBaseTimes.push(wTime);
-      if (rNumber < roundTimes.length && rest > 0) {
-        seq.push({ phase: 'rest', duration: rest, round: rNumber });
-        originalBaseTimes.push(rest);
-      }
-    });
-  } else if (currentMode === 'amrap' || currentMode === 'fortime') {
-    seq.push({ phase: 'work', duration: workDuration, round: null });
-    originalBaseTimes.push(workDuration);
-  }
+            function setupSequenceStage() {
+                getAudioCtx();
+                const seq = [];
+                const prepare = getRawValue("prepare");
+                const workDuration = getRawValue("work");
+                const rest = getRawValue("rest");
 
-  state = {
-    mode: currentMode,
-    seq,
-    idx: 0,
-    remaining: seq[0].duration,
-    elapsedInPhase: 0,
-    beepsFired: new Set(),
-    lastTick: performance.now(),
-    totalRounds: roundTimes.length
-  };
+                originalBaseTimes = [];
 
-  workoutHasStarted = false;
-  
-  // Popola la barra dei recap in basso per l'HIIT
-  if (currentMode === 'hiit') {
-    const isAdvanced = document.getElementById('cfg-advanced-toggle').checked;
-    document.getElementById('rcp-work').textContent = isAdvanced ? "Misto" : `${getRawValue('work')}s`;
-    document.getElementById('rcp-rest').textContent = `${rest}s`;
-    document.getElementById('rcp-rounds').textContent = state.totalRounds;
-    document.getElementById('rcp-warning').textContent = `${document.getElementById('cfg-warning').value}s`;
-    document.getElementById('active-hiit-recap').classList.add('visible');
-  } else {
-    document.getElementById('active-hiit-recap').classList.remove('visible');
-  }
+                if (prepare > 0) {
+                    seq.push({
+                        phase: "prepare",
+                        duration: prepare,
+                        round: null,
+                    });
+                    originalBaseTimes.push(prepare);
+                }
 
-  // UI iniziale di attesa
-  document.getElementById('btn-active-start').style.display = 'block';
-  document.getElementById('btn-pause').style.display = 'none';
-  document.getElementById('btn-pause').textContent = '⏸ Pausa';
+                if (currentMode === "hiit") {
+                    roundTimes.forEach((wTime, index) => {
+                        const rNumber = index + 1;
+                        seq.push({
+                            phase: "work",
+                            duration: wTime,
+                            round: rNumber,
+                        });
+                        originalBaseTimes.push(wTime);
+                        if (rNumber < roundTimes.length && rest > 0) {
+                            seq.push({
+                                phase: "rest",
+                                duration: rest,
+                                round: rNumber,
+                            });
+                            originalBaseTimes.push(rest);
+                        }
+                    });
+                } else if (
+                    currentMode === "amrap" ||
+                    currentMode === "fortime"
+                ) {
+                    seq.push({
+                        phase: "work",
+                        duration: workDuration,
+                        round: null,
+                    });
+                    originalBaseTimes.push(workDuration);
+                }
 
-  showActive();
-  acquireWakeLock();
-  renderActive();
-}
+                state = {
+                    mode: currentMode,
+                    seq,
+                    idx: 0,
+                    remaining: seq[0].duration,
+                    elapsedInPhase: 0,
+                    beepsFired: new Set(),
+                    lastTick: performance.now(),
+                    totalRounds: roundTimes.length,
+                };
 
-function startRunningWorkout() {
-  workoutHasStarted = true;
-  document.getElementById('btn-active-start').style.display = 'none';
-  document.getElementById('btn-pause').style.display = 'block';
-  state.lastTick = performance.now();
-  
-  // Rimosso il beep iniziale del prepare
-  state.beepsFired = new Set();
-  
-  interval = setInterval(tick, 50);
-}
+                workoutHasStarted = false;
 
-function onPhaseStart() {
-  state.beepsFired = new Set();
-  playHighBeep();
-}
+                if (currentMode === "hiit") {
+                    const isAdvanced = document.getElementById(
+                        "cfg-advanced-toggle",
+                    ).checked;
+                    document.getElementById("rcp-work").textContent = isAdvanced
+                        ? "Misto"
+                        : `${getRawValue("work")}s`;
+                    document.getElementById("rcp-rest").textContent =
+                        `${rest}s`;
+                    document.getElementById("rcp-rounds").textContent =
+                        state.totalRounds;
+                    document.getElementById("rcp-warning").textContent =
+                        `${document.getElementById("cfg-warning").value}s`;
+                    document
+                        .getElementById("active-hiit-recap")
+                        .classList.add("visible");
+                } else {
+                    document
+                        .getElementById("active-hiit-recap")
+                        .classList.remove("visible");
+                }
 
-function tick() {
-  if (!workoutHasStarted || (state && state.paused)) return;
+                document.getElementById("btn-active-start").style.display =
+                    "block";
+                document.getElementById("btn-pause").style.display = "none";
+                document.getElementById("btn-pause").textContent = "⏸ Pausa";
 
-  const now = performance.now();
-  const delta = (now - state.lastTick) / 1000;
-  state.lastTick = now;
+                showActive();
+                acquireWakeLock();
+                renderActive();
+            }
 
-  const seg = state.seq[state.idx];
+            function startRunningWorkout() {
+                workoutHasStarted = true;
+                document.getElementById("btn-active-start").style.display =
+                    "none";
+                document.getElementById("btn-pause").style.display = "block";
+                state.lastTick = performance.now();
+                state.beepsFired = new Set();
+                interval = setInterval(tick, 50);
+            }
 
-  if (state.mode === 'fortime' && seg.phase === 'work') {
-    state.elapsedInPhase += delta;
-    state.remaining = seg.duration - state.elapsedInPhase;
-    
-    if (state.elapsedInPhase >= seg.duration) {
-      finish();
-      return;
-    }
-  } else {
-    state.remaining -= delta;
-    if (state.remaining <= 0) {
-      advancePhase();
-      return;
-    }
-  }
+            function onPhaseStart() {
+                state.beepsFired = new Set();
+                playHighBeep();
+            }
 
-  // Gestione del Warning Pre-Fine personalizzato nell'HIIT
-  if (state.mode === 'hiit' && seg.phase === 'work') {
-    const warningLimit = parseInt(document.getElementById('cfg-warning').value) || 0;
-    if (warningLimit > 0 && Math.ceil(state.remaining) === warningLimit) {
-      if (!state.beepsFired.has('warning-pre')) {
-        state.beepsFired.add('warning-pre');
-        playLowBeep();
-      }
-    }
-  }
+            function tick() {
+                if (!workoutHasStarted || (state && state.paused)) return;
 
-  // Beeps classici degli ultimi 3 secondi
-  if (!(state.mode === 'fortime' && seg.phase === 'work')) {
-    const triggerBeepVal = Math.ceil(state.remaining);
-    if (triggerBeepVal <= 3 && triggerBeepVal >= 1) {
-      if (!state.beepsFired.has(triggerBeepVal)) {
-        state.beepsFired.add(triggerBeepVal);
-        playLowBeep();
-      }
-    }
-  }
+                const now = performance.now();
+                const delta = (now - state.lastTick) / 1000;
+                state.lastTick = now;
 
-  renderActive();
-}
+                const seg = state.seq[state.idx];
 
-function advancePhase() {
-  state.idx++;
-  if (state.idx >= state.seq.length) {
-    finish();
-    return;
-  }
+                if (state.mode === "fortime" && seg.phase === "work") {
+                    state.elapsedInPhase += delta;
+                    state.remaining = seg.duration - state.elapsedInPhase;
 
-  const next = state.seq[state.idx];
-  state.remaining = next.duration;
-  state.elapsedInPhase = 0;
-  state.beepsFired = new Set();
-  state.lastTick = performance.now();
+                    if (state.elapsedInPhase >= seg.duration) {
+                        finish();
+                        return;
+                    }
+                } else {
+                    state.remaining -= delta;
+                    if (state.remaining <= 0) {
+                        advancePhase();
+                        return;
+                    }
+                }
 
-  renderActive();
-  onPhaseStart();
-}
+                if (state.mode === "hiit" && seg.phase === "work") {
+                    const warningLimit =
+                        parseInt(
+                            document.getElementById("cfg-warning").value,
+                        ) || 0;
+                    if (
+                        warningLimit > 0 &&
+                        Math.ceil(state.remaining) === warningLimit
+                    ) {
+                        if (!state.beepsFired.has("warning-pre")) {
+                            state.beepsFired.add("warning-pre");
+                            playLowBeep();
+                        }
+                    }
+                }
 
-// ── REGOLATORI EXTRA TIME (+1m / -1m SEMPLIFICATI) ──
-document.getElementById('btn-add-extratime').addEventListener('click', () => {
-  if (!state) return;
-  const seg = state.seq[state.idx];
-  if (seg.phase !== 'work') return; 
+                if (!(state.mode === "fortime" && seg.phase === "work")) {
+                    const triggerBeepVal = Math.ceil(state.remaining);
+                    if (triggerBeepVal <= 3 && triggerBeepVal >= 1) {
+                        if (!state.beepsFired.has(triggerBeepVal)) {
+                            state.beepsFired.add(triggerBeepVal);
+                            playLowBeep();
+                        }
+                    }
+                }
 
-  const amount = 60; // Fisso a 1 minuto
-  seg.duration += amount;
+                renderActive();
+            }
 
-  if (state.mode !== 'fortime') {
-    state.remaining += amount;
-  }
-  
-  state.beepsFired.clear();
-  renderActive();
-});
+            function advancePhase() {
+                state.idx++;
+                if (state.idx >= state.seq.length) {
+                    finish();
+                    return;
+                }
 
-document.getElementById('btn-remove-extratime').addEventListener('click', () => {
-  if (!state) return;
-  const seg = state.seq[state.idx];
-  if (seg.phase !== 'work') return;
+                const next = state.seq[state.idx];
+                state.remaining = next.duration;
+                state.elapsedInPhase = 0;
+                state.beepsFired = new Set();
+                state.lastTick = performance.now();
 
-  const amount = 60;
-  const baseTimeInvalicabile = originalBaseTimes[state.idx];
+                renderActive();
+                onPhaseStart();
+            }
 
-  // Impedisce di scendere sotto il tempo stabilito all'inizio della configurazione
-  if (seg.duration - amount >= baseTimeInvalicabile) {
-    seg.duration -= amount;
-    if (state.mode === 'fortime') {
-      // Nel For Time rimanente si adegua dinamicamente alla riduzione della durata massima del cap
-      if (state.remaining < amount) state.remaining = 0;
-    } else {
-      state.remaining -= amount;
-    }
-    state.beepsFired.clear();
-    renderActive();
-  }
-});
+            // ── REGOLATORI EXTRA TIME (+1m / -1m) ──
+            document
+                .getElementById("btn-add-extratime")
+                .addEventListener("click", () => {
+                    if (!state) return;
+                    const seg = state.seq[state.idx];
+                    if (seg.phase !== "work" || state.mode !== "fortime")
+                        return;
 
-function finish() {
-  clearInterval(interval);
-  releaseWakeLock();
-  playHighBeep();
-  setTimeout(playHighBeep, 400);
+                    const amount = 60;
+                    seg.duration += amount;
+                    state.beepsFired.clear();
+                    renderActive();
+                });
 
-  if (state.mode === 'hiit') {
-    document.getElementById('finished-msg').textContent = `${state.totalRounds} round completati!`;
-  } else if (state.mode === 'amrap') {
-    document.getElementById('finished-msg').textContent = `Tempo scaduto! Allenamento AMRAP completato.`;
-  } else if (state.mode === 'fortime') {
-    document.getElementById('finished-msg').textContent = `Time cap raggiunto a ${formatSecondsToMMSS(Math.floor(state.elapsedInPhase))}!`;
-  }
-  document.getElementById('finished-overlay').classList.add('visible');
-}
+            document
+                .getElementById("btn-remove-extratime")
+                .addEventListener("click", () => {
+                    if (!state) return;
+                    const seg = state.seq[state.idx];
+                    if (seg.phase !== "work" || state.mode !== "fortime")
+                        return;
 
-function renderActive() {
-  const seg = state.seq[state.idx];
-  
-  let displaySeconds = Math.max(0, Math.ceil(state.remaining));
-  if (state.mode === 'fortime' && seg.phase === 'work') {
-    displaySeconds = Math.floor(state.elapsedInPhase);
-  }
+                    const amount = 60;
+                    const baseTimeInvalicabile = originalBaseTimes[state.idx];
 
-  const badge = document.getElementById('phase-badge');
-  badge.className = 'phase-badge ' + seg.phase;
-  badge.textContent = {
-    prepare: 'PREPARE',
-    work: state.mode === 'amrap' ? 'AMRAP' : (state.mode === 'fortime' ? 'FOR TIME' : 'WORK'),
-    rest: 'REST'
-  }[seg.phase];
+                    if (seg.duration - amount >= baseTimeInvalicabile) {
+                        seg.duration -= amount;
+                        if (state.remaining < amount) state.remaining = 0;
+                        state.beepsFired.clear();
+                        renderActive();
+                    }
+                });
 
-  const roundBox = document.getElementById('active-round-box');
-  const dividerBox = document.getElementById('active-divider-box');
-  const progressWrap = document.getElementById('active-progress-wrap');
-  const modifiersZone = document.getElementById('active-modifiers-zone');
-  const timecapSubinfo = document.getElementById('active-timecap-subinfo');
+            function finish() {
+                clearInterval(interval);
+                releaseWakeLock();
+                playHighBeep();
+                setTimeout(playHighBeep, 400);
 
-  if (seg.phase === 'prepare') {
-    roundBox.classList.remove('hidden');
-    dividerBox.classList.remove('hidden');
-    progressWrap.classList.remove('hidden');
-    modifiersZone.classList.remove('visible');
-    timecapSubinfo.classList.remove('visible');
+                if (state.mode === "hiit") {
+                    document.getElementById("finished-msg").textContent =
+                        `${state.totalRounds} round completati!`;
+                } else if (state.mode === "amrap") {
+                    document.getElementById("finished-msg").textContent =
+                        `Tempo scaduto! Allenamento AMRAP completato.`;
+                } else if (state.mode === "fortime") {
+                    document.getElementById("finished-msg").textContent =
+                        `Time cap raggiunto a ${formatSecondsToMMSS(Math.floor(state.elapsedInPhase))}!`;
+                }
+                document
+                    .getElementById("finished-overlay")
+                    .classList.add("visible");
+            }
 
-    document.getElementById('round-num').textContent = '—';
-    document.getElementById('round-label').textContent = state.mode === 'hiit' ? `${state.totalRounds} round` : "Pronto";
-    document.getElementById('time-label').textContent = 'prepare';
-  } else {
-    if (state.mode === 'hiit') {
-      roundBox.classList.remove('hidden');
-      dividerBox.classList.remove('hidden');
-      progressWrap.classList.remove('hidden');
-      modifiersZone.classList.remove('visible');
-      timecapSubinfo.classList.remove('visible');
+            function renderActive() {
+                const seg = state.seq[state.idx];
 
-      document.getElementById('round-num').textContent = seg.round;
-      document.getElementById('round-label').textContent = `/ ${state.totalRounds} round`;
-      document.getElementById('time-label').textContent = seg.phase === 'rest' ? 'rest' : 'lavoro';
-    } else {
-      roundBox.classList.add('hidden');
-      dividerBox.classList.add('hidden');
-      modifiersZone.classList.add('visible');
-      
-      if (state.mode === 'amrap') {
-        timecapSubinfo.classList.remove('visible');
-        progressWrap.classList.remove('hidden');
-        document.getElementById('time-label').textContent = 'tempo rimanente';
-      } else {
-        timecapSubinfo.classList.add('visible');
-        document.getElementById('timecap-target-val').textContent = formatSecondsToMMSS(seg.duration);
-        progressWrap.classList.add('hidden'); 
-        document.getElementById('time-label').textContent = 'tempo trascorso';
-      }
-    }
-  }
+                let displaySeconds = Math.max(0, Math.ceil(state.remaining));
+                if (state.mode === "fortime" && seg.phase === "work") {
+                    displaySeconds = Math.floor(state.elapsedInPhase);
+                }
 
-  document.getElementById('time-val').textContent = formatSecondsToMMSS(displaySeconds);
-  
-  let pct = (state.remaining / seg.duration) * 100;
-  document.getElementById('progress-bar').style.width = Math.max(0, pct) + '%';
-  document.body.className = 'phase-' + seg.phase;
-}
+                const badge = document.getElementById("phase-badge");
+                badge.className = "phase-badge " + seg.phase;
+                badge.textContent = {
+                    prepare: "PREPARE",
+                    work:
+                        state.mode === "amrap"
+                            ? "AMRAP"
+                            : state.mode === "fortime"
+                              ? "FOR TIME"
+                              : "WORK",
+                    rest: "REST",
+                }[seg.phase];
 
-function showActive() {
-  document.getElementById('setup-screen').style.display = 'none';
-  document.getElementById('active-screen').classList.add('visible');
-}
+                const roundBox = document.getElementById("active-round-box");
+                const dividerBox =
+                    document.getElementById("active-divider-box");
+                const progressWrap = document.getElementById(
+                    "active-progress-wrap",
+                );
+                const modifiersZone = document.getElementById(
+                    "active-modifiers-zone",
+                );
+                const timecapSubinfo = document.getElementById(
+                    "active-timecap-subinfo",
+                );
 
-function showSetup() {
-  document.getElementById('setup-screen').style.display = '';
-  document.getElementById('active-screen').classList.remove('visible');
-  document.body.className = '';
-  document.getElementById('finished-overlay').classList.remove('visible');
-}
+                if (seg.phase === "prepare") {
+                    roundBox.classList.remove("hidden");
+                    dividerBox.classList.remove("hidden");
+                    progressWrap.classList.remove("hidden");
+                    modifiersZone.classList.remove("visible");
+                    timecapSubinfo.classList.remove("visible");
 
-document.getElementById('btn-apply').addEventListener('click', setupSequenceStage);
+                    document.getElementById("round-num").textContent = "—";
+                    document.getElementById("round-label").textContent =
+                        state.mode === "hiit"
+                            ? `${state.totalRounds} round`
+                            : "Pronto";
+                    document.getElementById("time-label").textContent =
+                        "prepare";
+                } else {
+                    if (state.mode === "hiit") {
+                        roundBox.classList.remove("hidden");
+                        dividerBox.classList.remove("hidden");
+                        progressWrap.classList.remove("hidden");
+                        modifiersZone.classList.remove("visible");
+                        timecapSubinfo.classList.remove("visible");
 
-document.getElementById('btn-active-start').addEventListener('click', startRunningWorkout);
+                        document.getElementById("round-num").textContent =
+                            seg.round;
+                        document.getElementById("round-label").textContent =
+                            `/ ${state.totalRounds} round`;
+                        document.getElementById("time-label").textContent =
+                            seg.phase === "rest" ? "rest" : "lavoro";
+                    } else {
+                        roundBox.classList.add("hidden");
+                        dividerBox.classList.add("hidden");
 
-document.getElementById('btn-pause').addEventListener('click', () => {
-  if (!state) return;
-  state.paused = !state.paused;
-  if (!state.paused) state.lastTick = performance.now();
-  document.getElementById('btn-pause').textContent = state.paused ? '▶ Riprendi' : '⏸ Pausa';
-});
+                        if (state.mode === "amrap") {
+                            modifiersZone.classList.remove("visible"); // Nascosto in AMRAP
+                            timecapSubinfo.classList.remove("visible");
+                            progressWrap.classList.remove("hidden");
+                            document.getElementById("time-label").textContent =
+                                "tempo rimanente";
+                        } else {
+                            modifiersZone.classList.add("visible"); // Visibile solo in FOR TIME
+                            timecapSubinfo.classList.add("visible");
+                            document.getElementById(
+                                "timecap-target-val",
+                            ).textContent = formatSecondsToMMSS(seg.duration);
+                            progressWrap.classList.add("hidden");
+                            document.getElementById("time-label").textContent =
+                                "tempo trascorso";
+                        }
+                    }
+                }
 
-document.getElementById('btn-stop').addEventListener('click', () => { 
-  clearInterval(interval); 
-  releaseWakeLock(); 
-  state = null; 
-  showSetup(); 
-});
+                document.getElementById("time-val").textContent =
+                    formatSecondsToMMSS(displaySeconds);
 
-document.getElementById('btn-done').addEventListener('click', () => { 
-  clearInterval(interval); 
-  releaseWakeLock(); 
-  state = null; 
-  showSetup(); 
-});
+                let pct = (state.remaining / seg.duration) * 100;
+                document.getElementById("progress-bar").style.width =
+                    Math.max(0, pct) + "%";
+                document.body.className = "phase-" + seg.phase;
+            }
 
-loadConfig();
-</script>
-</body>
+            function showActive() {
+                document.getElementById("setup-screen").style.display = "none";
+                document
+                    .getElementById("active-screen")
+                    .classList.add("visible");
+            }
+
+            function showSetup() {
+                document.getElementById("setup-screen").style.display = "";
+                document
+                    .getElementById("active-screen")
+                    .classList.remove("visible");
+                document.body.className = "";
+                document
+                    .getElementById("finished-overlay")
+                    .classList.remove("visible");
+            }
+
+            document
+                .getElementById("btn-apply")
+                .addEventListener("click", setupSequenceStage);
+
+            document
+                .getElementById("btn-active-start")
+                .addEventListener("click", startRunningWorkout);
+
+            document
+                .getElementById("btn-pause")
+                .addEventListener("click", () => {
+                    if (!state) return;
+                    state.paused = !state.paused;
+                    if (!state.paused) state.lastTick = performance.now();
+                    document.getElementById("btn-pause").textContent =
+                        state.paused ? "▶ Riprendi" : "⏸ Pausa";
+                });
+
+            document
+                .getElementById("btn-stop")
+                .addEventListener("click", () => {
+                    clearInterval(interval);
+                    releaseWakeLock();
+                    state = null;
+                    showSetup();
+                });
+
+            document
+                .getElementById("btn-done")
+                .addEventListener("click", () => {
+                    clearInterval(interval);
+                    releaseWakeLock();
+                    state = null;
+                    showSetup();
+                });
+
+            loadConfig();
+        </script>
+    </body>
 </html>
