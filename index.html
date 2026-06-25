@@ -736,7 +736,6 @@
                             type="number"
                             id="cfg-warning"
                             min="0"
-                            max="30"
                             value="5"
                             readonly
                         />
@@ -1123,6 +1122,9 @@
                             );
                             roundTimes[idx] = sanitizedSec;
                             input.value = formatSecondsToMMSS(sanitizedSec);
+
+                            // Controllo di salvaguardia: il warning non deve superare il tempo del set appena modificato
+                            sanitizeWarningAgainstRoundTimes();
                             updateSummary();
                         };
                         input.addEventListener("blur", handleSingleBlur);
@@ -1135,6 +1137,7 @@
 
             function modifyRoundTime(idx, delta) {
                 roundTimes[idx] = Math.max(5, (roundTimes[idx] || 40) + delta);
+                sanitizeWarningAgainstRoundTimes();
                 buildRoundInputs();
             }
 
@@ -1149,6 +1152,10 @@
                         isWork,
                     );
                     setRawValue(field, sanitizedSec);
+
+                    if (field === "work") {
+                        sanitizeWarningAgainstRoundTimes();
+                    }
                     updateSummary();
                 };
                 input.addEventListener("blur", handleMainBlur);
@@ -1170,6 +1177,7 @@
                             getRawValue("work") || DEFAULTS.work;
                         roundTimes[roundTimes.length - 1] = standardValue;
                     }
+                    sanitizeWarningAgainstRoundTimes();
                     buildRoundInputs();
                 });
 
@@ -1179,19 +1187,22 @@
                     let currentRounds = roundTimes.length;
                     if (currentRounds <= 1) return;
                     syncRoundsArray(currentRounds - 1);
+                    sanitizeWarningAgainstRoundTimes();
                     buildRoundInputs();
                 });
 
+            // Incremento e decremento del Warning senza il tetto massimo dei 30 secondi
             document
                 .getElementById("btn-warning-plus")
                 .addEventListener("click", () => {
                     const input = document.getElementById("cfg-warning");
-                    input.value = Math.min(
-                        30,
-                        (parseInt(input.value) || 0) + 1,
-                    );
+                    let currentWarning = (parseInt(input.value) || 0) + 1;
+
+                    input.value = currentWarning;
+                    sanitizeWarningAgainstRoundTimes();
                     updateSummary();
                 });
+
             document
                 .getElementById("btn-warning-minus")
                 .addEventListener("click", () => {
@@ -1200,9 +1211,36 @@
                     updateSummary();
                 });
 
+            // Funzione centrale di controllo per fare in modo che il warning si abbassi
+            // automaticamente se supera la durata minima di lavoro configurata
+            function sanitizeWarningAgainstRoundTimes() {
+                const warningInput = document.getElementById("cfg-warning");
+                let currentWarning = parseInt(warningInput.value) || 0;
+
+                let maxAllowedWarning = Infinity;
+                if (currentMode === "hiit") {
+                    if (
+                        document.getElementById("cfg-advanced-toggle").checked
+                    ) {
+                        // Se i set sono personalizzati, il warning massimo è dettato dal set più corto
+                        maxAllowedWarning = Math.min(...roundTimes);
+                    } else {
+                        maxAllowedWarning =
+                            getRawValue("work") || DEFAULTS.work;
+                    }
+                }
+
+                if (currentWarning > maxAllowedWarning) {
+                    warningInput.value = maxAllowedWarning;
+                }
+            }
+
             document
                 .getElementById("cfg-advanced-toggle")
-                .addEventListener("change", toggleAdvancedMode);
+                .addEventListener("change", () => {
+                    toggleAdvancedMode();
+                    sanitizeWarningAgainstRoundTimes();
+                });
 
             function updateSummary() {
                 const prepare = getRawValue("prepare");
@@ -1255,6 +1293,9 @@
                     if (field !== "work" && newSec < 0) newSec = 0;
 
                     setRawValue(field, newSec);
+                    if (field === "work") {
+                        sanitizeWarningAgainstRoundTimes();
+                    }
                     updateSummary();
                 });
             });
@@ -1618,13 +1659,13 @@
                         dividerBox.classList.add("hidden");
 
                         if (state.mode === "amrap") {
-                            modifiersZone.classList.remove("visible"); // Nascosto in AMRAP
+                            modifiersZone.classList.remove("visible");
                             timecapSubinfo.classList.remove("visible");
                             progressWrap.classList.remove("hidden");
                             document.getElementById("time-label").textContent =
                                 "tempo rimanente";
                         } else {
-                            modifiersZone.classList.add("visible"); // Visibile solo in FOR TIME
+                            modifiersZone.classList.add("visible");
                             timecapSubinfo.classList.add("visible");
                             document.getElementById(
                                 "timecap-target-val",
