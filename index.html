@@ -36,7 +36,7 @@
                 <div class="config-row" id="row-rounds">
                     <label>
                         <span class="label-main">Round totali</span>
-                        Numero di round totali
+                        Numero di round totali (scrivibile da tastiera)
                     </label>
                     <div class="stepper">
                         <button id="btn-round-minus">−</button>
@@ -45,8 +45,7 @@
                             id="cfg-rounds"
                             min="1"
                             max="30"
-                            value="8"
-                            readonly
+                            value="10"
                         />
                         <button id="btn-round-plus">+</button>
                     </div>
@@ -71,19 +70,15 @@
 
                 <div class="config-row" id="row-standard-work">
                     <label>
-                        <span class="label-main" id="lbl-work-main"
-                            >Durata round</span
-                        >
-                        <span id="lbl-work-sub"
-                            >Tempo di lavoro (uguale per tutti i round)</span
-                        >
+                        <span class="label-main" id="lbl-work-main">Durata round</span>
+                        <span id="lbl-work-sub">Tempo di lavoro (uguale per tutti i round)</span>
                     </label>
                     <div class="stepper">
                         <button data-field="work" data-delta="-5">−</button>
                         <input
                             type="text"
                             id="cfg-work"
-                            data-value="40"
+                            data-value="20"
                             inputmode="numeric"
                         />
                         <button data-field="work" data-delta="5">+</button>
@@ -109,15 +104,15 @@
 
                 <div class="config-row" id="row-rest">
                     <label>
-                        <span class="label-main">Rest</span>
-                        Recupero tra i round
+                        <span class="label-main">Rest standard</span>
+                        Recupero tra i round standard
                     </label>
                     <div class="stepper">
                         <button data-field="rest" data-delta="-5">−</button>
                         <input
                             type="text"
                             id="cfg-rest"
-                            data-value="20"
+                            data-value="10"
                             inputmode="numeric"
                         />
                         <button data-field="rest" data-delta="5">+</button>
@@ -125,9 +120,10 @@
                 </div>
             </div>
 
+            <!-- TOGGLE TEMPI DIVERSI PER SET (TEAL STYLE) -->
             <div class="toggle-row" id="row-toggle-advanced">
                 <label class="toggle-label-wrap" for="cfg-advanced-toggle">
-                    <span>Imposta tempi diversi per ogni set</span>
+                    <span style="color:var(--advanced-sets);">Imposta tempi diversi per ogni set</span>
                     <div class="switch">
                         <input type="checkbox" id="cfg-advanced-toggle" />
                         <span class="slider"></span>
@@ -135,17 +131,70 @@
                 </label>
             </div>
 
+            <!-- OPZIONI TEMPI DIVERSI (COMPARE SUBITO SOTTO IL TOGGLE RELATIVO) -->
             <div
                 class="rounds-list-container"
                 id="rounds-inputs-container-wrap"
             >
-                <h3>Personalizza durata singoli Set (mm:ss)</h3>
+                <h3 style="color:var(--advanced-sets);">Personalizza durata singoli Set (mm:ss)</h3>
                 <div class="rounds-list" id="rounds-inputs-container"></div>
+            </div>
+
+            <!-- TOGGLE RECUPERI EXTRA (PURPLE STYLE) -->
+            <div class="toggle-row" id="row-toggle-extra-rest">
+                <label class="toggle-label-wrap" for="cfg-extra-rest-toggle">
+                    <span style="color:var(--extra-rest);">Inserisci recuperi extra programmati</span>
+                    <div class="switch">
+                        <input type="checkbox" id="cfg-extra-rest-toggle" checked />
+                        <span class="slider"></span>
+                    </div>
+                </label>
+            </div>
+
+            <!-- OPZIONI RECUPERI EXTRA (COMPARE SUBITO SOTTO IL TOGGLE RELATIVO) -->
+            <div id="extra-rest-inputs-container-wrap">
+                <!-- RIGA: REST EXTRA (DURATA) -->
+                <div class="config-row" id="row-extra-rest">
+                    <label>
+                        <span class="label-main" style="color:var(--extra-rest);">Rest Extra</span>
+                        Durata del recupero lungo speciale (mm:ss)
+                    </label>
+                    <div class="stepper">
+                        <button data-field="extraRest" data-delta="-5">−</button>
+                        <input
+                            type="text"
+                            id="cfg-extraRest"
+                            data-value="40"
+                            inputmode="numeric"
+                        />
+                        <button data-field="extraRest" data-delta="5">+</button>
+                    </div>
+                </div>
+
+                <!-- RIGA: FREQUENZA REST EXTRA -->
+                <div class="config-row" id="row-extra-rest-freq">
+                    <label>
+                        <span class="label-main" style="color:var(--extra-rest);">Frequenza Rest Extra</span>
+                        Inserisci un Rest Extra ogni X round di lavoro
+                    </label>
+                    <div class="stepper">
+                        <button id="btn-extra-rest-freq-minus">−</button>
+                        <input
+                            type="number"
+                            id="cfg-extraRestFreq"
+                            min="0"
+                            max="30"
+                            value="5"
+                            readonly
+                        />
+                        <button id="btn-extra-rest-freq-plus">+</button>
+                    </div>
+                </div>
             </div>
 
             <div class="summary-card" id="row-summary">
                 <div class="summary-stat">
-                    <div class="val" id="sum-rounds">8</div>
+                    <div class="val" id="sum-rounds">10</div>
                     <div class="lbl">Round</div>
                 </div>
                 <div class="summary-stat">
@@ -167,7 +216,7 @@
 
             <div class="phase-badge" id="phase-badge">PREPARE</div>
 
-            <!-- Standard Display (Usato in HIIT, TABATA, EMOM, AMRAP, FOR TIME) -->
+            <!-- Standard Display -->
             <div class="main-display" id="main-display-standard">
                 <div class="round-display" id="active-round-box">
                     <div class="round-num" id="round-num">1</div>

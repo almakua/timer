@@ -1,10 +1,10 @@
 let currentMode = "hiit";
-let roundTimes = [40, 40, 40, 40, 40, 40, 40, 40];
+let roundTimes = [20, 20, 20, 20, 20, 20, 20, 20, 20, 20];
 let originalBaseTimes = [];
-const DEFAULTS = { prepare: 10, work: 40, warning: 5, rest: 20 };
+const DEFAULTS = { prepare: 10, work: 20, warning: 5, rest: 10, extraRest: 40, extraRestFreq: 5 };
 
 const modeCacheValues = {
-    hiit: { work: 40 },
+    hiit: { work: 20 },
     tabata: { work: 20 },
     emom: { work: 60 },
     amrap: { work: 1200 },
@@ -88,6 +88,8 @@ function adaptUIForMode() {
     const rowWork = document.getElementById("row-standard-work");
     const rowWarning = document.getElementById("row-warning");
     const rowRest = document.getElementById("row-rest");
+    const rowToggleExtraRest = document.getElementById("row-toggle-extra-rest");
+    const extraRestWrap = document.getElementById("extra-rest-inputs-container-wrap");
     const rowToggle = document.getElementById("row-toggle-advanced");
     const rowSummary = document.getElementById("row-summary");
     const lblWorkMain = document.getElementById("lbl-work-main");
@@ -99,6 +101,7 @@ function adaptUIForMode() {
     rowWork.classList.remove("hidden");
     rowWarning.classList.remove("hidden");
     rowRest.classList.remove("hidden");
+    rowToggleExtraRest.classList.remove("hidden");
     rowToggle.classList.remove("hidden");
     rowSummary.classList.remove("hidden");
 
@@ -106,63 +109,72 @@ function adaptUIForMode() {
         setRawValue("work", modeCacheValues.hiit.work);
         lblWorkMain.textContent = "Durata round";
         lblWorkSub.textContent = "Tempo di lavoro (uguale per tutti i round)";
+        rowToggleExtraRest.classList.remove("hidden");
         toggleAdvancedMode();
-    } else if (currentMode === "tabata") {
-        // Tabata: 8 round, prepare 10s. Espone solo: durata round, warning e rest
-        rowRounds.classList.add("hidden");
-        rowPrepare.classList.add("hidden");
-        rowToggle.classList.add("hidden");
-        document.getElementById("rounds-inputs-container-wrap").classList.remove("visible");
-        
-        setRawValue("work", modeCacheValues.tabata.work);
-        lblWorkMain.textContent = "Durata Round (Lavoro)";
-        lblWorkSub.textContent = "Tempo di attività per ciascun set (Tabata)";
-        updateSummary();
-    } else if (currentMode === "emom") {
-        // EMOM: rest=0s, work=60s. Espone solo: round totali, prepare e warning
-        rowWork.classList.add("hidden");
-        rowRest.classList.add("hidden");
-        rowToggle.classList.add("hidden");
-        document.getElementById("rounds-inputs-container-wrap").classList.remove("visible");
-        
-        lblWorkMain.textContent = "Tempo di Lavoro";
-        lblWorkSub.textContent = "Preimpostato a 1:00 per ciascun minuto";
-        updateSummary();
-    } else if (currentMode === "amrap") {
-        rowRounds.classList.add("hidden");
-        rowWarning.classList.add("hidden");
-        rowRest.classList.add("hidden");
-        rowToggle.classList.add("hidden");
-        rowSummary.classList.add("hidden");
-        document.getElementById("rounds-inputs-container-wrap").classList.remove("visible");
-        
-        setRawValue("work", modeCacheValues.amrap.work);
-        lblWorkMain.textContent = "Durata totale AMRAP";
-        lblWorkSub.textContent = "Tempo totale limite dell'allenamento";
-        updateSummary();
-    } else if (currentMode === "fortime") {
-        rowRounds.classList.add("hidden");
-        rowWarning.classList.add("hidden");
-        rowRest.classList.add("hidden");
-        rowToggle.classList.add("hidden");
-        rowSummary.classList.add("hidden");
-        document.getElementById("rounds-inputs-container-wrap").classList.remove("visible");
-        
-        setRawValue("work", modeCacheValues.fortime.work);
-        lblWorkMain.textContent = "Time Cap (Massimo)";
-        lblWorkSub.textContent = "Interruzione forzata dopo questo tempo";
-        updateSummary();
+        toggleExtraRestMode();
+    } else {
+        rowToggleExtraRest.classList.add("hidden");
+        extraRestWrap.style.display = "none";
+
+        if (currentMode === "tabata") {
+            rowRounds.classList.add("hidden");
+            rowPrepare.classList.add("hidden");
+            rowToggle.classList.add("hidden");
+            document.getElementById("rounds-inputs-container-wrap").classList.remove("visible");
+            
+            setRawValue("work", modeCacheValues.tabata.work);
+            lblWorkMain.textContent = "Durata Round (Lavoro)";
+            lblWorkSub.textContent = "Tempo di attività per ciascun set (Tabata)";
+            updateSummary();
+        } else if (currentMode === "emom") {
+            rowWork.classList.add("hidden");
+            rowRest.classList.add("hidden");
+            rowToggle.classList.add("hidden");
+            document.getElementById("rounds-inputs-container-wrap").classList.remove("visible");
+            
+            lblWorkMain.textContent = "Tempo di Lavoro";
+            lblWorkSub.textContent = "Preimpostato a 1:00 per ciascun minuto";
+            updateSummary();
+        } else if (currentMode === "amrap") {
+            rowRounds.classList.add("hidden");
+            rowWarning.classList.add("hidden");
+            rowRest.classList.add("hidden");
+            rowToggle.classList.add("hidden");
+            rowSummary.classList.add("hidden");
+            document.getElementById("rounds-inputs-container-wrap").classList.remove("visible");
+            
+            setRawValue("work", modeCacheValues.amrap.work);
+            lblWorkMain.textContent = "Durata totale AMRAP";
+            lblWorkSub.textContent = "Tempo totale limite dell'allenamento";
+            updateSummary();
+        } else if (currentMode === "fortime") {
+            rowRounds.classList.add("hidden");
+            rowWarning.classList.add("hidden");
+            rowRest.classList.add("hidden");
+            rowToggle.classList.add("hidden");
+            rowSummary.classList.add("hidden");
+            document.getElementById("rounds-inputs-container-wrap").classList.remove("visible");
+            
+            setRawValue("work", modeCacheValues.fortime.work);
+            lblWorkMain.textContent = "Time Cap (Massimo)";
+            lblWorkSub.textContent = "Interruzione forzata dopo questo tempo";
+            updateSummary();
+        }
     }
 }
 
 function loadConfig() {
-    const saved = localStorage.getItem("hiit-config-v11");
+    const saved = localStorage.getItem("hiit-config-v12");
     if (!saved) {
         setRawValue("prepare", DEFAULTS.prepare);
         setRawValue("work", DEFAULTS.work);
         setRawValue("warning", DEFAULTS.warning);
         setRawValue("rest", DEFAULTS.rest);
-        syncRoundsArray(parseInt(document.getElementById("cfg-rounds").value));
+        setRawValue("extraRest", DEFAULTS.extraRest);
+        document.getElementById("cfg-extraRestFreq").value = DEFAULTS.extraRestFreq;
+        document.getElementById("cfg-extra-rest-toggle").checked = true;
+        document.getElementById("cfg-rounds").value = 10;
+        syncRoundsArray(10);
         adaptUIForMode();
         return;
     }
@@ -176,6 +188,10 @@ function loadConfig() {
         setRawValue("work", parsed.work ?? DEFAULTS.work);
         setRawValue("warning", parsed.warning ?? DEFAULTS.warning);
         setRawValue("rest", parsed.rest ?? DEFAULTS.rest);
+        setRawValue("extraRest", parsed.extraRest ?? DEFAULTS.extraRest);
+        document.getElementById("cfg-extraRestFreq").value = parsed.extraRestFreq ?? DEFAULTS.extraRestFreq;
+        document.getElementById("cfg-extra-rest-toggle").checked = parsed.extraRestActive ?? true;
+        document.getElementById("cfg-rounds").value = parsed.rounds ?? 10;
         document.getElementById("cfg-advanced-toggle").checked = parsed.advancedMode ?? false;
         if (parsed.modeCacheValues) Object.assign(modeCacheValues, parsed.modeCacheValues);
         if (Array.isArray(parsed.roundTimes) && parsed.roundTimes.length > 0) {
@@ -194,11 +210,15 @@ function saveConfig() {
         work: getRawValue("work"),
         warning: getRawValue("warning"),
         rest: getRawValue("rest"),
+        extraRest: getRawValue("extraRest"),
+        extraRestFreq: parseInt(document.getElementById("cfg-extraRestFreq").value) || 0,
+        extraRestActive: document.getElementById("cfg-extra-rest-toggle").checked,
+        rounds: parseInt(document.getElementById("cfg-rounds").value) || 10,
         advancedMode: document.getElementById("cfg-advanced-toggle").checked,
         roundTimes: roundTimes,
         modeCacheValues: modeCacheValues,
     };
-    localStorage.setItem("hiit-config-v11", JSON.stringify(cfg));
+    localStorage.setItem("hiit-config-v12", JSON.stringify(cfg));
 }
 
 function getRawValue(idPart) {
@@ -238,6 +258,19 @@ function toggleAdvancedMode() {
         roundTimes = Array(totalRounds).fill(standardValue);
     }
     buildRoundInputs();
+}
+
+function toggleExtraRestMode() {
+    if (currentMode !== "hiit") return;
+    const isExtraRestActive = document.getElementById("cfg-extra-rest-toggle").checked;
+    const wrap = document.getElementById("extra-rest-inputs-container-wrap");
+
+    if (isExtraRestActive) {
+        wrap.style.display = "grid";
+    } else {
+        wrap.style.display = "none";
+    }
+    updateSummary();
 }
 
 function buildRoundInputs() {
@@ -289,11 +322,11 @@ function modifyRoundTime(idx, delta) {
     buildRoundInputs();
 }
 
-["prepare", "work", "rest", "warning"].forEach((field) => {
+["prepare", "work", "rest", "warning", "extraRest"].forEach((field) => {
     const input = document.getElementById("cfg-" + field);
     const handleMainBlur = () => {
         const def = DEFAULTS[field];
-        const isWork = field === "work" || field === "warning";
+        const isWork = field === "work" || field === "warning" || field === "extraRest";
         const sanitizedSec = parseAndSanitizeTimeToSeconds(input.value, def, isWork);
         setRawValue(field, sanitizedSec);
 
@@ -308,24 +341,68 @@ function modifyRoundTime(idx, delta) {
     });
 });
 
-document.getElementById("btn-round-plus").addEventListener("click", () => {
-    let currentRounds = roundTimes.length;
-    if (currentRounds >= 30) return;
-    syncRoundsArray(currentRounds + 1);
-    if (!document.getElementById("cfg-advanced-toggle").checked) {
-        const standardValue = getRawValue("work") || DEFAULTS.work;
-        roundTimes[roundTimes.length - 1] = standardValue;
-    }
+// Input diretto del numero di round totali
+const roundsInput = document.getElementById("cfg-rounds");
+roundsInput.addEventListener("blur", () => {
+    let val = parseInt(roundsInput.value) || 8;
+    if (val < 1) val = 1;
+    if (val > 30) val = 30;
+    roundsInput.value = val;
+    
+    syncRoundsArray(val);
     sanitizeWarningAgainstRoundTimes();
-    buildRoundInputs();
+    if (document.getElementById("cfg-advanced-toggle").checked) {
+        buildRoundInputs();
+    }
+    updateSummary();
+});
+roundsInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") roundsInput.blur();
+});
+
+document.getElementById("btn-round-plus").addEventListener("click", () => {
+    const input = document.getElementById("cfg-rounds");
+    let val = parseInt(input.value) || 8;
+    if (val < 30) {
+        val++;
+        input.value = val;
+        syncRoundsArray(val);
+        sanitizeWarningAgainstRoundTimes();
+        if (document.getElementById("cfg-advanced-toggle").checked) {
+            buildRoundInputs();
+        }
+        updateSummary();
+    }
 });
 
 document.getElementById("btn-round-minus").addEventListener("click", () => {
-    let currentRounds = roundTimes.length;
-    if (currentRounds <= 1) return;
-    syncRoundsArray(currentRounds - 1);
-    sanitizeWarningAgainstRoundTimes();
-    buildRoundInputs();
+    const input = document.getElementById("cfg-rounds");
+    let val = parseInt(input.value) || 8;
+    if (val > 1) {
+        val--;
+        input.value = val;
+        syncRoundsArray(val);
+        sanitizeWarningAgainstRoundTimes();
+        if (document.getElementById("cfg-advanced-toggle").checked) {
+            buildRoundInputs();
+        }
+        updateSummary();
+    }
+});
+
+// Incremento / Decremento frequenza Rest Extra
+document.getElementById("btn-extra-rest-freq-plus").addEventListener("click", () => {
+    const input = document.getElementById("cfg-extraRestFreq");
+    let val = parseInt(input.value) || 0;
+    if (val < 30) input.value = val + 1;
+    updateSummary();
+});
+
+document.getElementById("btn-extra-rest-freq-minus").addEventListener("click", () => {
+    const input = document.getElementById("cfg-extraRestFreq");
+    let val = parseInt(input.value) || 0;
+    if (val > 0) input.value = val - 1;
+    updateSummary();
 });
 
 function sanitizeWarningAgainstRoundTimes() {
@@ -354,16 +431,24 @@ document.getElementById("cfg-advanced-toggle").addEventListener("change", () => 
     sanitizeWarningAgainstRoundTimes();
 });
 
+document.getElementById("cfg-extra-rest-toggle").addEventListener("change", () => {
+    toggleExtraRestMode();
+});
+
 function updateSummary() {
     let prepare = 10;
     let rest = 20;
     let totalRounds = 8;
     let workTotal = 0;
+    let restTotal = 0;
 
     if (currentMode === "hiit") {
         prepare = getRawValue("prepare");
         rest = getRawValue("rest");
-        totalRounds = roundTimes.length;
+        const extraRest = getRawValue("extraRest");
+        const extraRestFreq = parseInt(document.getElementById("cfg-extraRestFreq").value) || 0;
+        const isExtraRestActive = document.getElementById("cfg-extra-rest-toggle").checked;
+        totalRounds = parseInt(document.getElementById("cfg-rounds").value) || 10;
 
         if (document.getElementById("cfg-advanced-toggle").checked) {
             workTotal = roundTimes.reduce((a, b) => a + b, 0);
@@ -372,26 +457,34 @@ function updateSummary() {
             workTotal = totalRounds * standardValue;
             roundTimes = Array(totalRounds).fill(standardValue);
         }
+
+        // Calcolo dei tempi di recupero (rest standard e rest extra)
+        for (let rNumber = 1; rNumber < totalRounds; rNumber++) {
+            const isExtraRestRound = (isExtraRestActive && extraRestFreq > 0 && rNumber % extraRestFreq === 0);
+            const activeRestDuration = isExtraRestRound && extraRest > 0 ? extraRest : rest;
+            restTotal += activeRestDuration;
+        }
     } else if (currentMode === "tabata") {
         prepare = 10;
         rest = getRawValue("rest");
         totalRounds = 8;
         const workTime = getRawValue("work") || 20;
         workTotal = totalRounds * workTime;
+        restTotal = totalRounds > 1 ? (totalRounds - 1) * rest : 0;
     } else if (currentMode === "emom") {
         prepare = getRawValue("prepare");
         rest = 0;
         totalRounds = parseInt(document.getElementById("cfg-rounds").value) || 10;
         const workTime = 60;
         workTotal = totalRounds * workTime;
+        restTotal = 0;
     } else if (currentMode === "amrap" || currentMode === "fortime") {
         prepare = getRawValue("prepare");
         workTotal = getRawValue("work");
         totalRounds = 1;
-        rest = 0;
+        restTotal = 0;
     }
 
-    const restTotal = (currentMode === "hiit" || currentMode === "tabata") && totalRounds > 1 ? (totalRounds - 1) * rest : 0;
     const totalDuration = prepare + workTotal + restTotal;
 
     document.getElementById("sum-rounds").textContent = totalRounds;
@@ -415,7 +508,8 @@ document.querySelectorAll("[data-field]").forEach((btn) => {
 
         if (field === "work" && newSec < 5) newSec = 5;
         if (field === "warning" && newSec < 0) newSec = 0;
-        if (field !== "work" && field !== "warning" && newSec < 0) newSec = 0;
+        if (field === "extraRest" && newSec < 0) newSec = 0;
+        if (field !== "work" && field !== "warning" && field !== "extraRest" && newSec < 0) newSec = 0;
 
         setRawValue(field, newSec);
         if (field === "work" || field === "warning") {
@@ -486,16 +580,21 @@ function setupSequenceStage() {
     const seq = [];
     let prepare = 10;
     let warning = 5;
-    let rest = 20;
-    let rounds = 8;
+    let rest = 10;
+    let extraRest = 0;
+    let extraRestFreq = 0;
+    let rounds = 10;
 
     originalBaseTimes = [];
 
     if (currentMode === "hiit") {
         prepare = getRawValue("prepare");
         rest = getRawValue("rest");
+        extraRest = getRawValue("extraRest");
+        extraRestFreq = parseInt(document.getElementById("cfg-extraRestFreq").value) || 0;
+        const isExtraRestActive = document.getElementById("cfg-extra-rest-toggle").checked;
         warning = getRawValue("warning");
-        rounds = roundTimes.length;
+        rounds = parseInt(document.getElementById("cfg-rounds").value) || 10;
         
         if (prepare > 0) {
             seq.push({ phase: "prepare", duration: prepare, round: null });
@@ -505,9 +604,19 @@ function setupSequenceStage() {
             const rNumber = index + 1;
             seq.push({ phase: "work", duration: wTime, round: rNumber });
             originalBaseTimes.push(wTime);
-            if (rNumber < roundTimes.length && rest > 0) {
-                seq.push({ phase: "rest", duration: rest, round: rNumber });
-                originalBaseTimes.push(rest);
+            
+            if (rNumber < roundTimes.length) {
+                const isExtraRestRound = (isExtraRestActive && extraRestFreq > 0 && rNumber % extraRestFreq === 0);
+                const activeRestDuration = isExtraRestRound && extraRest > 0 ? extraRest : rest;
+                
+                if (activeRestDuration > 0) {
+                    seq.push({ 
+                        phase: isExtraRestRound && extraRest > 0 ? "extraRest" : "rest", 
+                        duration: activeRestDuration, 
+                        round: rNumber 
+                    });
+                    originalBaseTimes.push(activeRestDuration);
+                }
             }
         });
     } else if (currentMode === "tabata") {
@@ -579,7 +688,13 @@ function setupSequenceStage() {
         if (currentMode === "hiit") {
             const isAdvanced = document.getElementById("cfg-advanced-toggle").checked;
             document.getElementById("rcp-work").textContent = isAdvanced ? "Misto" : `${getRawValue("work")}s`;
-            document.getElementById("rcp-rest").textContent = `${rest}s`;
+            
+            let restText = `${rest}s`;
+            const isExtraRestActive = document.getElementById("cfg-extra-rest-toggle").checked;
+            if (isExtraRestActive && extraRestFreq > 0 && extraRest > 0) {
+                restText += ` (+${extraRest}s ogni ${extraRestFreq})`;
+            }
+            document.getElementById("rcp-rest").textContent = restText;
         } else if (currentMode === "tabata") {
             document.getElementById("rcp-work").textContent = `${getRawValue("work")}s`;
             document.getElementById("rcp-rest").textContent = `${rest}s`;
@@ -743,6 +858,8 @@ function renderActive() {
         if (state.mode === "amrap") phaseText = "AMRAP";
         else if (state.mode === "fortime") phaseText = "FOR TIME";
         else if (state.mode === "emom") phaseText = "EMOM";
+    } else if (seg.phase === "extraRest") {
+        phaseText = "REST EXTRA";
     }
     badge.textContent = phaseText;
 
@@ -773,7 +890,11 @@ function renderActive() {
 
             document.getElementById("round-num").textContent = seg.round;
             document.getElementById("round-label").textContent = `/ ${state.totalRounds} round`;
-            document.getElementById("time-label").textContent = seg.phase === "rest" ? "rest" : "lavoro";
+            
+            let timeLabelText = "lavoro";
+            if (seg.phase === "rest") timeLabelText = "rest standard";
+            else if (seg.phase === "extraRest") timeLabelText = "rest extra";
+            document.getElementById("time-label").textContent = timeLabelText;
         } else {
             roundBox.classList.add("hidden");
             dividerBox.classList.add("hidden");
@@ -798,7 +919,7 @@ function renderActive() {
     let pct = (state.remaining / seg.duration) * 100;
     document.getElementById("progress-bar").style.width = Math.max(0, pct) + "%";
 
-    document.body.classList.remove("phase-prepare", "phase-work", "phase-rest");
+    document.body.classList.remove("phase-prepare", "phase-work", "phase-rest", "phase-extraRest");
     document.body.classList.add("phase-" + seg.phase);
 }
 
@@ -811,7 +932,7 @@ function showSetup() {
     document.getElementById("setup-screen").style.display = "";
     document.getElementById("active-screen").classList.remove("visible");
     document.getElementById("finished-overlay").classList.remove("visible");
-    document.body.classList.remove("phase-prepare", "phase-work", "phase-rest");
+    document.body.classList.remove("phase-prepare", "phase-work", "phase-rest", "phase-extraRest");
 }
 
 function togglePause() {
@@ -826,7 +947,6 @@ function togglePause() {
     document.getElementById("btn-pause").textContent = state.paused ? "▶ Riprendi" : "⏸ Pausa";
 }
 
-// ── Gestione Schermo Intero (Fullscreen) ──
 function toggleFullScreen() {
     if (!document.fullscreenElement) {
         document.documentElement.requestFullscreen().catch((err) => {
@@ -837,7 +957,6 @@ function toggleFullScreen() {
     }
 }
 
-// ── Scorciatoie da Tastiera / Telecomando clicker ──
 document.addEventListener("keydown", (e) => {
     if (document.activeElement.tagName === "INPUT") return;
 
@@ -887,7 +1006,6 @@ document.getElementById("btn-done").addEventListener("click", () => {
     showSetup();
 });
 
-// Bottone fullscreen in active screen
 document.getElementById("btn-fullscreen").addEventListener("click", toggleFullScreen);
 
 loadConfig();
