@@ -1,4 +1,5 @@
 import { createSession, updateSession, subscribeToSession } from "./sync.js";
+import { t, getLang, setLang } from "./i18n.js";
 
 let currentMode = "hiit";
 let roundTimes = [20, 20, 20, 20, 20, 20, 20, 20, 20, 20];
@@ -121,8 +122,8 @@ function adaptUIForMode() {
 
     if (currentMode === "hiit") {
         setRawValue("work", modeCacheValues.hiit.work);
-        lblWorkMain.textContent = "Durata round";
-        lblWorkSub.textContent = "Tempo di lavoro (uguale per tutti i round)";
+        lblWorkMain.textContent = t("workLabelHiit");
+        lblWorkSub.textContent = t("workSubHiit");
         rowToggleExtraRest.classList.remove("hidden");
         toggleAdvancedMode();
         toggleExtraRestMode();
@@ -137,8 +138,8 @@ function adaptUIForMode() {
             document.getElementById("rounds-inputs-container-wrap").classList.remove("visible");
 
             setRawValue("work", modeCacheValues.tabata.work);
-            lblWorkMain.textContent = "Durata Round (Lavoro)";
-            lblWorkSub.textContent = "Tempo di attività per ciascun set (Tabata)";
+            lblWorkMain.textContent = t("workLabelTabata");
+            lblWorkSub.textContent = t("workSubTabata");
             updateSummary();
         } else if (currentMode === "emom") {
             rowWork.classList.add("hidden");
@@ -146,8 +147,8 @@ function adaptUIForMode() {
             rowToggle.classList.add("hidden");
             document.getElementById("rounds-inputs-container-wrap").classList.remove("visible");
 
-            lblWorkMain.textContent = "Tempo di Lavoro";
-            lblWorkSub.textContent = "Preimpostato a 1:00 per ciascun minuto";
+            lblWorkMain.textContent = t("workLabelEmom");
+            lblWorkSub.textContent = t("workSubEmom");
             updateSummary();
         } else if (currentMode === "amrap") {
             rowRounds.classList.add("hidden");
@@ -158,8 +159,8 @@ function adaptUIForMode() {
             document.getElementById("rounds-inputs-container-wrap").classList.remove("visible");
 
             setRawValue("work", modeCacheValues.amrap.work);
-            lblWorkMain.textContent = "Durata totale AMRAP";
-            lblWorkSub.textContent = "Tempo totale limite dell'allenamento";
+            lblWorkMain.textContent = t("workLabelAmrap");
+            lblWorkSub.textContent = t("workSubAmrap");
             updateSummary();
         } else if (currentMode === "fortime") {
             rowRounds.classList.add("hidden");
@@ -170,8 +171,8 @@ function adaptUIForMode() {
             document.getElementById("rounds-inputs-container-wrap").classList.remove("visible");
 
             setRawValue("work", modeCacheValues.fortime.work);
-            lblWorkMain.textContent = "Time Cap (Massimo)";
-            lblWorkSub.textContent = "Interruzione forzata dopo questo tempo";
+            lblWorkMain.textContent = t("workLabelFortime");
+            lblWorkSub.textContent = t("workSubFortime");
             updateSummary();
         }
     }
@@ -307,7 +308,7 @@ function buildRoundInputs() {
         const row = document.createElement("div");
         row.className = "round-item";
         row.innerHTML = `
-            <span>Set ${index + 1}</span>
+            <span>${t("setLabel")} ${index + 1}</span>
             <div class="stepper">
                 <button type="button" class="btn-time-minus" data-idx="${index}">−</button>
                 <input type="text" class="cfg-single-work" data-idx="${index}" value="${formatSecondsToMMSS(time)}" inputmode="numeric" />
@@ -721,12 +722,12 @@ function setupSequenceStage() {
         document.getElementById("rcp-warning").textContent = `${warning}s`;
         if (currentMode === "hiit") {
             const isAdvanced = document.getElementById("cfg-advanced-toggle").checked;
-            document.getElementById("rcp-work").textContent = isAdvanced ? "Misto" : `${getRawValue("work")}s`;
+            document.getElementById("rcp-work").textContent = isAdvanced ? t("workMixedLabel") : `${getRawValue("work")}s`;
 
             let restText = `${rest}s`;
             const isExtraRestActive = document.getElementById("cfg-extra-rest-toggle").checked;
             if (isExtraRestActive && extraRestFreq > 0 && extraRest > 0) {
-                restText += ` (+${extraRest}s ogni ${extraRestFreq})`;
+                restText += t("recapRestExtraSuffix", { extraRest, freq: extraRestFreq });
             }
             document.getElementById("rcp-rest").textContent = restText;
         } else if (currentMode === "tabata") {
@@ -743,10 +744,10 @@ function setupSequenceStage() {
 
     document.getElementById("btn-active-start").style.display = "block";
     document.getElementById("btn-pause").style.display = "none";
-    document.getElementById("btn-pause").textContent = "⏸ Pausa";
-    document.getElementById("btn-stop").textContent = "■ Indietro / Reset";
+    document.getElementById("btn-pause").textContent = t("pauseBtn");
+    document.getElementById("btn-stop").textContent = t("stopBtn");
     document.getElementById("btn-share").style.display = "flex";
-    document.getElementById("btn-share").textContent = "📡 Condividi";
+    document.getElementById("btn-share").textContent = t("shareBtn");
     document.getElementById("share-code-badge").classList.remove("visible");
     document.getElementById("viewer-banner").classList.remove("visible");
     document.getElementById("rep-counter-panel").classList.remove("visible");
@@ -867,7 +868,7 @@ function viewerTick() {
 
 function applyRemoteData(data) {
     if (data.status === "ended") {
-        alert("Il coach ha terminato la condivisione.");
+        alert(t("alertCoachEndedSharing"));
         exitViewerMode();
         return;
     }
@@ -913,14 +914,14 @@ function finishViewer() {
     timerWorker.postMessage('stop');
     playHighBeep();
     setTimeout(playHighBeep, 400);
-    document.getElementById("finished-msg").textContent = "Il coach ha completato l'allenamento!";
+    document.getElementById("finished-msg").textContent = t("finishedViewerMsg");
     document.getElementById("finished-overlay").classList.add("visible");
 }
 
 function setViewerControlsVisibility() {
     document.getElementById("btn-active-start").style.display = "none";
     document.getElementById("btn-pause").style.display = "none";
-    document.getElementById("btn-stop").textContent = "■ Esci";
+    document.getElementById("btn-stop").textContent = t("exitBtn");
     document.getElementById("btn-share").style.display = "none";
     document.getElementById("share-code-badge").classList.remove("visible");
     document.getElementById("viewer-banner").classList.add("visible");
@@ -929,7 +930,7 @@ function setViewerControlsVisibility() {
 
 async function joinSession() {
     if (shareSession) {
-        alert("Termina prima la condivisione in corso per poter seguire un altro allenamento.");
+        alert(t("alertShareTerminateFirst"));
         return;
     }
     const input = document.getElementById("cfg-join-code");
@@ -938,7 +939,7 @@ async function joinSession() {
 
     const btn = document.getElementById("btn-join");
     btn.disabled = true;
-    btn.textContent = "Connessione...";
+    btn.textContent = t("joinBtnConnecting");
 
     try {
         const unsubscribe = await subscribeToSession(
@@ -947,10 +948,10 @@ async function joinSession() {
             (err) => {
                 console.error(err);
                 if (viewerSession) {
-                    alert("Sessione non trovata o terminata.");
+                    alert(t("alertSessionNotFound"));
                     exitViewerMode();
                 } else {
-                    alert("Codice non valido o sessione inesistente.");
+                    alert(t("alertInvalidCode"));
                 }
             },
         );
@@ -961,10 +962,10 @@ async function joinSession() {
         timerWorker.postMessage('start');
     } catch (err) {
         console.error(err);
-        alert("Impossibile connettersi: " + err.message);
+        alert(t("alertConnectFailed", { msg: err.message }));
     } finally {
         btn.disabled = false;
-        btn.textContent = "Segui";
+        btn.textContent = t("joinBtn");
     }
 }
 
@@ -1011,24 +1012,24 @@ function pushSyncUpdate(extra = {}) {
 async function startSharing() {
     if (!state || state.isViewer) return;
     if (viewerSession) {
-        alert("Esci dalla visualizzazione remota prima di condividere un tuo allenamento.");
+        alert(t("alertExitViewerFirst"));
         return;
     }
     if (shareSession) return;
 
     const btn = document.getElementById("btn-share");
     btn.disabled = true;
-    btn.textContent = "Attivazione...";
+    btn.textContent = t("shareBtnActivating");
     try {
         const { code, controllerToken } = await createSession(buildSyncPayload());
         shareSession = { code, controllerToken };
         showShareBadge(code);
     } catch (err) {
         console.error(err);
-        alert("Impossibile attivare la condivisione: " + err.message);
+        alert(t("alertShareFailed", { msg: err.message }));
     } finally {
         btn.disabled = false;
-        btn.textContent = "📡 Condividi";
+        btn.textContent = t("shareBtn");
     }
 }
 
@@ -1082,11 +1083,11 @@ function finish() {
     setTimeout(playHighBeep, 400);
 
     if (state.mode === "hiit" || state.mode === "tabata" || state.mode === "emom") {
-        document.getElementById("finished-msg").textContent = `${state.totalRounds} round completati!`;
+        document.getElementById("finished-msg").textContent = t("finishedHiit", { rounds: state.totalRounds });
     } else if (state.mode === "amrap") {
-        document.getElementById("finished-msg").textContent = `Tempo scaduto! Allenamento completato.`;
+        document.getElementById("finished-msg").textContent = t("finishedAmrap");
     } else if (state.mode === "fortime") {
-        document.getElementById("finished-msg").textContent = `Time cap raggiunto a ${formatSecondsToMMSS(Math.floor(state.elapsedInPhase))}!`;
+        document.getElementById("finished-msg").textContent = t("finishedFortime", { time: formatSecondsToMMSS(Math.floor(state.elapsedInPhase)) });
     }
     document.getElementById("finished-overlay").classList.add("visible");
 
@@ -1111,7 +1112,7 @@ function renderActive() {
         else if (state.mode === "fortime") phaseText = "FOR TIME";
         else if (state.mode === "emom") phaseText = "EMOM";
     } else if (seg.phase === "extraRest") {
-        phaseText = "REST EXTRA";
+        phaseText = t("phaseExtraRestBadge");
     }
     badge.textContent = phaseText;
 
@@ -1130,8 +1131,8 @@ function renderActive() {
 
         document.getElementById("round-num").textContent = "—";
         document.getElementById("round-label").textContent =
-            (state.mode === "hiit" || state.mode === "tabata" || state.mode === "emom") ? `${state.totalRounds} round` : "Pronto";
-        document.getElementById("time-label").textContent = "prepare";
+            (state.mode === "hiit" || state.mode === "tabata" || state.mode === "emom") ? t("roundLabelPrepare", { n: state.totalRounds }) : t("readyLabel");
+        document.getElementById("time-label").textContent = t("timeLabelPrepare");
     } else {
         if (state.mode === "hiit" || state.mode === "tabata" || state.mode === "emom") {
             roundBox.classList.remove("hidden");
@@ -1141,11 +1142,11 @@ function renderActive() {
             timecapSubinfo.classList.remove("visible");
 
             document.getElementById("round-num").textContent = seg.round;
-            document.getElementById("round-label").textContent = `/ ${state.totalRounds} round`;
+            document.getElementById("round-label").textContent = t("roundLabelActive", { n: state.totalRounds });
 
-            let timeLabelText = "lavoro";
-            if (seg.phase === "rest") timeLabelText = "rest standard";
-            else if (seg.phase === "extraRest") timeLabelText = "rest extra";
+            let timeLabelText = t("timeLabelWork");
+            if (seg.phase === "rest") timeLabelText = t("timeLabelRestStandard");
+            else if (seg.phase === "extraRest") timeLabelText = t("timeLabelRestExtra");
             document.getElementById("time-label").textContent = timeLabelText;
         } else {
             roundBox.classList.add("hidden");
@@ -1155,13 +1156,13 @@ function renderActive() {
                 modifiersZone.classList.remove("visible");
                 timecapSubinfo.classList.remove("visible");
                 progressWrap.classList.remove("hidden");
-                document.getElementById("time-label").textContent = "tempo rimanente";
+                document.getElementById("time-label").textContent = t("timeLabelRemaining");
             } else if (state.mode === "fortime") {
                 modifiersZone.classList.toggle("visible", !state.isViewer);
                 timecapSubinfo.classList.add("visible");
                 document.getElementById("timecap-target-val").textContent = formatSecondsToMMSS(seg.duration);
                 progressWrap.classList.add("hidden");
-                document.getElementById("time-label").textContent = "tempo trascorso";
+                document.getElementById("time-label").textContent = t("timeLabelElapsed");
             }
         }
     }
@@ -1189,8 +1190,8 @@ function showSetup() {
     document.getElementById("viewer-banner").classList.remove("visible");
     document.getElementById("rep-counter-panel").classList.remove("visible");
     document.getElementById("btn-share").style.display = "flex";
-    document.getElementById("btn-share").textContent = "📡 Condividi";
-    document.getElementById("btn-stop").textContent = "■ Indietro / Reset";
+    document.getElementById("btn-share").textContent = t("shareBtn");
+    document.getElementById("btn-stop").textContent = t("stopBtn");
 }
 
 function togglePause() {
@@ -1203,7 +1204,7 @@ function togglePause() {
         state.pausedElapsedSeconds = (Date.now() - state.phaseStartedAt) / 1000;
         timerWorker.postMessage('stop');
     }
-    document.getElementById("btn-pause").textContent = state.paused ? "▶ Riprendi" : "⏸ Pausa";
+    document.getElementById("btn-pause").textContent = state.paused ? t("resumeBtn") : t("pauseBtn");
     pushSyncUpdate();
 }
 
@@ -1339,19 +1340,20 @@ function renderHistoryList() {
         history = [];
     }
     if (history.length === 0) {
-        container.innerHTML = '<p class="history-empty">Nessun allenamento ancora registrato.</p>';
+        container.innerHTML = `<p class="history-empty">${t("historyEmptyMsg")}</p>`;
         return;
     }
+    const dateLocale = getLang() === "en" ? "en-GB" : "it-IT";
     container.innerHTML = history
         .map((r, idx) => {
             const d = new Date(r.date);
-            const dateLabel = d.toLocaleDateString("it-IT", { day: "2-digit", month: "2-digit", year: "numeric" });
-            const timeLabel = d.toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" });
+            const dateLabel = d.toLocaleDateString(dateLocale, { day: "2-digit", month: "2-digit", year: "numeric" });
+            const timeLabel = d.toLocaleTimeString(dateLocale, { hour: "2-digit", minute: "2-digit" });
             const roundsPart = (r.mode === "hiit" || r.mode === "tabata" || r.mode === "emom")
-                ? `${r.totalRounds} round · `
+                ? t("historyRoundsPart", { n: r.totalRounds })
                 : "";
             const reuseBtn = r.config
-                ? `<button type="button" class="history-reuse-btn" data-reuse-idx="${idx}">▶ Riusa</button>`
+                ? `<button type="button" class="history-reuse-btn" data-reuse-idx="${idx}">${t("historyReuseBtn")}</button>`
                 : "";
             return `<div class="history-item">
                 <div class="history-item-info">
@@ -1394,10 +1396,41 @@ document.getElementById("btn-history-close").addEventListener("click", () => {
     document.getElementById("history-overlay").classList.remove("visible");
 });
 document.getElementById("btn-history-clear").addEventListener("click", () => {
-    if (confirm("Cancellare tutto lo storico allenamenti?")) {
+    if (confirm(t("historyClearConfirm"))) {
         localStorage.removeItem(HISTORY_KEY);
         renderHistoryList();
     }
 });
 
+// ── Selettore Lingua ──
+function applyStaticTranslations() {
+    document.documentElement.lang = getLang();
+    document.querySelectorAll("[data-i18n]").forEach((el) => {
+        el.textContent = t(el.dataset.i18n);
+    });
+    document.querySelectorAll("[data-i18n-placeholder]").forEach((el) => {
+        el.placeholder = t(el.dataset.i18nPlaceholder);
+    });
+    document.querySelectorAll("[data-i18n-title]").forEach((el) => {
+        el.title = t(el.dataset.i18nTitle);
+    });
+}
+
+function refreshDynamicTranslations() {
+    adaptUIForMode();
+    if (document.getElementById("history-overlay").classList.contains("visible")) {
+        renderHistoryList();
+    }
+}
+
+const langSwitcher = document.getElementById("lang-switcher");
+langSwitcher.value = getLang();
+langSwitcher.addEventListener("change", () => {
+    if (setLang(langSwitcher.value)) {
+        applyStaticTranslations();
+        refreshDynamicTranslations();
+    }
+});
+
+applyStaticTranslations();
 loadConfig();

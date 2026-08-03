@@ -1,4 +1,4 @@
-const CACHE_NAME = 'hiit-timer-pro-v4';
+const CACHE_NAME = 'hiit-timer-pro-v5';
 const ASSETS = [
   './',
   './index.html',
@@ -6,6 +6,7 @@ const ASSETS = [
   './app.js',
   './sync.js',
   './firebase-config.js',
+  './i18n.js',
   './manifest.json',
   './icon.svg'
 ];

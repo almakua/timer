@@ -11,7 +11,12 @@
     </head>
     <body>
         <div id="setup-screen">
-            <button type="button" class="btn-history" id="btn-history" title="Storico allenamenti">
+            <select id="lang-switcher" class="lang-switcher" aria-label="Language / Lingua">
+                <option value="it">🇮🇹 Italiano</option>
+                <option value="en">🇬🇧 English</option>
+            </select>
+
+            <button type="button" class="btn-history" id="btn-history" data-i18n="historyBtn">
                 📜 Storico
             </button>
 
@@ -39,8 +44,8 @@
             <div class="config-grid">
                 <div class="config-row" id="row-rounds">
                     <label>
-                        <span class="label-main">Round totali</span>
-                        Numero di round totali (scrivibile da tastiera)
+                        <span class="label-main" data-i18n="roundsLabel">Round totali</span>
+                        <span data-i18n="roundsSub">Numero di round totali (scrivibile da tastiera)</span>
                     </label>
                     <div class="stepper">
                         <button id="btn-round-minus">−</button>
@@ -57,8 +62,8 @@
 
                 <div class="config-row" id="row-prepare">
                     <label>
-                        <span class="label-main">Prepare</span>
-                        Conto alla rovescia iniziale
+                        <span class="label-main" data-i18n="prepareLabel">Prepare</span>
+                        <span data-i18n="prepareSub">Conto alla rovescia iniziale</span>
                     </label>
                     <div class="stepper">
                         <button data-field="prepare" data-delta="-5">−</button>
@@ -91,8 +96,8 @@
 
                 <div class="config-row" id="row-warning">
                     <label>
-                        <span class="label-main">Warning pre-fine</span>
-                        Allarme prima della fine del blocco (mm:ss)
+                        <span class="label-main" data-i18n="warningLabel">Warning pre-fine</span>
+                        <span data-i18n="warningSub">Allarme prima della fine del blocco (mm:ss)</span>
                     </label>
                     <div class="stepper">
                         <button data-field="warning" data-delta="-5">−</button>
@@ -108,8 +113,8 @@
 
                 <div class="config-row" id="row-rest">
                     <label>
-                        <span class="label-main">Rest standard</span>
-                        Recupero tra i round standard
+                        <span class="label-main" data-i18n="restLabel">Rest standard</span>
+                        <span data-i18n="restSub">Recupero tra i round standard</span>
                     </label>
                     <div class="stepper">
                         <button data-field="rest" data-delta="-5">−</button>
@@ -127,7 +132,7 @@
             <!-- TOGGLE TEMPI DIVERSI PER SET (TEAL STYLE) -->
             <div class="toggle-row" id="row-toggle-advanced">
                 <label class="toggle-label-wrap" for="cfg-advanced-toggle">
-                    <span style="color:var(--advanced-sets);">Imposta tempi diversi per ogni set</span>
+                    <span style="color:var(--advanced-sets);" data-i18n="advancedToggleLabel">Imposta tempi diversi per ogni set</span>
                     <div class="switch">
                         <input type="checkbox" id="cfg-advanced-toggle" />
                         <span class="slider"></span>
@@ -140,14 +145,14 @@
                 class="rounds-list-container"
                 id="rounds-inputs-container-wrap"
             >
-                <h3 style="color:var(--advanced-sets);">Personalizza durata singoli Set (mm:ss)</h3>
+                <h3 style="color:var(--advanced-sets);" data-i18n="advancedTitle">Personalizza durata singoli Set (mm:ss)</h3>
                 <div class="rounds-list" id="rounds-inputs-container"></div>
             </div>
 
             <!-- TOGGLE RECUPERI EXTRA (PURPLE STYLE) -->
             <div class="toggle-row" id="row-toggle-extra-rest">
                 <label class="toggle-label-wrap" for="cfg-extra-rest-toggle">
-                    <span style="color:var(--extra-rest);">Inserisci recuperi extra programmati</span>
+                    <span style="color:var(--extra-rest);" data-i18n="extraRestToggleLabel">Inserisci recuperi extra programmati</span>
                     <div class="switch">
                         <input type="checkbox" id="cfg-extra-rest-toggle" checked />
                         <span class="slider"></span>
@@ -160,8 +165,8 @@
                 <!-- RIGA: REST EXTRA (DURATA) -->
                 <div class="config-row" id="row-extra-rest">
                     <label>
-                        <span class="label-main" style="color:var(--extra-rest);">Rest Extra</span>
-                        Durata del recupero lungo speciale (mm:ss)
+                        <span class="label-main" style="color:var(--extra-rest);" data-i18n="extraRestLabel">Rest Extra</span>
+                        <span data-i18n="extraRestSub">Durata del recupero lungo speciale (mm:ss)</span>
                     </label>
                     <div class="stepper">
                         <button data-field="extraRest" data-delta="-5">−</button>
@@ -178,8 +183,8 @@
                 <!-- RIGA: FREQUENZA REST EXTRA -->
                 <div class="config-row" id="row-extra-rest-freq">
                     <label>
-                        <span class="label-main" style="color:var(--extra-rest);">Frequenza Rest Extra</span>
-                        Inserisci un Rest Extra ogni X round di lavoro
+                        <span class="label-main" style="color:var(--extra-rest);" data-i18n="extraRestFreqLabel">Frequenza Rest Extra</span>
+                        <span data-i18n="extraRestFreqSub">Inserisci un Rest Extra ogni X round di lavoro</span>
                     </label>
                     <div class="stepper">
                         <button id="btn-extra-rest-freq-minus">−</button>
@@ -199,45 +204,46 @@
             <div class="summary-card" id="row-summary">
                 <div class="summary-stat">
                     <div class="val" id="sum-rounds">10</div>
-                    <div class="lbl">Round</div>
+                    <div class="lbl" data-i18n="summaryRoundsLabel">Round</div>
                 </div>
                 <div class="summary-stat">
                     <div class="val" id="sum-total">—</div>
-                    <div class="lbl">Durata totale</div>
+                    <div class="lbl" data-i18n="summaryTotalLabel">Durata totale</div>
                 </div>
             </div>
 
-            <button class="start-btn" id="btn-apply">✓ Applica</button>
+            <button class="start-btn" id="btn-apply" data-i18n="applyBtn">✓ Applica</button>
 
             <!-- Segui un allenamento condiviso da un altro dispositivo -->
             <div class="join-box">
-                <label class="join-box-label" for="cfg-join-code">Segui un allenamento condiviso</label>
+                <label class="join-box-label" for="cfg-join-code" data-i18n="joinLabel">Segui un allenamento condiviso</label>
                 <div class="join-box-row">
                     <input
                         type="text"
                         id="cfg-join-code"
                         placeholder="CODICE"
+                        data-i18n-placeholder="joinPlaceholder"
                         maxlength="6"
                         autocomplete="off"
                         autocapitalize="characters"
                     />
-                    <button type="button" id="btn-join">Segui</button>
+                    <button type="button" id="btn-join" data-i18n="joinBtn">Segui</button>
                 </div>
             </div>
         </div>
 
         <div id="active-screen">
             <!-- Bottone Schermo Intero per Monitor Palestra -->
-            <button type="button" class="btn-fullscreen" id="btn-fullscreen" title="Schermo Intero">
+            <button type="button" class="btn-fullscreen" id="btn-fullscreen" title="Schermo Intero" data-i18n-title="fullscreenTitle">
                 <svg viewBox="0 0 24 24">
                     <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
                 </svg>
             </button>
 
             <!-- Bottone Condividi: genera un codice per far seguire il timer da un altro dispositivo -->
-            <button type="button" class="btn-share" id="btn-share">📡 Condividi</button>
+            <button type="button" class="btn-share" id="btn-share" data-i18n="shareBtn">📡 Condividi</button>
 
-            <div class="viewer-banner" id="viewer-banner">👀 Stai seguendo in sola lettura</div>
+            <div class="viewer-banner" id="viewer-banner" data-i18n="viewerBanner">👀 Stai seguendo in sola lettura</div>
 
             <div class="phase-badge" id="phase-badge">PREPARE</div>
 
@@ -264,6 +270,7 @@
                     type="button"
                     class="extratime-btn remove"
                     id="btn-remove-extratime"
+                    data-i18n="extratimeMinus"
                 >
                     - 1 Min
                 </button>
@@ -271,6 +278,7 @@
                     type="button"
                     class="extratime-btn add"
                     id="btn-add-extratime"
+                    data-i18n="extratimePlus"
                 >
                     + 1 Min
                 </button>
@@ -281,15 +289,15 @@
             </div>
 
             <div class="hiit-recap-ticker" id="active-hiit-recap">
-                <span>Lavoro: <strong id="rcp-work">—</strong></span>
-                <span>Rest: <strong id="rcp-rest">—</strong></span>
-                <span>Round Totali: <strong id="rcp-rounds">—</strong></span>
-                <span>Warning: <strong id="rcp-warning">—</strong></span>
+                <span><span data-i18n="recapWorkLabel">Lavoro:</span> <strong id="rcp-work">—</strong></span>
+                <span><span data-i18n="recapRestLabel">Rest:</span> <strong id="rcp-rest">—</strong></span>
+                <span><span data-i18n="recapRoundsLabel">Round Totali:</span> <strong id="rcp-rounds">—</strong></span>
+                <span><span data-i18n="recapWarningLabel">Warning:</span> <strong id="rcp-warning">—</strong></span>
             </div>
 
             <!-- Contatore Rep/Giri personale: visibile solo in modalità "Segui", mai sincronizzato -->
             <div class="rep-counter-panel" id="rep-counter-panel">
-                <span class="rep-counter-label">I tuoi giri / rep</span>
+                <span class="rep-counter-label" data-i18n="repCounterLabel">I tuoi giri / rep</span>
                 <div class="stepper">
                     <button type="button" id="btn-rep-minus">−</button>
                     <span class="rep-counter-value" id="rep-counter-value">0</span>
@@ -298,38 +306,38 @@
             </div>
 
             <div class="controls">
-                <button class="ctrl-btn" id="btn-active-start">
+                <button class="ctrl-btn" id="btn-active-start" data-i18n="startBtn">
                     ▶ Inizia Allenamento
                 </button>
-                <button class="ctrl-btn" id="btn-pause" style="display: none">
+                <button class="ctrl-btn" id="btn-pause" style="display: none" data-i18n="pauseBtn">
                     ⏸ Pausa
                 </button>
-                <button class="ctrl-btn" id="btn-stop">
+                <button class="ctrl-btn" id="btn-stop" data-i18n="stopBtn">
                     ■ Indietro / Reset
                 </button>
             </div>
         </div>
 
         <div id="finished-overlay">
-            <h2>💪 Fatto!</h2>
+            <h2 data-i18n="finishedTitle">💪 Fatto!</h2>
             <p id="finished-msg">Allenamento completato</p>
-            <button id="btn-done">Ricomincia</button>
+            <button id="btn-done" data-i18n="restartBtn">Ricomincia</button>
         </div>
 
         <!-- Badge fisso col codice sessione, visibile mentre si condivide il timer -->
         <div class="share-code-badge" id="share-code-badge">
-            <span class="share-code-label">Codice</span>
+            <span class="share-code-label" data-i18n="codeLabel">Codice</span>
             <span class="share-code-value" id="share-code-value">------</span>
         </div>
 
         <!-- Modal Storico Allenamenti (solo locale, nessun account) -->
         <div class="history-overlay" id="history-overlay">
             <div class="history-panel">
-                <h2>📜 Storico allenamenti</h2>
+                <h2 data-i18n="historyModalTitle">📜 Storico allenamenti</h2>
                 <div class="history-list" id="history-list"></div>
                 <div class="history-actions">
-                    <button type="button" id="btn-history-clear">Cancella storico</button>
-                    <button type="button" id="btn-history-close">Chiudi</button>
+                    <button type="button" id="btn-history-clear" data-i18n="historyClearBtn">Cancella storico</button>
+                    <button type="button" id="btn-history-close" data-i18n="historyCloseBtn">Chiudi</button>
                 </div>
             </div>
         </div>

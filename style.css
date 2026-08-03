@@ -684,6 +684,30 @@ input:checked + .slider:before {
     letter-spacing: 0.05em;
 }
 
+/* ── SELETTORE LINGUA (Setup Screen) ── */
+.lang-switcher {
+    position: absolute;
+    top: 24px;
+    left: 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 99px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    padding: 8px 10px;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+}
+.lang-switcher:hover {
+    background: var(--border);
+}
+.lang-switcher:focus {
+    outline: 2px solid var(--btn-primary);
+    outline-offset: 2px;
+}
+
 /* ── STORICO (Setup Screen) ── */
 .btn-history {
     position: absolute;
