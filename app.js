@@ -1,3 +1,5 @@
+import { createSession, updateSession, subscribeToSession } from "./sync.js";
+
 let currentMode = "hiit";
 let roundTimes = [20, 20, 20, 20, 20, 20, 20, 20, 20, 20];
 let originalBaseTimes = [];
@@ -10,6 +12,15 @@ const modeCacheValues = {
     amrap: { work: 1200 },
     fortime: { work: 600 },
 };
+
+const MODE_LABELS = { hiit: "HIIT", tabata: "TABATA", emom: "EMOM", amrap: "AMRAP", fortime: "FOR TIME" };
+const HISTORY_KEY = "hiit-history-v1";
+const HISTORY_LIMIT = 50;
+
+// ── Stato di condivisione / visualizzazione remota ──
+let shareSession = null; // { code, controllerToken } quando QUESTO dispositivo comanda e condivide
+let viewerSession = null; // { code, unsubscribe } quando QUESTO dispositivo segue un codice altrui
+let repCounter = 0;
 
 // ── Web Worker Inline per Timer Preciso ──
 const workerCode = `
@@ -32,7 +43,10 @@ const blob = new Blob([workerCode], { type: 'application/javascript' });
 const timerWorker = new Worker(URL.createObjectURL(blob));
 
 timerWorker.onmessage = function(e) {
-    if (e.data === 'tick') {
+    if (e.data !== 'tick') return;
+    if (viewerSession) {
+        viewerTick();
+    } else {
         tick();
     }
 };
@@ -121,7 +135,7 @@ function adaptUIForMode() {
             rowPrepare.classList.add("hidden");
             rowToggle.classList.add("hidden");
             document.getElementById("rounds-inputs-container-wrap").classList.remove("visible");
-            
+
             setRawValue("work", modeCacheValues.tabata.work);
             lblWorkMain.textContent = "Durata Round (Lavoro)";
             lblWorkSub.textContent = "Tempo di attività per ciascun set (Tabata)";
@@ -131,7 +145,7 @@ function adaptUIForMode() {
             rowRest.classList.add("hidden");
             rowToggle.classList.add("hidden");
             document.getElementById("rounds-inputs-container-wrap").classList.remove("visible");
-            
+
             lblWorkMain.textContent = "Tempo di Lavoro";
             lblWorkSub.textContent = "Preimpostato a 1:00 per ciascun minuto";
             updateSummary();
@@ -142,7 +156,7 @@ function adaptUIForMode() {
             rowToggle.classList.add("hidden");
             rowSummary.classList.add("hidden");
             document.getElementById("rounds-inputs-container-wrap").classList.remove("visible");
-            
+
             setRawValue("work", modeCacheValues.amrap.work);
             lblWorkMain.textContent = "Durata totale AMRAP";
             lblWorkSub.textContent = "Tempo totale limite dell'allenamento";
@@ -154,7 +168,7 @@ function adaptUIForMode() {
             rowToggle.classList.add("hidden");
             rowSummary.classList.add("hidden");
             document.getElementById("rounds-inputs-container-wrap").classList.remove("visible");
-            
+
             setRawValue("work", modeCacheValues.fortime.work);
             lblWorkMain.textContent = "Time Cap (Massimo)";
             lblWorkSub.textContent = "Interruzione forzata dopo questo tempo";
@@ -348,7 +362,7 @@ roundsInput.addEventListener("blur", () => {
     if (val < 1) val = 1;
     if (val > 30) val = 30;
     roundsInput.value = val;
-    
+
     syncRoundsArray(val);
     sanitizeWarningAgainstRoundTimes();
     if (document.getElementById("cfg-advanced-toggle").checked) {
@@ -572,6 +586,11 @@ function releaseWakeLock() {
 }
 
 // ── Motore Sequenza Timer ──
+// Il tempo rimanente/trascorso si calcola sempre da un epoch assoluto
+// (Date.now() al momento in cui la fase corrente è iniziata), non per
+// accumulo di delta. Questo rende identico il calcolo sia in locale
+// (solo/controller) sia su un dispositivo che segue una sessione remota:
+// cambia solo la provenienza di `phaseStartedAt` (locale o da Firestore).
 let state = null;
 let workoutHasStarted = false;
 
@@ -595,7 +614,7 @@ function setupSequenceStage() {
         const isExtraRestActive = document.getElementById("cfg-extra-rest-toggle").checked;
         warning = getRawValue("warning");
         rounds = parseInt(document.getElementById("cfg-rounds").value) || 10;
-        
+
         if (prepare > 0) {
             seq.push({ phase: "prepare", duration: prepare, round: null });
             originalBaseTimes.push(prepare);
@@ -604,16 +623,16 @@ function setupSequenceStage() {
             const rNumber = index + 1;
             seq.push({ phase: "work", duration: wTime, round: rNumber });
             originalBaseTimes.push(wTime);
-            
+
             if (rNumber < roundTimes.length) {
                 const isExtraRestRound = (isExtraRestActive && extraRestFreq > 0 && rNumber % extraRestFreq === 0);
                 const activeRestDuration = isExtraRestRound && extraRest > 0 ? extraRest : rest;
-                
+
                 if (activeRestDuration > 0) {
-                    seq.push({ 
-                        phase: isExtraRestRound && extraRest > 0 ? "extraRest" : "rest", 
-                        duration: activeRestDuration, 
-                        round: rNumber 
+                    seq.push({
+                        phase: isExtraRestRound && extraRest > 0 ? "extraRest" : "rest",
+                        duration: activeRestDuration,
+                        round: rNumber
                     });
                     originalBaseTimes.push(activeRestDuration);
                 }
@@ -659,7 +678,7 @@ function setupSequenceStage() {
         prepare = getRawValue("prepare");
         const workDuration = getRawValue("work");
         rounds = 1;
-        
+
         if (prepare > 0) {
             seq.push({ phase: "prepare", duration: prepare, round: null });
             originalBaseTimes.push(prepare);
@@ -674,9 +693,13 @@ function setupSequenceStage() {
         idx: 0,
         remaining: seq[0].duration,
         elapsedInPhase: 0,
-        beepsFired: new Set(),
-        lastTick: performance.now(),
+        phaseStartedAt: null,
+        paused: false,
+        pausedElapsedSeconds: 0,
+        warning,
         totalRounds: rounds,
+        beepsFired: new Set(),
+        isViewer: false,
     };
 
     workoutHasStarted = false;
@@ -688,7 +711,7 @@ function setupSequenceStage() {
         if (currentMode === "hiit") {
             const isAdvanced = document.getElementById("cfg-advanced-toggle").checked;
             document.getElementById("rcp-work").textContent = isAdvanced ? "Misto" : `${getRawValue("work")}s`;
-            
+
             let restText = `${rest}s`;
             const isExtraRestActive = document.getElementById("cfg-extra-rest-toggle").checked;
             if (isExtraRestActive && extraRestFreq > 0 && extraRest > 0) {
@@ -710,6 +733,12 @@ function setupSequenceStage() {
     document.getElementById("btn-active-start").style.display = "block";
     document.getElementById("btn-pause").style.display = "none";
     document.getElementById("btn-pause").textContent = "⏸ Pausa";
+    document.getElementById("btn-stop").textContent = "■ Indietro / Reset";
+    document.getElementById("btn-share").style.display = "flex";
+    document.getElementById("btn-share").textContent = "📡 Condividi";
+    document.getElementById("share-code-badge").classList.remove("visible");
+    document.getElementById("viewer-banner").classList.remove("visible");
+    document.getElementById("rep-counter-panel").classList.remove("visible");
 
     showActive();
     acquireWakeLock();
@@ -720,9 +749,10 @@ function startRunningWorkout() {
     workoutHasStarted = true;
     document.getElementById("btn-active-start").style.display = "none";
     document.getElementById("btn-pause").style.display = "block";
-    state.lastTick = performance.now();
+    state.phaseStartedAt = Date.now();
     state.beepsFired = new Set();
     timerWorker.postMessage('start');
+    pushSyncUpdate();
 }
 
 function onPhaseStart() {
@@ -730,36 +760,11 @@ function onPhaseStart() {
     playHighBeep();
 }
 
-function tick() {
-    if (!workoutHasStarted || (state && state.paused)) return;
-
-    const now = performance.now();
-    const delta = (now - state.lastTick) / 1000;
-    state.lastTick = now;
-
-    const seg = state.seq[state.idx];
-
-    if (state.mode === "fortime" && seg.phase === "work") {
-        state.elapsedInPhase += delta;
-        state.remaining = seg.duration - state.elapsedInPhase;
-
-        if (state.elapsedInPhase >= seg.duration) {
-            finish();
-            return;
-        }
-    } else {
-        state.remaining -= delta;
-        if (state.remaining <= 0) {
-            advancePhase();
-            return;
-        }
-    }
-
-    // Beeps acustici
+function evaluateBeeps(seg) {
     const triggerBeepVal = Math.ceil(state.remaining);
-    
+
     if ((state.mode === "hiit" || state.mode === "tabata" || state.mode === "emom") && seg.phase === "work") {
-        const warningLimit = getRawValue("warning") || 0;
+        const warningLimit = state.warning || 0;
         if (warningLimit > 0 && triggerBeepVal === warningLimit) {
             if (!state.beepsFired.has("warning-pre")) {
                 state.beepsFired.add("warning-pre");
@@ -777,7 +782,31 @@ function tick() {
             }
         }
     }
+}
 
+function tick() {
+    if (!workoutHasStarted || (state && state.paused)) return;
+
+    const seg = state.seq[state.idx];
+    const now = Date.now();
+
+    if (state.mode === "fortime" && seg.phase === "work") {
+        state.elapsedInPhase = (now - state.phaseStartedAt) / 1000;
+        state.remaining = seg.duration - state.elapsedInPhase;
+
+        if (state.elapsedInPhase >= seg.duration) {
+            finish();
+            return;
+        }
+    } else {
+        state.remaining = seg.duration - (now - state.phaseStartedAt) / 1000;
+        if (state.remaining <= 0) {
+            advancePhase();
+            return;
+        }
+    }
+
+    evaluateBeeps(seg);
     renderActive();
 }
 
@@ -788,19 +817,226 @@ function advancePhase() {
         return;
     }
 
-    const next = state.seq[state.idx];
-    state.remaining = next.duration;
+    state.phaseStartedAt = Date.now();
     state.elapsedInPhase = 0;
+    state.pausedElapsedSeconds = 0;
+    state.remaining = state.seq[state.idx].duration;
     state.beepsFired = new Set();
-    state.lastTick = performance.now();
 
     renderActive();
     onPhaseStart();
+    pushSyncUpdate();
+}
+
+// ── Visualizzazione in sola lettura di una sessione remota ──
+function viewerTick() {
+    if (!state || !state.isViewer) return;
+    const seg = state.seq[state.idx];
+
+    if (state.paused) {
+        if (state.mode === "fortime" && seg.phase === "work") {
+            state.elapsedInPhase = state.pausedElapsedSeconds || 0;
+            state.remaining = seg.duration - state.elapsedInPhase;
+        } else {
+            state.remaining = seg.duration - (state.pausedElapsedSeconds || 0);
+        }
+    } else {
+        const now = Date.now();
+        if (state.mode === "fortime" && seg.phase === "work") {
+            state.elapsedInPhase = (now - state.phaseStartedAt) / 1000;
+            state.remaining = seg.duration - state.elapsedInPhase;
+        } else {
+            state.remaining = seg.duration - (now - state.phaseStartedAt) / 1000;
+        }
+    }
+
+    evaluateBeeps(seg);
+    renderActive();
+}
+
+function applyRemoteData(data) {
+    if (data.status === "ended") {
+        alert("Il coach ha terminato la condivisione.");
+        exitViewerMode();
+        return;
+    }
+
+    state = {
+        mode: data.mode,
+        seq: data.seq,
+        idx: data.idx,
+        totalRounds: data.totalRounds,
+        warning: data.warning || 0,
+        remaining: 0,
+        elapsedInPhase: 0,
+        phaseStartedAt: data.phaseStartedAt,
+        paused: data.status !== "running",
+        pausedElapsedSeconds: data.status === "running" ? 0 : (data.pausedElapsedSeconds || 0),
+        beepsFired: new Set(),
+        isViewer: true,
+    };
+
+    if (data.recap) {
+        document.getElementById("rcp-work").textContent = data.recap.work ?? "—";
+        document.getElementById("rcp-rest").textContent = data.recap.rest ?? "—";
+        document.getElementById("rcp-rounds").textContent = data.recap.rounds ?? "—";
+        document.getElementById("rcp-warning").textContent = data.recap.warning ?? "—";
+        document.getElementById("active-hiit-recap").classList.toggle(
+            "visible",
+            data.mode === "hiit" || data.mode === "tabata" || data.mode === "emom",
+        );
+    }
+
+    document.getElementById("finished-overlay").classList.remove("visible");
+    setViewerControlsVisibility();
+    showActive();
+
+    if (data.status === "finished") {
+        finishViewer();
+        return;
+    }
+    viewerTick();
+}
+
+function finishViewer() {
+    timerWorker.postMessage('stop');
+    playHighBeep();
+    setTimeout(playHighBeep, 400);
+    document.getElementById("finished-msg").textContent = "Il coach ha completato l'allenamento!";
+    document.getElementById("finished-overlay").classList.add("visible");
+}
+
+function setViewerControlsVisibility() {
+    document.getElementById("btn-active-start").style.display = "none";
+    document.getElementById("btn-pause").style.display = "none";
+    document.getElementById("btn-stop").textContent = "■ Esci";
+    document.getElementById("btn-share").style.display = "none";
+    document.getElementById("share-code-badge").classList.remove("visible");
+    document.getElementById("viewer-banner").classList.add("visible");
+    document.getElementById("rep-counter-panel").classList.add("visible");
+}
+
+async function joinSession() {
+    if (shareSession) {
+        alert("Termina prima la condivisione in corso per poter seguire un altro allenamento.");
+        return;
+    }
+    const input = document.getElementById("cfg-join-code");
+    const code = (input.value || "").trim().toUpperCase();
+    if (code.length < 4) return;
+
+    const btn = document.getElementById("btn-join");
+    btn.disabled = true;
+    btn.textContent = "Connessione...";
+
+    try {
+        const unsubscribe = await subscribeToSession(
+            code,
+            (data) => applyRemoteData(data),
+            (err) => {
+                console.error(err);
+                if (viewerSession) {
+                    alert("Sessione non trovata o terminata.");
+                    exitViewerMode();
+                } else {
+                    alert("Codice non valido o sessione inesistente.");
+                }
+            },
+        );
+        viewerSession = { code, unsubscribe };
+        resetRepCounter();
+        getAudioCtx();
+        acquireWakeLock();
+        timerWorker.postMessage('start');
+    } catch (err) {
+        console.error(err);
+        alert("Impossibile connettersi: " + err.message);
+    } finally {
+        btn.disabled = false;
+        btn.textContent = "Segui";
+    }
+}
+
+function exitViewerMode() {
+    if (viewerSession) {
+        viewerSession.unsubscribe();
+        viewerSession = null;
+    }
+    timerWorker.postMessage('stop');
+    releaseWakeLock();
+    state = null;
+    resetRepCounter();
+    showSetup();
+}
+
+// ── Condivisione (lato controller) ──
+function buildSyncPayload() {
+    return {
+        mode: state.mode,
+        seq: state.seq,
+        idx: state.idx,
+        totalRounds: state.totalRounds,
+        warning: state.warning,
+        status: state.paused ? "paused" : (workoutHasStarted ? "running" : "ready"),
+        phaseStartedAt: state.phaseStartedAt,
+        pausedElapsedSeconds: state.paused ? state.pausedElapsedSeconds : null,
+        recap: {
+            work: document.getElementById("rcp-work").textContent,
+            rest: document.getElementById("rcp-rest").textContent,
+            rounds: document.getElementById("rcp-rounds").textContent,
+            warning: document.getElementById("rcp-warning").textContent,
+        },
+    };
+}
+
+function pushSyncUpdate(extra = {}) {
+    if (!shareSession) return;
+    const payload = { ...buildSyncPayload(), ...extra };
+    updateSession(shareSession.code, shareSession.controllerToken, payload).catch((err) => {
+        console.error("Errore di sincronizzazione:", err);
+    });
+}
+
+async function startSharing() {
+    if (!state || state.isViewer) return;
+    if (viewerSession) {
+        alert("Esci dalla visualizzazione remota prima di condividere un tuo allenamento.");
+        return;
+    }
+    if (shareSession) return;
+
+    const btn = document.getElementById("btn-share");
+    btn.disabled = true;
+    btn.textContent = "Attivazione...";
+    try {
+        const { code, controllerToken } = await createSession(buildSyncPayload());
+        shareSession = { code, controllerToken };
+        showShareBadge(code);
+    } catch (err) {
+        console.error(err);
+        alert("Impossibile attivare la condivisione: " + err.message);
+    } finally {
+        btn.disabled = false;
+        btn.textContent = "📡 Condividi";
+    }
+}
+
+function showShareBadge(code) {
+    document.getElementById("share-code-value").textContent = code;
+    document.getElementById("share-code-badge").classList.add("visible");
+    document.getElementById("btn-share").style.display = "none";
+}
+
+function stopSharing() {
+    if (!shareSession) return;
+    updateSession(shareSession.code, shareSession.controllerToken, { status: "ended" }).catch(() => {});
+    shareSession = null;
+    document.getElementById("share-code-badge").classList.remove("visible");
 }
 
 // ── REGOLATORI EXTRA TIME (+1m / -1m) ──
 document.getElementById("btn-add-extratime").addEventListener("click", () => {
-    if (!state) return;
+    if (!state || state.isViewer) return;
     const seg = state.seq[state.idx];
     if (seg.phase !== "work" || state.mode !== "fortime") return;
 
@@ -808,10 +1044,11 @@ document.getElementById("btn-add-extratime").addEventListener("click", () => {
     seg.duration += amount;
     state.beepsFired.clear();
     renderActive();
+    pushSyncUpdate();
 });
 
 document.getElementById("btn-remove-extratime").addEventListener("click", () => {
-    if (!state) return;
+    if (!state || state.isViewer) return;
     const seg = state.seq[state.idx];
     if (seg.phase !== "work" || state.mode !== "fortime") return;
 
@@ -823,6 +1060,7 @@ document.getElementById("btn-remove-extratime").addEventListener("click", () => 
         if (state.remaining < amount) state.remaining = 0;
         state.beepsFired.clear();
         renderActive();
+        pushSyncUpdate();
     }
 });
 
@@ -840,6 +1078,9 @@ function finish() {
         document.getElementById("finished-msg").textContent = `Time cap raggiunto a ${formatSecondsToMMSS(Math.floor(state.elapsedInPhase))}!`;
     }
     document.getElementById("finished-overlay").classList.add("visible");
+
+    pushSyncUpdate({ status: "finished" });
+    saveHistoryRecord();
 }
 
 function renderActive() {
@@ -852,7 +1093,7 @@ function renderActive() {
 
     const badge = document.getElementById("phase-badge");
     badge.className = "phase-badge " + seg.phase;
-    
+
     let phaseText = seg.phase.toUpperCase();
     if (seg.phase === "work") {
         if (state.mode === "amrap") phaseText = "AMRAP";
@@ -890,7 +1131,7 @@ function renderActive() {
 
             document.getElementById("round-num").textContent = seg.round;
             document.getElementById("round-label").textContent = `/ ${state.totalRounds} round`;
-            
+
             let timeLabelText = "lavoro";
             if (seg.phase === "rest") timeLabelText = "rest standard";
             else if (seg.phase === "extraRest") timeLabelText = "rest extra";
@@ -905,7 +1146,7 @@ function renderActive() {
                 progressWrap.classList.remove("hidden");
                 document.getElementById("time-label").textContent = "tempo rimanente";
             } else if (state.mode === "fortime") {
-                modifiersZone.classList.add("visible");
+                modifiersZone.classList.toggle("visible", !state.isViewer);
                 timecapSubinfo.classList.add("visible");
                 document.getElementById("timecap-target-val").textContent = formatSecondsToMMSS(seg.duration);
                 progressWrap.classList.add("hidden");
@@ -933,18 +1174,26 @@ function showSetup() {
     document.getElementById("active-screen").classList.remove("visible");
     document.getElementById("finished-overlay").classList.remove("visible");
     document.body.classList.remove("phase-prepare", "phase-work", "phase-rest", "phase-extraRest");
+    document.getElementById("share-code-badge").classList.remove("visible");
+    document.getElementById("viewer-banner").classList.remove("visible");
+    document.getElementById("rep-counter-panel").classList.remove("visible");
+    document.getElementById("btn-share").style.display = "flex";
+    document.getElementById("btn-share").textContent = "📡 Condividi";
+    document.getElementById("btn-stop").textContent = "■ Indietro / Reset";
 }
 
 function togglePause() {
-    if (!state) return;
+    if (!state || state.isViewer) return;
     state.paused = !state.paused;
     if (!state.paused) {
-        state.lastTick = performance.now();
+        state.phaseStartedAt = Date.now() - state.pausedElapsedSeconds * 1000;
         timerWorker.postMessage('start');
     } else {
+        state.pausedElapsedSeconds = (Date.now() - state.phaseStartedAt) / 1000;
         timerWorker.postMessage('stop');
     }
     document.getElementById("btn-pause").textContent = state.paused ? "▶ Riprendi" : "⏸ Pausa";
+    pushSyncUpdate();
 }
 
 function toggleFullScreen() {
@@ -957,6 +1206,20 @@ function toggleFullScreen() {
     }
 }
 
+function handleBackToSetup() {
+    if (viewerSession) {
+        exitViewerMode();
+        return;
+    }
+    if (shareSession) {
+        stopSharing();
+    }
+    timerWorker.postMessage('stop');
+    releaseWakeLock();
+    state = null;
+    showSetup();
+}
+
 document.addEventListener("keydown", (e) => {
     if (document.activeElement.tagName === "INPUT") return;
 
@@ -966,6 +1229,7 @@ document.addEventListener("keydown", (e) => {
 
     if (e.code === "Space" || key === " ") {
         e.preventDefault();
+        if (viewerSession) return;
         if (activeVisible) {
             if (!workoutHasStarted) {
                 startRunningWorkout();
@@ -978,10 +1242,7 @@ document.addEventListener("keydown", (e) => {
     } else if (key === "escape" || key === "r") {
         e.preventDefault();
         if (activeVisible || overlayVisible) {
-            timerWorker.postMessage('stop');
-            releaseWakeLock();
-            state = null;
-            showSetup();
+            handleBackToSetup();
         }
     } else if (key === "f") {
         e.preventDefault();
@@ -993,19 +1254,110 @@ document.addEventListener("keydown", (e) => {
 document.getElementById("btn-apply").addEventListener("click", setupSequenceStage);
 document.getElementById("btn-active-start").addEventListener("click", startRunningWorkout);
 document.getElementById("btn-pause").addEventListener("click", togglePause);
-document.getElementById("btn-stop").addEventListener("click", () => {
-    timerWorker.postMessage('stop');
-    releaseWakeLock();
-    state = null;
-    showSetup();
-});
-document.getElementById("btn-done").addEventListener("click", () => {
-    timerWorker.postMessage('stop');
-    releaseWakeLock();
-    state = null;
-    showSetup();
-});
+document.getElementById("btn-stop").addEventListener("click", handleBackToSetup);
+document.getElementById("btn-done").addEventListener("click", handleBackToSetup);
 
 document.getElementById("btn-fullscreen").addEventListener("click", toggleFullScreen);
+
+document.getElementById("btn-share").addEventListener("click", startSharing);
+
+document.getElementById("btn-join").addEventListener("click", joinSession);
+const joinCodeInput = document.getElementById("cfg-join-code");
+joinCodeInput.addEventListener("input", () => {
+    joinCodeInput.value = joinCodeInput.value.toUpperCase();
+});
+joinCodeInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") joinSession();
+});
+
+// ── Contatore Rep/Giri (solo locale, mai sincronizzato) ──
+function resetRepCounter() {
+    repCounter = 0;
+    updateRepCounterDisplay();
+}
+function updateRepCounterDisplay() {
+    const el = document.getElementById("rep-counter-value");
+    if (el) el.textContent = repCounter;
+}
+document.getElementById("btn-rep-plus").addEventListener("click", () => {
+    repCounter++;
+    updateRepCounterDisplay();
+});
+document.getElementById("btn-rep-minus").addEventListener("click", () => {
+    repCounter = Math.max(0, repCounter - 1);
+    updateRepCounterDisplay();
+});
+
+// ── Storico allenamenti (solo locale) ──
+function saveHistoryRecord() {
+    if (state.isViewer) return;
+
+    let durationLabel;
+    if (state.mode === "fortime") {
+        durationLabel = formatSecondsToMMSS(Math.floor(state.elapsedInPhase));
+    } else {
+        const totalSeconds = state.seq.reduce((acc, s) => acc + s.duration, 0);
+        durationLabel = formatSecondsToMMSS(totalSeconds);
+    }
+
+    const record = {
+        date: new Date().toISOString(),
+        mode: state.mode,
+        totalRounds: state.totalRounds,
+        duration: durationLabel,
+    };
+
+    let history = [];
+    try {
+        history = JSON.parse(localStorage.getItem(HISTORY_KEY)) || [];
+    } catch {
+        history = [];
+    }
+    history.unshift(record);
+    if (history.length > HISTORY_LIMIT) history.length = HISTORY_LIMIT;
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+}
+
+function renderHistoryList() {
+    const container = document.getElementById("history-list");
+    let history = [];
+    try {
+        history = JSON.parse(localStorage.getItem(HISTORY_KEY)) || [];
+    } catch {
+        history = [];
+    }
+    if (history.length === 0) {
+        container.innerHTML = '<p class="history-empty">Nessun allenamento ancora registrato.</p>';
+        return;
+    }
+    container.innerHTML = history
+        .map((r) => {
+            const d = new Date(r.date);
+            const dateLabel = d.toLocaleDateString("it-IT", { day: "2-digit", month: "2-digit", year: "numeric" });
+            const timeLabel = d.toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" });
+            const roundsPart = (r.mode === "hiit" || r.mode === "tabata" || r.mode === "emom")
+                ? `${r.totalRounds} round · `
+                : "";
+            return `<div class="history-item">
+                <div class="history-item-mode">${MODE_LABELS[r.mode] || r.mode}</div>
+                <div class="history-item-meta">${dateLabel} ${timeLabel} · ${roundsPart}${r.duration}</div>
+            </div>`;
+        })
+        .join("");
+}
+
+document.getElementById("btn-history").addEventListener("click", () => {
+    renderHistoryList();
+    document.getElementById("history-overlay").classList.add("visible");
+});
+document.getElementById("btn-history-close").addEventListener("click", () => {
+    document.getElementById("history-overlay").classList.remove("visible");
+});
+document.getElementById("btn-history-clear").addEventListener("click", () => {
+    if (confirm("Cancellare tutto lo storico allenamenti?")) {
+        localStorage.removeItem(HISTORY_KEY);
+        renderHistoryList();
+    }
+});
 
 loadConfig();

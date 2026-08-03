@@ -11,6 +11,10 @@
     </head>
     <body>
         <div id="setup-screen">
+            <button type="button" class="btn-history" id="btn-history" title="Storico allenamenti">
+                📜 Storico
+            </button>
+
             <h1>HIIT Timer Pro</h1>
 
             <!-- Selettore Modalità con Preset integrati -->
@@ -204,6 +208,22 @@
             </div>
 
             <button class="start-btn" id="btn-apply">✓ Applica</button>
+
+            <!-- Segui un allenamento condiviso da un altro dispositivo -->
+            <div class="join-box">
+                <label class="join-box-label" for="cfg-join-code">Segui un allenamento condiviso</label>
+                <div class="join-box-row">
+                    <input
+                        type="text"
+                        id="cfg-join-code"
+                        placeholder="CODICE"
+                        maxlength="6"
+                        autocomplete="off"
+                        autocapitalize="characters"
+                    />
+                    <button type="button" id="btn-join">Segui</button>
+                </div>
+            </div>
         </div>
 
         <div id="active-screen">
@@ -213,6 +233,11 @@
                     <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
                 </svg>
             </button>
+
+            <!-- Bottone Condividi: genera un codice per far seguire il timer da un altro dispositivo -->
+            <button type="button" class="btn-share" id="btn-share">📡 Condividi</button>
+
+            <div class="viewer-banner" id="viewer-banner">👀 Stai seguendo in sola lettura</div>
 
             <div class="phase-badge" id="phase-badge">PREPARE</div>
 
@@ -262,6 +287,16 @@
                 <span>Warning: <strong id="rcp-warning">—</strong></span>
             </div>
 
+            <!-- Contatore Rep/Giri personale: visibile solo in modalità "Segui", mai sincronizzato -->
+            <div class="rep-counter-panel" id="rep-counter-panel">
+                <span class="rep-counter-label">I tuoi giri / rep</span>
+                <div class="stepper">
+                    <button type="button" id="btn-rep-minus">−</button>
+                    <span class="rep-counter-value" id="rep-counter-value">0</span>
+                    <button type="button" id="btn-rep-plus">+</button>
+                </div>
+            </div>
+
             <div class="controls">
                 <button class="ctrl-btn" id="btn-active-start">
                     ▶ Inizia Allenamento
@@ -281,7 +316,25 @@
             <button id="btn-done">Ricomincia</button>
         </div>
 
-        <script src="app.js"></script>
+        <!-- Badge fisso col codice sessione, visibile mentre si condivide il timer -->
+        <div class="share-code-badge" id="share-code-badge">
+            <span class="share-code-label">Codice</span>
+            <span class="share-code-value" id="share-code-value">------</span>
+        </div>
+
+        <!-- Modal Storico Allenamenti (solo locale, nessun account) -->
+        <div class="history-overlay" id="history-overlay">
+            <div class="history-panel">
+                <h2>📜 Storico allenamenti</h2>
+                <div class="history-list" id="history-list"></div>
+                <div class="history-actions">
+                    <button type="button" id="btn-history-clear">Cancella storico</button>
+                    <button type="button" id="btn-history-close">Chiudi</button>
+                </div>
+            </div>
+        </div>
+
+        <script type="module" src="app.js"></script>
         <script>
             // Registrazione del Service Worker per il caching offline (PWA)
             if ("serviceWorker" in navigator) {

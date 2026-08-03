@@ -13,6 +13,8 @@ Live deployment: **[timer.mbianchi.me](https://timer.mbianchi.me)** (GitHub Page
 - **Precision Timing (Web Worker Threading):** Bypasses browser background tab throttling using an inline Web Worker thread for high-precision time ticks (50ms intervals).
 - **Dynamic Audio Synthesis:** Sound alerts are synthesized on-the-fly using the Web Audio API (triangle wave oscillators) to eliminate latency and asset loading issues.
 - **Wakelock Integration:** Keeps the screen active and prevents sleep mode during workouts using the Screen Wake Lock API.
+- **Multi-Screen Sync (optional):** Share a running workout with a 6-character code — any other device can follow it read-only in real time, no account required. See "Sincronizzazione Multi-Schermo" below.
+- **Local Workout History:** Every completed session is logged on-device (date, mode, rounds, duration) — no account, no server, just `localStorage`.
 - **Physical Controller Friendly:** Keyboard hotkeys mapped for wireless clickers and remotes:
   * `Space` -> Play / Pause (or Apply configuration).
   * `Esc` / `R` -> Reset / Back to configuration screen.
@@ -43,6 +45,46 @@ A count-down workout duration timer.
 
 ### 5. FOR TIME
 A count-up stopwatch. Includes target time cap and on-screen modifying buttons to add/remove 1 minute to the cap during the workout.
+
+---
+
+## 🔗 Sincronizzazione Multi-Schermo (opzionale)
+
+Il timer può essere seguito in tempo reale da altri dispositivi tramite un codice a 6 caratteri, senza account e senza login. Finché non si usa questa funzione, il timer resta interamente locale e offline come prima.
+
+- **Condividi**: durante un allenamento, il pulsante **📡 Condividi** (in alto a sinistra) genera un codice mostrato in basso a destra. Chi ha comandato il timer (premuto "Applica"/"Inizia") resta il "controller".
+- **Segui**: dalla schermata iniziale, inserendo il codice nel box "Segui un allenamento condiviso" un altro dispositivo (telefono in un'altra stanza, TV di un'altra sala, telefono di un atleta) visualizza il timer **in sola lettura**, con audio e beep identici a quelli del controller.
+- **Contatore rep/giri**: chi segue con un codice vede anche un contatore personale di giri/rep, incrementabile a mano. È **solo locale a quel dispositivo**, non viene mai salvato né condiviso con nessuno: serve solo come promemoria personale durante il WOD.
+- **Storico**: il pulsante **📜 Storico** in alto a destra mostra gli ultimi allenamenti completati su quel dispositivo (data, modalità, round, durata). Anche questo è salvato solo in locale (`localStorage`), non richiede account.
+
+### Setup richiesto (una tantum)
+
+La sincronizzazione si appoggia a **Firebase Firestore** (piano gratuito). GitHub Pages resta l'hosting di tutto il resto: non serve un server.
+
+1. Crea un progetto su [console.firebase.google.com](https://console.firebase.google.com) (gratuito).
+2. Abilita **Firestore Database** (modalità produzione).
+3. In *Impostazioni progetto → Le tue app*, crea una "app web" e copia la configurazione in [`firebase-config.js`](firebase-config.js), sostituendo i valori placeholder.
+4. Incolla queste **Security Rules** in Firestore → Regole:
+
+    ```
+    rules_version = '2';
+    service cloud.firestore {
+      match /databases/{database}/documents {
+        match /sessions/{code} {
+          allow get: if true;
+          allow list: if false;
+          allow create: if request.resource.data.controllerToken is string
+                        && request.resource.data.expireAt is timestamp;
+          allow update: if request.resource.data.controllerToken == resource.data.controllerToken;
+          allow delete: if false;
+        }
+      }
+    }
+    ```
+
+5. In Firestore → *Database → TTL* attiva una policy TTL sulla collezione `sessions`, campo `expireAt`, così le sessioni vengono cancellate automaticamente circa 6 ore dopo l'ultimo aggiornamento (nessuna manutenzione manuale necessaria).
+
+**Nota sulla sicurezza**: senza account, chi comanda una sessione è distinto da chi la segue tramite un `controllerToken` segreto generato al momento della condivisione e mai esposto a chi si unisce con il codice — solo chi possiede il token può modificare la sessione. Il codice stesso è pensato per essere condiviso a voce/schermo con persone fidate nello stesso box: chiunque lo conosca può seguire in sola lettura la sessione.
 
 ---
 
@@ -108,7 +150,9 @@ This lock is released automatically when navigating away or stopping the timer, 
 
 - `index.html` - Core layout structure and Service Worker registration.
 - `style.css` - Responsive grid/flex design utilizing viewport-relative typography (`clamp()`, `vw`) for television layouts, plus color-coded option blocks.
-- `app.js` - Sequence builder, sound engine, UI binding, keyboard event router, and Web Worker wrapper.
+- `app.js` - Sequence builder, sound engine, UI binding, keyboard event router, Web Worker wrapper, and multi-screen sync/history/rep-counter logic (ES module).
+- `sync.js` - Firebase Firestore wrapper (lazy-loaded), used only when sharing or following a session.
+- `firebase-config.js` - Firebase project configuration (placeholder — see "Sincronizzazione Multi-Schermo" above).
 - `sw.js` - Service Worker cache script.
 - `manifest.json` - PWA app installation metadata.
 - `icon.svg` - App launcher icon.
