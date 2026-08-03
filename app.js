@@ -706,6 +706,7 @@ function setupSequenceStage() {
         remaining: seq[0].duration,
         elapsedInPhase: 0,
         phaseStartedAt: null,
+        workoutStartedAt: null,
         paused: false,
         pausedElapsedSeconds: 0,
         warning,
@@ -757,11 +758,14 @@ function setupSequenceStage() {
     renderActive();
 }
 
+const EARLY_FINISH_MIN_SECONDS = 30;
+
 function startRunningWorkout() {
     workoutHasStarted = true;
     document.getElementById("btn-active-start").style.display = "none";
     document.getElementById("btn-pause").style.display = "block";
     state.phaseStartedAt = Date.now();
+    state.workoutStartedAt = Date.now();
     state.beepsFired = new Set();
     timerWorker.postMessage('start');
     pushSyncUpdate();
@@ -1218,10 +1222,38 @@ function toggleFullScreen() {
     }
 }
 
+// FOR TIME è l'unica modalità dove interrompere prima del tempo è l'esito
+// normale e desiderato (hai finito il lavoro prima del time cap): se sono
+// passati almeno EARLY_FINISH_MIN_SECONDS dall'inizio, lo trattiamo come un
+// risultato valido e lo salviamo nello storico. Sotto quella soglia si
+// presume un avvio accidentale, e non si salva nulla. Per le altre modalità
+// (HIIT/TABATA/EMOM/AMRAP) interrompere in anticipo resta un abbandono: non
+// viene salvato, come già oggi.
+function maybeSaveEarlyFinish() {
+    if (!state || state.isViewer || !workoutHasStarted) return;
+    if (state.mode !== "fortime") return;
+    if (!state.workoutStartedAt) return;
+
+    const seg = state.seq[state.idx];
+    if (seg.phase !== "work") return;
+
+    const elapsedSinceStart = (Date.now() - state.workoutStartedAt) / 1000;
+    if (elapsedSinceStart < EARLY_FINISH_MIN_SECONDS) return;
+
+    state.elapsedInPhase = state.paused
+        ? (state.pausedElapsedSeconds || 0)
+        : (Date.now() - state.phaseStartedAt) / 1000;
+    saveHistoryRecord();
+}
+
 function handleBackToSetup() {
     if (viewerSession) {
         exitViewerMode();
         return;
+    }
+    const alreadyFinished = document.getElementById("finished-overlay").classList.contains("visible");
+    if (!alreadyFinished) {
+        maybeSaveEarlyFinish();
     }
     if (shareSession) {
         stopSharing();
