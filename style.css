@@ -913,6 +913,10 @@ input:checked + .slider:before {
     border: 1px solid var(--border);
     border-radius: 8px;
     padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
 }
 .history-item-mode {
     font-weight: 800;
@@ -923,6 +927,23 @@ input:checked + .slider:before {
     font-size: 0.8rem;
     color: var(--muted);
     margin-top: 2px;
+}
+.history-reuse-btn {
+    flex-shrink: 0;
+    background: var(--work);
+    color: #000;
+    border: none;
+    border-radius: 8px;
+    font-weight: 800;
+    font-size: 0.78rem;
+    padding: 8px 12px;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    transition: opacity 0.15s;
+}
+.history-reuse-btn:hover {
+    opacity: 0.85;
 }
 .history-actions {
     display: flex;

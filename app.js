@@ -177,6 +177,31 @@ function adaptUIForMode() {
     }
 }
 
+function applyConfigObject(parsed) {
+    currentMode = parsed.currentMode || "hiit";
+    document.querySelectorAll(".mode-tab").forEach((t) => {
+        t.classList.toggle("active", t.dataset.mode === currentMode);
+    });
+    setRawValue("prepare", parsed.prepare ?? DEFAULTS.prepare);
+    setRawValue("work", parsed.work ?? DEFAULTS.work);
+    setRawValue("warning", parsed.warning ?? DEFAULTS.warning);
+    setRawValue("rest", parsed.rest ?? DEFAULTS.rest);
+    setRawValue("extraRest", parsed.extraRest ?? DEFAULTS.extraRest);
+    document.getElementById("cfg-extraRestFreq").value = parsed.extraRestFreq ?? DEFAULTS.extraRestFreq;
+    document.getElementById("cfg-extra-rest-toggle").checked = parsed.extraRestActive ?? true;
+    document.getElementById("cfg-rounds").value = parsed.rounds ?? 10;
+    document.getElementById("cfg-advanced-toggle").checked = parsed.advancedMode ?? false;
+    if (parsed.modeCacheValues) Object.assign(modeCacheValues, parsed.modeCacheValues);
+    // adaptUIForMode() ripopola il campo "work" da modeCacheValues[currentMode]: se quella cache
+    // è rimasta indietro rispetto al valore appena ripristinato, lo sovrascriverebbe silenziosamente.
+    if (modeCacheValues[currentMode]) {
+        modeCacheValues[currentMode].work = parsed.work ?? DEFAULTS.work;
+    }
+    if (Array.isArray(parsed.roundTimes) && parsed.roundTimes.length > 0) {
+        roundTimes = parsed.roundTimes;
+    }
+}
+
 function loadConfig() {
     const saved = localStorage.getItem("hiit-config-v12");
     if (!saved) {
@@ -193,32 +218,15 @@ function loadConfig() {
         return;
     }
     try {
-        const parsed = JSON.parse(saved);
-        currentMode = parsed.currentMode || "hiit";
-        document.querySelectorAll(".mode-tab").forEach((t) => {
-            t.classList.toggle("active", t.dataset.mode === currentMode);
-        });
-        setRawValue("prepare", parsed.prepare ?? DEFAULTS.prepare);
-        setRawValue("work", parsed.work ?? DEFAULTS.work);
-        setRawValue("warning", parsed.warning ?? DEFAULTS.warning);
-        setRawValue("rest", parsed.rest ?? DEFAULTS.rest);
-        setRawValue("extraRest", parsed.extraRest ?? DEFAULTS.extraRest);
-        document.getElementById("cfg-extraRestFreq").value = parsed.extraRestFreq ?? DEFAULTS.extraRestFreq;
-        document.getElementById("cfg-extra-rest-toggle").checked = parsed.extraRestActive ?? true;
-        document.getElementById("cfg-rounds").value = parsed.rounds ?? 10;
-        document.getElementById("cfg-advanced-toggle").checked = parsed.advancedMode ?? false;
-        if (parsed.modeCacheValues) Object.assign(modeCacheValues, parsed.modeCacheValues);
-        if (Array.isArray(parsed.roundTimes) && parsed.roundTimes.length > 0) {
-            roundTimes = parsed.roundTimes;
-        }
+        applyConfigObject(JSON.parse(saved));
     } catch (e) {
         console.error(e);
     }
     adaptUIForMode();
 }
 
-function saveConfig() {
-    const cfg = {
+function buildConfigSnapshot() {
+    return {
         currentMode: currentMode,
         prepare: getRawValue("prepare"),
         work: getRawValue("work"),
@@ -232,7 +240,10 @@ function saveConfig() {
         roundTimes: roundTimes,
         modeCacheValues: modeCacheValues,
     };
-    localStorage.setItem("hiit-config-v12", JSON.stringify(cfg));
+}
+
+function saveConfig() {
+    localStorage.setItem("hiit-config-v12", JSON.stringify(buildConfigSnapshot()));
 }
 
 function getRawValue(idPart) {
@@ -1305,6 +1316,7 @@ function saveHistoryRecord() {
         mode: state.mode,
         totalRounds: state.totalRounds,
         duration: durationLabel,
+        config: buildConfigSnapshot(),
     };
 
     let history = [];
@@ -1331,20 +1343,48 @@ function renderHistoryList() {
         return;
     }
     container.innerHTML = history
-        .map((r) => {
+        .map((r, idx) => {
             const d = new Date(r.date);
             const dateLabel = d.toLocaleDateString("it-IT", { day: "2-digit", month: "2-digit", year: "numeric" });
             const timeLabel = d.toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" });
             const roundsPart = (r.mode === "hiit" || r.mode === "tabata" || r.mode === "emom")
                 ? `${r.totalRounds} round · `
                 : "";
+            const reuseBtn = r.config
+                ? `<button type="button" class="history-reuse-btn" data-reuse-idx="${idx}">▶ Riusa</button>`
+                : "";
             return `<div class="history-item">
-                <div class="history-item-mode">${MODE_LABELS[r.mode] || r.mode}</div>
-                <div class="history-item-meta">${dateLabel} ${timeLabel} · ${roundsPart}${r.duration}</div>
+                <div class="history-item-info">
+                    <div class="history-item-mode">${MODE_LABELS[r.mode] || r.mode}</div>
+                    <div class="history-item-meta">${dateLabel} ${timeLabel} · ${roundsPart}${r.duration}</div>
+                </div>
+                ${reuseBtn}
             </div>`;
         })
         .join("");
 }
+
+function reuseHistoryRecord(idx) {
+    let history = [];
+    try {
+        history = JSON.parse(localStorage.getItem(HISTORY_KEY)) || [];
+    } catch {
+        history = [];
+    }
+    const record = history[idx];
+    if (!record || !record.config) return;
+
+    applyConfigObject(record.config);
+    adaptUIForMode();
+    document.getElementById("history-overlay").classList.remove("visible");
+    setupSequenceStage();
+}
+
+document.getElementById("history-list").addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-reuse-idx]");
+    if (!btn) return;
+    reuseHistoryRecord(parseInt(btn.dataset.reuseIdx));
+});
 
 document.getElementById("btn-history").addEventListener("click", () => {
     renderHistoryList();
