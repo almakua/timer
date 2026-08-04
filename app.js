@@ -908,17 +908,32 @@ function applyRemoteData(data) {
     showActive();
 
     if (data.status === "finished") {
-        finishViewer();
+        finishViewer(data);
         return;
     }
     viewerTick();
 }
 
-function finishViewer() {
+// Stessa logica di messaggio usata da finish() lato controller, così chi segue
+// vede un'informazione equivalente (round completati / time cap raggiunto),
+// non un generico "il coach ha finito" privo di dettagli.
+function buildFinishedMessage(mode, totalRounds, timeValueSeconds) {
+    if (mode === "hiit" || mode === "tabata" || mode === "emom") {
+        return t("finishedHiit", { rounds: totalRounds });
+    } else if (mode === "amrap") {
+        return t("finishedAmrap");
+    } else if (mode === "fortime") {
+        return t("finishedFortime", { time: formatSecondsToMMSS(Math.floor(timeValueSeconds)) });
+    }
+    return "";
+}
+
+function finishViewer(data) {
     timerWorker.postMessage('stop');
     playHighBeep();
     setTimeout(playHighBeep, 400);
-    document.getElementById("finished-msg").textContent = t("finishedViewerMsg");
+    const timeValueSeconds = data.mode === "fortime" ? data.seq[data.idx].duration : 0;
+    document.getElementById("finished-msg").textContent = buildFinishedMessage(data.mode, data.totalRounds, timeValueSeconds);
     document.getElementById("finished-overlay").classList.add("visible");
 }
 
@@ -1086,13 +1101,7 @@ function finish() {
     playHighBeep();
     setTimeout(playHighBeep, 400);
 
-    if (state.mode === "hiit" || state.mode === "tabata" || state.mode === "emom") {
-        document.getElementById("finished-msg").textContent = t("finishedHiit", { rounds: state.totalRounds });
-    } else if (state.mode === "amrap") {
-        document.getElementById("finished-msg").textContent = t("finishedAmrap");
-    } else if (state.mode === "fortime") {
-        document.getElementById("finished-msg").textContent = t("finishedFortime", { time: formatSecondsToMMSS(Math.floor(state.elapsedInPhase)) });
-    }
+    document.getElementById("finished-msg").textContent = buildFinishedMessage(state.mode, state.totalRounds, state.elapsedInPhase);
     document.getElementById("finished-overlay").classList.add("visible");
 
     pushSyncUpdate({ status: "finished" });

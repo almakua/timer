@@ -845,17 +845,14 @@ input:checked + .slider:before {
     font-variant-numeric: tabular-nums;
 }
 
-/* Banner di sola lettura per chi segue un codice */
+/* Indicatore discreto per chi segue un codice: informativo ma non invadente */
 .viewer-banner {
     display: none;
-    background: var(--surface);
-    border: 1px solid var(--rest);
-    color: var(--rest);
-    border-radius: 99px;
-    font-size: 0.85rem;
-    font-weight: 700;
-    padding: 8px 18px;
-    margin-top: 8px;
+    color: var(--muted);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    margin-top: 4px;
 }
 .viewer-banner.visible {
     display: block;

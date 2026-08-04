@@ -45,7 +45,7 @@ const dict = {
         fullscreenTitle: "Schermo Intero",
         shareBtn: "📡 Condividi",
         shareBtnActivating: "Attivazione...",
-        viewerBanner: "👀 Stai seguendo in sola lettura",
+        viewerBanner: "👀 In diretta",
         readyLabel: "Pronto",
         extratimeMinus: "- 1 Min",
         extratimePlus: "+ 1 Min",
@@ -76,7 +76,6 @@ const dict = {
         finishedHiit: "{rounds} round completati!",
         finishedAmrap: "Tempo scaduto! Allenamento completato.",
         finishedFortime: "Time cap raggiunto a {time}!",
-        finishedViewerMsg: "Il coach ha completato l'allenamento!",
         restartBtn: "Ricomincia",
 
         codeLabel: "Codice",
@@ -137,7 +136,7 @@ const dict = {
         fullscreenTitle: "Fullscreen",
         shareBtn: "📡 Share",
         shareBtnActivating: "Activating...",
-        viewerBanner: "👀 You're following in read-only mode",
+        viewerBanner: "👀 Live",
         readyLabel: "Ready",
         extratimeMinus: "- 1 Min",
         extratimePlus: "+ 1 Min",
@@ -168,7 +167,6 @@ const dict = {
         finishedHiit: "{rounds} rounds completed!",
         finishedAmrap: "Time's up! Workout completed.",
         finishedFortime: "Time cap reached at {time}!",
-        finishedViewerMsg: "The coach has completed the workout!",
         restartBtn: "Restart",
 
         codeLabel: "Code",
