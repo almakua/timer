@@ -788,11 +788,38 @@ input:checked + .slider:before {
     cursor: default;
 }
 
-/* ── CONDIVIDI (Active Screen) ── */
-.btn-share {
+/* ── AZIONI IN ALTO A SINISTRA (Active Screen): mute + condividi ── */
+.top-left-actions {
     position: absolute;
     top: 24px;
     left: 24px;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.btn-mute {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    font-size: 1.15rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: background 0.15s, border-color 0.15s;
+}
+.btn-mute:hover {
+    background: var(--border);
+    border-color: #555;
+}
+
+.btn-share {
     background: var(--surface);
     border: 1px solid var(--border);
     color: var(--text);
@@ -801,7 +828,6 @@ input:checked + .slider:before {
     font-weight: 700;
     padding: 10px 16px;
     cursor: pointer;
-    z-index: 10;
     transition: background 0.15s, border-color 0.15s;
 }
 .btn-share:hover {

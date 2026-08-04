@@ -23,6 +23,10 @@ let shareSession = null; // { code, controllerToken } quando QUESTO dispositivo 
 let viewerSession = null; // { code, unsubscribe } quando QUESTO dispositivo segue un codice altrui
 let repCounter = 0;
 
+// ── Audio on/off (per dispositivo, mai sincronizzato) ──
+const SOUND_KEY = "hiit-timer-sound-enabled";
+let soundEnabled = localStorage.getItem(SOUND_KEY) !== "off";
+
 // ── Web Worker Inline per Timer Preciso ──
 const workerCode = `
     let interval = null;
@@ -554,6 +558,7 @@ function getAudioCtx() {
     return audioCtx;
 }
 function playBeep(frequency, duration) {
+    if (!soundEnabled) return;
     try {
         const ctx = getAudioCtx();
         if (ctx.state === "suspended") ctx.resume();
@@ -1462,6 +1467,7 @@ function refreshDynamicTranslations() {
     if (document.getElementById("history-overlay").classList.contains("visible")) {
         renderHistoryList();
     }
+    updateMuteButtonUI();
 }
 
 const langSwitcher = document.getElementById("lang-switcher");
@@ -1473,5 +1479,18 @@ langSwitcher.addEventListener("change", () => {
     }
 });
 
+function updateMuteButtonUI() {
+    const btn = document.getElementById("btn-mute");
+    btn.textContent = soundEnabled ? "🔊" : "🔇";
+    btn.title = soundEnabled ? t("muteBtnMute") : t("muteBtnUnmute");
+}
+
+document.getElementById("btn-mute").addEventListener("click", () => {
+    soundEnabled = !soundEnabled;
+    localStorage.setItem(SOUND_KEY, soundEnabled ? "on" : "off");
+    updateMuteButtonUI();
+});
+
 applyStaticTranslations();
+updateMuteButtonUI();
 loadConfig();
