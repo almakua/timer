@@ -819,6 +819,51 @@ input:checked + .slider:before {
     border-color: #555;
 }
 
+.volume-slider {
+    width: 100px;
+    height: 44px;
+    flex-shrink: 0;
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent;
+    cursor: pointer;
+}
+.volume-slider::-webkit-slider-runnable-track {
+    height: 6px;
+    border-radius: 99px;
+    background: var(--border);
+}
+.volume-slider::-moz-range-track {
+    height: 6px;
+    border-radius: 99px;
+    background: var(--border);
+}
+.volume-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    margin-top: -6px;
+    border-radius: 50%;
+    background: var(--text);
+    cursor: pointer;
+}
+.volume-slider::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border: none;
+    border-radius: 50%;
+    background: var(--text);
+    cursor: pointer;
+}
+.volume-slider:focus {
+    outline: none;
+}
+.volume-slider:focus::-webkit-slider-thumb {
+    outline: 2px solid var(--btn-primary);
+    outline-offset: 2px;
+}
+
 .btn-share {
     background: var(--surface);
     border: 1px solid var(--border);

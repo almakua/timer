@@ -241,8 +241,10 @@
             </button>
 
             <div class="top-left-actions">
-                <!-- Mute: attiva/disattiva tutti i beep, per dispositivo, nessuna regolazione del volume -->
+                <!-- Mute: azzera/ripristina il volume dei beep, per dispositivo -->
                 <button type="button" class="btn-mute" id="btn-mute" title="Disattiva audio">🔊</button>
+                <!-- Volume beep: regolazione fine, utile ad es. per attenuare i beep frequenti dell'EMOM -->
+                <input type="range" class="volume-slider" id="volume-slider" min="0" max="100" step="5" value="100" aria-label="Volume" />
                 <!-- Bottone Condividi: genera un codice per far seguire il timer da un altro dispositivo -->
                 <button type="button" class="btn-share" id="btn-share" data-i18n="shareBtn">📡 Condividi</button>
             </div>

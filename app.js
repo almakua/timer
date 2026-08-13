@@ -23,9 +23,24 @@ let shareSession = null; // { code, controllerToken } quando QUESTO dispositivo 
 let viewerSession = null; // { code, unsubscribe } quando QUESTO dispositivo segue un codice altrui
 let repCounter = 0;
 
-// ── Audio on/off (per dispositivo, mai sincronizzato) ──
-const SOUND_KEY = "hiit-timer-sound-enabled";
-let soundEnabled = localStorage.getItem(SOUND_KEY) !== "off";
+// ── Volume beep (per dispositivo, mai sincronizzato) ──
+const VOLUME_KEY = "hiit-timer-volume";
+const VOLUME_LAST_NONZERO_KEY = "hiit-timer-volume-last-nonzero";
+const LEGACY_SOUND_KEY = "hiit-timer-sound-enabled";
+
+// Migra la vecchia impostazione on/off verso il nuovo volume in percentuale
+if (localStorage.getItem(VOLUME_KEY) === null) {
+    const legacy = localStorage.getItem(LEGACY_SOUND_KEY);
+    if (legacy !== null) {
+        localStorage.setItem(VOLUME_KEY, legacy === "off" ? "0" : "100");
+        localStorage.removeItem(LEGACY_SOUND_KEY);
+    }
+}
+
+let volumeLevel = parseInt(localStorage.getItem(VOLUME_KEY), 10);
+if (isNaN(volumeLevel)) volumeLevel = 100;
+let lastNonZeroVolume = parseInt(localStorage.getItem(VOLUME_LAST_NONZERO_KEY), 10);
+if (isNaN(lastNonZeroVolume) || lastNonZeroVolume <= 0) lastNonZeroVolume = 100;
 
 // ── Web Worker Inline per Timer Preciso ──
 const workerCode = `
@@ -558,7 +573,7 @@ function getAudioCtx() {
     return audioCtx;
 }
 function playBeep(frequency, duration) {
-    if (!soundEnabled) return;
+    if (volumeLevel <= 0) return;
     try {
         const ctx = getAudioCtx();
         if (ctx.state === "suspended") ctx.resume();
@@ -567,9 +582,10 @@ function playBeep(frequency, duration) {
         osc.type = "triangle";
         osc.frequency.value = frequency;
         const now = ctx.currentTime;
+        const peakGain = 0.9 * (volumeLevel / 100);
         gainNode.gain.setValueAtTime(0, now);
-        gainNode.gain.linearRampToValueAtTime(0.9, now + 0.005);
-        gainNode.gain.setValueAtTime(0.9, now + duration - 0.01);
+        gainNode.gain.linearRampToValueAtTime(peakGain, now + 0.005);
+        gainNode.gain.setValueAtTime(peakGain, now + duration - 0.01);
         gainNode.gain.linearRampToValueAtTime(0, now + duration);
         osc.connect(gainNode);
         gainNode.connect(ctx.destination);
@@ -1467,7 +1483,7 @@ function refreshDynamicTranslations() {
     if (document.getElementById("history-overlay").classList.contains("visible")) {
         renderHistoryList();
     }
-    updateMuteButtonUI();
+    updateVolumeControlsUI();
 }
 
 const langSwitcher = document.getElementById("lang-switcher");
@@ -1479,18 +1495,32 @@ langSwitcher.addEventListener("change", () => {
     }
 });
 
-function updateMuteButtonUI() {
+function setVolumeLevel(newLevel) {
+    volumeLevel = Math.max(0, Math.min(100, newLevel));
+    localStorage.setItem(VOLUME_KEY, String(volumeLevel));
+    if (volumeLevel > 0) {
+        lastNonZeroVolume = volumeLevel;
+        localStorage.setItem(VOLUME_LAST_NONZERO_KEY, String(lastNonZeroVolume));
+    }
+    updateVolumeControlsUI();
+}
+
+function updateVolumeControlsUI() {
     const btn = document.getElementById("btn-mute");
-    btn.textContent = soundEnabled ? "🔊" : "🔇";
-    btn.title = soundEnabled ? t("muteBtnMute") : t("muteBtnUnmute");
+    const slider = document.getElementById("volume-slider");
+    btn.textContent = volumeLevel <= 0 ? "🔇" : "🔊";
+    btn.title = volumeLevel <= 0 ? t("muteBtnUnmute") : t("muteBtnMute");
+    slider.value = volumeLevel;
 }
 
 document.getElementById("btn-mute").addEventListener("click", () => {
-    soundEnabled = !soundEnabled;
-    localStorage.setItem(SOUND_KEY, soundEnabled ? "on" : "off");
-    updateMuteButtonUI();
+    setVolumeLevel(volumeLevel > 0 ? 0 : lastNonZeroVolume);
+});
+
+document.getElementById("volume-slider").addEventListener("input", (e) => {
+    setVolumeLevel(parseInt(e.target.value, 10) || 0);
 });
 
 applyStaticTranslations();
-updateMuteButtonUI();
+updateVolumeControlsUI();
 loadConfig();
