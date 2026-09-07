@@ -800,23 +800,28 @@ function onPhaseStart() {
 function evaluateBeeps(seg) {
     const triggerBeepVal = Math.ceil(state.remaining);
 
+    // Chiave condivisa tra tutte le regole: se un secondo è già stato "coperto"
+    // da una regola (es. warning basso che si sovrappone al countdown di fine
+    // fase), le altre lo trovano già in beepsFired e non raddoppiano il beep.
+    const fireBeepOnce = () => {
+        if (state.beepsFired.has(triggerBeepVal)) return;
+        state.beepsFired.add(triggerBeepVal);
+        playLowBeep();
+    };
+
     if ((state.mode === "hiit" || state.mode === "tabata" || state.mode === "emom") && seg.phase === "work") {
         const warningLimit = state.warning || 0;
-        if (warningLimit > 0 && triggerBeepVal === warningLimit) {
-            if (!state.beepsFired.has("warning-pre")) {
-                state.beepsFired.add("warning-pre");
-                playLowBeep();
-            }
+        // Countdown di 3 beep che anticipano il warning, più il beep del warning stesso
+        // (es. warning a 1:30 -> beep a 1:33, 1:32, 1:31, 1:30)
+        if (warningLimit > 0 && triggerBeepVal >= warningLimit && triggerBeepVal <= warningLimit + 3) {
+            fireBeepOnce();
         }
     }
 
     // Beep 3, 2, 1 secondi prima della fine della fase
     if (!(state.mode === "fortime" && seg.phase === "work")) {
         if (triggerBeepVal <= 3 && triggerBeepVal >= 1) {
-            if (!state.beepsFired.has(triggerBeepVal)) {
-                state.beepsFired.add(triggerBeepVal);
-                playLowBeep();
-            }
+            fireBeepOnce();
         }
     }
 }
