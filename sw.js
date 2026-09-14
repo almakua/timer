@@ -14,14 +14,22 @@ const ASSETS = [
   './icon.svg'
 ];
 
-// Installazione: cache delle risorse statiche
+// Installazione: cache delle risorse statiche.
+// Non chiama skipWaiting() automaticamente: se c'è già una versione attiva,
+// il nuovo worker resta in attesa finché l'utente non conferma l'aggiornamento
+// dal banner (vedi il messaggio 'skipWaiting' qui sotto).
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(ASSETS);
     })
   );
-  self.skipWaiting();
+});
+
+self.addEventListener('message', (event) => {
+  if (event.data === 'skipWaiting') {
+    self.skipWaiting();
+  }
 });
 
 // Attivazione: pulizia vecchie cache

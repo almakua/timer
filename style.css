@@ -945,6 +945,37 @@ input:checked + .slider:before {
     cursor: default;
 }
 
+/* Banner per notificare che una nuova versione della PWA è pronta */
+.update-banner {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    justify-content: center;
+    align-items: center;
+    gap: 14px;
+    background: var(--prepare);
+    color: #1a1200;
+    font-size: 0.85rem;
+    font-weight: 700;
+    padding: 10px 16px;
+    z-index: 100;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+.update-banner.visible {
+    display: flex;
+}
+.update-banner button {
+    background: #1a1200;
+    color: #fff;
+    border: none;
+    border-radius: var(--radius);
+    padding: 4px 14px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
 /* Badge col codice sessione, fisso in basso a destra */
 .share-code-badge {
     display: none;

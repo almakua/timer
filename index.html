@@ -10,6 +10,12 @@
         <link rel="icon" href="icon.svg" type="image/svg+xml" />
     </head>
     <body>
+        <!-- Banner di notifica quando una nuova versione della PWA è pronta -->
+        <div class="update-banner" id="update-banner">
+            <span data-i18n="updateAvailableMsg">🔄 Nuova versione disponibile</span>
+            <button type="button" id="btn-update-reload" data-i18n="updateReloadBtn">Aggiorna</button>
+        </div>
+
         <div id="setup-screen">
             <!-- Barra utility: azioni usate di rado, raggruppate e discrete -->
             <div class="utility-bar">
@@ -385,10 +391,43 @@
             // Registrazione del Service Worker per il caching offline (PWA)
             if ("serviceWorker" in navigator) {
                 window.addEventListener("load", () => {
+                    function showUpdateBanner(waitingWorker) {
+                        document.getElementById("update-banner").classList.add("visible");
+                        document.getElementById("btn-update-reload").addEventListener(
+                            "click",
+                            () => waitingWorker.postMessage("skipWaiting"),
+                            { once: true },
+                        );
+                    }
+
                     navigator.serviceWorker
                         .register("sw.js")
-                        .then((reg) => console.log("Service Worker registrato con successo per l'offline.", reg.scope))
+                        .then((reg) => {
+                            console.log("Service Worker registrato con successo per l'offline.", reg.scope);
+
+                            // Un worker già in attesa (es. tab rimasta aperta da prima dell'aggiornamento)
+                            if (reg.waiting) showUpdateBanner(reg.waiting);
+
+                            // Nuovo worker scaricato: appena pronto, se c'è già un controller attivo
+                            // significa che non è la prima installazione ma un aggiornamento
+                            reg.addEventListener("updatefound", () => {
+                                const newWorker = reg.installing;
+                                newWorker.addEventListener("statechange", () => {
+                                    if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
+                                        showUpdateBanner(newWorker);
+                                    }
+                                });
+                            });
+                        })
                         .catch((err) => console.error("Errore durante la registrazione del Service Worker:", err));
+
+                    // Quando il nuovo worker prende il controllo, ricarica per usare i nuovi asset
+                    let reloadedForUpdate = false;
+                    navigator.serviceWorker.addEventListener("controllerchange", () => {
+                        if (reloadedForUpdate) return;
+                        reloadedForUpdate = true;
+                        window.location.reload();
+                    });
                 });
             }
         </script>
