@@ -494,6 +494,18 @@ input:checked + .slider:before {
     line-height: 1;
     transition: color 0.3s;
 }
+/* Pulsazione visiva negli ultimi secondi di una fase, in sincro col beep del countdown */
+.timer-display .time-val.pulse {
+    animation: countdown-pulse 1s ease-in-out infinite;
+}
+@keyframes countdown-pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.08);
+    }
+}
 .timer-display .time-label {
     font-size: 1rem;
     color: var(--muted);

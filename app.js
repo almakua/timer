@@ -1200,7 +1200,12 @@ function renderActive() {
         }
     }
 
-    document.getElementById("time-val").textContent = formatSecondsToMMSS(displaySeconds);
+    const timeVal = document.getElementById("time-val");
+    timeVal.textContent = formatSecondsToMMSS(displaySeconds);
+    // Pulsa in sincro col beep degli ultimi 3 secondi di fase (stessa esclusione
+    // per il lavoro FOR TIME, che conta in su verso un cap e non ha un "fine fase" imminente)
+    const isFinalCountdown = displaySeconds >= 1 && displaySeconds <= 3 && !(state.mode === "fortime" && seg.phase === "work");
+    timeVal.classList.toggle("pulse", isFinalCountdown);
 
     let pct = (state.remaining / seg.duration) * 100;
     document.getElementById("progress-bar").style.width = Math.max(0, pct) + "%";
