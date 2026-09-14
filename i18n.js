@@ -82,6 +82,7 @@ const dict = {
         restartBtn: "Ricomincia",
 
         codeLabel: "Codice",
+        shareQrHint: "📷 Inquadra per seguire",
 
         historyModalTitle: "📜 Storico allenamenti",
         historyClearBtn: "Cancella storico",
@@ -185,6 +186,7 @@ const dict = {
         restartBtn: "Restart",
 
         codeLabel: "Code",
+        shareQrHint: "📷 Scan to follow",
 
         historyModalTitle: "📜 Workout history",
         historyClearBtn: "Clear history",

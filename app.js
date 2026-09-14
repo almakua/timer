@@ -2,6 +2,7 @@ import { createSession, updateSession, subscribeToSession } from "./sync.js";
 import { t, getLang, setLang } from "./i18n.js";
 import { formatSecondsToMMSS, parseAndSanitizeTimeToSeconds } from "./time-utils.js";
 import { parseWodText } from "./wod-parser.js";
+import { qrcode } from "./qrcode-lib.js";
 
 let currentMode = "hiit";
 let roundTimes = [20, 20, 20, 20, 20, 20, 20, 20, 20, 20];
@@ -1059,8 +1060,20 @@ async function startSharing() {
     }
 }
 
+function buildJoinUrl(code) {
+    return `${location.origin}${location.pathname}?join=${code}`;
+}
+
+function renderShareQr(code) {
+    const qr = qrcode(0, "M");
+    qr.addData(buildJoinUrl(code));
+    qr.make();
+    document.getElementById("share-code-qr").innerHTML = qr.createSvgTag(4, 0);
+}
+
 function showShareBadge(code) {
     document.getElementById("share-code-value").textContent = code;
+    renderShareQr(code);
     document.getElementById("share-code-badge").classList.add("visible");
     document.getElementById("btn-share").style.display = "none";
 }
@@ -1579,3 +1592,12 @@ document.getElementById("volume-slider").addEventListener("input", (e) => {
 applyStaticTranslations();
 updateVolumeControlsUI();
 loadConfig();
+
+// ── Join automatico da QR code (?join=CODICE nell'URL) ──
+const joinCodeFromUrl = new URLSearchParams(location.search).get("join");
+if (joinCodeFromUrl) {
+    history.replaceState(null, "", location.pathname);
+    document.getElementById("join-accordion").open = true;
+    document.getElementById("cfg-join-code").value = joinCodeFromUrl.trim().toUpperCase();
+    joinSession();
+}

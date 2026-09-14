@@ -1,4 +1,4 @@
-const CACHE_NAME = 'hiit-timer-pro-v6';
+const CACHE_NAME = 'hiit-timer-pro-v7';
 const ASSETS = [
   './',
   './index.html',
@@ -9,6 +9,7 @@ const ASSETS = [
   './i18n.js',
   './time-utils.js',
   './wod-parser.js',
+  './qrcode-lib.js',
   './manifest.json',
   './icon.svg'
 ];

@@ -222,7 +222,7 @@
             <button class="start-btn" id="btn-apply" data-i18n="applyBtn">✓ Applica</button>
 
             <!-- Segui un allenamento condiviso da un altro dispositivo: richiuso di default -->
-            <details class="join-accordion">
+            <details class="join-accordion" id="join-accordion">
                 <summary data-i18n="joinLabel">🔗 Segui un allenamento condiviso</summary>
                 <div class="join-box-row">
                     <input
@@ -339,8 +339,12 @@
 
         <!-- Badge fisso col codice sessione, visibile mentre si condivide il timer -->
         <div class="share-code-badge" id="share-code-badge">
-            <span class="share-code-label" data-i18n="codeLabel">Codice</span>
-            <span class="share-code-value" id="share-code-value">------</span>
+            <div class="share-code-qr" id="share-code-qr"></div>
+            <span class="share-code-hint" data-i18n="shareQrHint">📷 Inquadra per seguire</span>
+            <div class="share-code-text-row">
+                <span class="share-code-label" data-i18n="codeLabel">Codice</span>
+                <span class="share-code-value" id="share-code-value">------</span>
+            </div>
         </div>
 
         <!-- Modal Storico Allenamenti (solo locale, nessun account) -->
