@@ -1062,6 +1062,119 @@ input:checked + .slider:before {
     color: var(--btn-primary-text);
 }
 
+/* ── INCOLLA WOD (Setup Screen) ── */
+.btn-wod-import {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: var(--radius);
+    font-size: 0.9rem;
+    font-weight: 700;
+    padding: 12px;
+    cursor: pointer;
+    margin-bottom: 12px;
+    transition: background 0.15s, border-color 0.15s;
+}
+.btn-wod-import:hover {
+    background: var(--border);
+    border-color: #555;
+}
+
+.wod-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.85);
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 24px;
+}
+.wod-overlay.visible {
+    display: flex;
+}
+.wod-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    width: 100%;
+    max-width: 480px;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+}
+.wod-panel h2 {
+    font-size: 1.4rem;
+    font-weight: 800;
+    margin-bottom: 8px;
+}
+.wod-hint {
+    color: var(--muted);
+    font-size: 0.82rem;
+    margin-bottom: 14px;
+    line-height: 1.4;
+}
+.wod-textarea {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 0.95rem;
+    font-family: inherit;
+    padding: 12px;
+    resize: vertical;
+    min-height: 100px;
+}
+.wod-textarea:focus {
+    outline: 2px solid var(--btn-primary);
+    outline-offset: 2px;
+}
+.wod-preview {
+    min-height: 1.4em;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--work);
+    margin: 12px 0;
+}
+.wod-preview.wod-preview-error {
+    color: var(--warning);
+    font-weight: 600;
+}
+.wod-actions {
+    display: flex;
+    gap: 10px;
+}
+.wod-actions button {
+    flex: 1;
+    border: none;
+    border-radius: 8px;
+    font-weight: 800;
+    padding: 12px;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-size: 0.8rem;
+}
+#btn-wod-parse {
+    background: var(--border);
+    color: var(--text);
+}
+#btn-wod-apply {
+    background: var(--work);
+    color: #000;
+}
+#btn-wod-apply:disabled {
+    background: var(--border);
+    color: var(--muted);
+    cursor: default;
+}
+#btn-wod-close {
+    background: var(--btn-primary);
+    color: var(--btn-primary-text);
+}
+
 body.phase-prepare {
     --phase-color: var(--prepare);
 }

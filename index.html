@@ -41,6 +41,8 @@
                 </button>
             </div>
 
+            <button type="button" class="btn-wod-import" id="btn-wod-import" data-i18n="wodImportBtn">📋 Incolla WOD</button>
+
             <div class="config-grid">
                 <div class="config-row" id="row-rounds">
                     <label>
@@ -344,6 +346,27 @@
                 <div class="history-actions">
                     <button type="button" id="btn-history-clear" data-i18n="historyClearBtn">Cancella storico</button>
                     <button type="button" id="btn-history-close" data-i18n="historyCloseBtn">Chiudi</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Incolla WOD: parsing testuale locale, nessun server/AI coinvolto -->
+        <div class="wod-overlay" id="wod-overlay">
+            <div class="wod-panel">
+                <h2 data-i18n="wodModalTitle">📋 Incolla il WOD</h2>
+                <p class="wod-hint" data-i18n="wodHint">Riconosce formati comuni: EMOM 12, AMRAP 20, Tabata, 21-15-9 for time, 5 rounds 40s/20s...</p>
+                <textarea
+                    id="wod-textarea"
+                    class="wod-textarea"
+                    rows="5"
+                    data-i18n-placeholder="wodTextareaPlaceholder"
+                    placeholder="Incolla qui il testo del WOD"
+                ></textarea>
+                <div class="wod-preview" id="wod-preview"></div>
+                <div class="wod-actions">
+                    <button type="button" id="btn-wod-parse" data-i18n="wodParseBtn">Analizza</button>
+                    <button type="button" id="btn-wod-apply" data-i18n="wodApplyBtn" disabled>Applica al timer</button>
+                    <button type="button" id="btn-wod-close" data-i18n="wodCloseBtn">Chiudi</button>
                 </div>
             </div>
         </div>

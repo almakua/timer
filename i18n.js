@@ -90,6 +90,15 @@ const dict = {
         historyRoundsPart: "{n} round · ",
         historyClearConfirm: "Cancellare tutto lo storico allenamenti?",
 
+        wodImportBtn: "📋 Incolla WOD",
+        wodModalTitle: "📋 Incolla il WOD",
+        wodHint: "Riconosce formati comuni: EMOM 12, AMRAP 20, Tabata, 21-15-9 for time, 5 rounds 40s/20s...",
+        wodTextareaPlaceholder: "Incolla qui il testo del WOD",
+        wodParseBtn: "Analizza",
+        wodApplyBtn: "Applica al timer",
+        wodCloseBtn: "Chiudi",
+        wodNotRecognized: "Non ho riconosciuto una struttura valida. Prova a riformularlo o imposta i campi a mano.",
+
         alertShareTerminateFirst: "Termina prima la condivisione in corso per poter seguire un altro allenamento.",
         alertSessionNotFound: "Sessione non trovata o terminata.",
         alertInvalidCode: "Codice non valido o sessione inesistente.",
@@ -182,6 +191,15 @@ const dict = {
         historyReuseBtn: "▶ Reuse",
         historyRoundsPart: "{n} rounds · ",
         historyClearConfirm: "Clear all workout history?",
+
+        wodImportBtn: "📋 Paste WOD",
+        wodModalTitle: "📋 Paste the WOD",
+        wodHint: "Recognizes common formats: EMOM 12, AMRAP 20, Tabata, 21-15-9 for time, 5 rounds 40s/20s...",
+        wodTextareaPlaceholder: "Paste the WOD text here",
+        wodParseBtn: "Analyze",
+        wodApplyBtn: "Apply to timer",
+        wodCloseBtn: "Close",
+        wodNotRecognized: "I couldn't recognize a valid structure. Try rephrasing it or set the fields manually.",
 
         alertShareTerminateFirst: "End the current sharing session first to follow another workout.",
         alertSessionNotFound: "Session not found or ended.",
