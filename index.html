@@ -25,6 +25,7 @@
                 </select>
                 <button type="button" class="btn-utility" id="btn-wod-import" title="Incolla WOD" data-i18n-title="wodImportBtn">📋</button>
                 <button type="button" class="btn-utility" id="btn-history" title="Storico" data-i18n-title="historyBtn">📜</button>
+                <button type="button" class="btn-utility" id="btn-shortcuts-help" title="Scorciatoie da tastiera" data-i18n-title="shortcutsHelpBtn">⌨️</button>
             </div>
 
             <h1>HIIT Timer Pro</h1>
@@ -246,6 +247,9 @@
         </div>
 
         <div id="active-screen">
+            <!-- Aiuto scorciatoie da tastiera -->
+            <button type="button" class="btn-shortcuts-help-active" id="btn-shortcuts-help-active" title="Scorciatoie da tastiera" data-i18n-title="shortcutsHelpBtn">⌨️</button>
+
             <!-- Bottone Schermo Intero per Monitor Palestra -->
             <button type="button" class="btn-fullscreen" id="btn-fullscreen" title="Schermo Intero" data-i18n-title="fullscreenTitle">
                 <svg viewBox="0 0 24 24">
@@ -383,6 +387,20 @@
                     <button type="button" id="btn-wod-apply" data-i18n="wodApplyBtn" disabled>Applica al timer</button>
                     <button type="button" id="btn-wod-close" data-i18n="wodCloseBtn">Chiudi</button>
                 </div>
+            </div>
+        </div>
+
+        <!-- Modal Aiuto: elenco delle scorciatoie da tastiera disponibili -->
+        <div class="shortcuts-overlay" id="shortcuts-overlay">
+            <div class="shortcuts-panel">
+                <h2 data-i18n="shortcutsModalTitle">⌨️ Scorciatoie da tastiera</h2>
+                <div class="shortcuts-list">
+                    <div class="shortcuts-row"><kbd data-i18n="shortcutSpaceKey">Spazio</kbd><span data-i18n="shortcutSpace">Avvia / Metti in pausa / Riprendi</span></div>
+                    <div class="shortcuts-row"><kbd>Esc</kbd><kbd>R</kbd><span data-i18n="shortcutEsc">Indietro / Esci dall'allenamento</span></div>
+                    <div class="shortcuts-row"><kbd>F</kbd><span data-i18n="shortcutF">Schermo intero</span></div>
+                    <div class="shortcuts-row"><kbd>?</kbd><span data-i18n="shortcutHelp">Mostra/nascondi questo aiuto</span></div>
+                </div>
+                <button type="button" id="btn-shortcuts-close" data-i18n="wodCloseBtn">Chiudi</button>
             </div>
         </div>
 

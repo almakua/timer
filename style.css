@@ -400,6 +400,28 @@ input:checked + .slider:before {
     background: var(--border);
     border-color: #555;
 }
+.btn-shortcuts-help-active {
+    position: absolute;
+    top: 24px;
+    right: 78px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    transition: background 0.15s, border-color 0.15s;
+    z-index: 10;
+}
+.btn-shortcuts-help-active:hover {
+    background: var(--border);
+    border-color: #555;
+}
 .btn-fullscreen svg {
     width: 20px;
     height: 20px;
@@ -1280,6 +1302,74 @@ input:checked + .slider:before {
 #btn-wod-close {
     background: var(--btn-primary);
     color: var(--btn-primary-text);
+}
+
+.shortcuts-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.85);
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 24px;
+}
+.shortcuts-overlay.visible {
+    display: flex;
+}
+.shortcuts-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    width: 100%;
+    max-width: 420px;
+}
+.shortcuts-panel h2 {
+    font-size: 1.4rem;
+    font-weight: 800;
+    margin-bottom: 16px;
+}
+.shortcuts-list {
+    display: grid;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+.shortcuts-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+}
+.shortcuts-row span {
+    margin-left: 4px;
+    color: var(--text);
+}
+.shortcuts-row kbd {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-bottom-width: 2px;
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-family: inherit;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--text);
+    min-width: 1.6em;
+    text-align: center;
+}
+#btn-shortcuts-close {
+    width: 100%;
+    background: var(--btn-primary);
+    color: var(--btn-primary-text);
+    border: none;
+    border-radius: 8px;
+    font-weight: 800;
+    padding: 12px;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-size: 0.85rem;
 }
 
 body.phase-prepare {

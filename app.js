@@ -1305,15 +1305,28 @@ function handleBackToSetup() {
     showSetup();
 }
 
+function toggleShortcutsHelp() {
+    document.getElementById("shortcuts-overlay").classList.toggle("visible");
+}
+function closeShortcutsHelp() {
+    document.getElementById("shortcuts-overlay").classList.remove("visible");
+}
+
 document.addEventListener("keydown", (e) => {
-    if (document.activeElement.tagName === "INPUT") return;
+    const activeTag = document.activeElement.tagName;
+    if (activeTag === "INPUT" || activeTag === "TEXTAREA" || activeTag === "SELECT") return;
 
     const key = e.key.toLowerCase();
     const activeVisible = document.getElementById("active-screen").classList.contains("visible");
     const overlayVisible = document.getElementById("finished-overlay").classList.contains("visible");
+    const helpVisible = document.getElementById("shortcuts-overlay").classList.contains("visible");
 
-    if (e.code === "Space" || key === " ") {
+    if (key === "?") {
         e.preventDefault();
+        toggleShortcutsHelp();
+    } else if (e.code === "Space" || key === " ") {
+        e.preventDefault();
+        if (helpVisible) return;
         if (viewerSession) return;
         if (activeVisible) {
             if (!workoutHasStarted) {
@@ -1326,7 +1339,9 @@ document.addEventListener("keydown", (e) => {
         }
     } else if (key === "escape" || key === "r") {
         e.preventDefault();
-        if (activeVisible || overlayVisible) {
+        if (helpVisible) {
+            closeShortcutsHelp();
+        } else if (activeVisible || overlayVisible) {
             handleBackToSetup();
         }
     } else if (key === "f") {
@@ -1334,6 +1349,10 @@ document.addEventListener("keydown", (e) => {
         toggleFullScreen();
     }
 });
+
+document.getElementById("btn-shortcuts-help").addEventListener("click", toggleShortcutsHelp);
+document.getElementById("btn-shortcuts-help-active").addEventListener("click", toggleShortcutsHelp);
+document.getElementById("btn-shortcuts-close").addEventListener("click", closeShortcutsHelp);
 
 // Event Listeners UI
 document.getElementById("btn-apply").addEventListener("click", setupSequenceStage);

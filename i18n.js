@@ -7,6 +7,13 @@ const STORAGE_KEY = "hiit-timer-lang";
 const dict = {
     it: {
         historyBtn: "Storico",
+        shortcutsHelpBtn: "Scorciatoie da tastiera",
+        shortcutsModalTitle: "⌨️ Scorciatoie da tastiera",
+        shortcutSpaceKey: "Spazio",
+        shortcutSpace: "Avvia / Metti in pausa / Riprendi",
+        shortcutEsc: "Indietro / Esci dall'allenamento",
+        shortcutF: "Schermo intero",
+        shortcutHelp: "Mostra/nascondi questo aiuto",
         roundsLabel: "Round totali",
         roundsSub: "Numero di round totali (scrivibile da tastiera)",
         prepareLabel: "Prepare",
@@ -113,6 +120,13 @@ const dict = {
     },
     en: {
         historyBtn: "History",
+        shortcutsHelpBtn: "Keyboard shortcuts",
+        shortcutsModalTitle: "⌨️ Keyboard shortcuts",
+        shortcutSpaceKey: "Space",
+        shortcutSpace: "Start / Pause / Resume",
+        shortcutEsc: "Back / Exit workout",
+        shortcutF: "Fullscreen",
+        shortcutHelp: "Show/hide this help",
         roundsLabel: "Total rounds",
         roundsSub: "Total number of rounds (typeable from keyboard)",
         prepareLabel: "Prepare",
