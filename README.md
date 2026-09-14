@@ -1,70 +1,75 @@
 # HIIT Timer Pro
 
-A professional CrossFit and gym timer optimized for large monitors and TV screens, readable from 10-15 meters away. Built with a lightweight, offline-first vanilla web stack (Zero-Compile).
+A professional CrossFit and gym timer optimized for large monitors and TV screens, readable from 10-15 meters away. Built with a lightweight, offline-first vanilla web stack (zero build step, zero runtime dependencies).
 
 Live deployment: **[timer.mbianchi.me](https://timer.mbianchi.me)** (GitHub Pages)
 
 ---
 
-## 🚀 Key Features
+## Key Features
 
-- **Zero-Compile Vanilla Stack:** Pure HTML5, CSS3, and ES6 JavaScript. No framework overhead, no build steps, instant startup.
-- **Offline-First (PWA):** Fully-compliant Progressive Web App utilizing a Service Worker cache to run completely offline. Once loaded, the timer functions in gym environments without any internet connectivity.
-- **Precision Timing (Web Worker Threading):** Bypasses browser background tab throttling using an inline Web Worker thread for high-precision time ticks (50ms intervals).
-- **Dynamic Audio Synthesis:** Sound alerts are synthesized on-the-fly using the Web Audio API (triangle wave oscillators) to eliminate latency and asset loading issues.
-- **Wakelock Integration:** Keeps the screen active and prevents sleep mode during workouts using the Screen Wake Lock API.
-- **Multi-Screen Sync (optional):** Share a running workout with a 6-character code — any other device can follow it read-only in real time, no account required. See "Sincronizzazione Multi-Schermo" below.
-- **Local Workout History:** Every completed session is logged on-device (date, mode, rounds, duration) — no account, no server, just `localStorage`.
-- **Physical Controller Friendly:** Keyboard hotkeys mapped for wireless clickers and remotes:
-  * `Space` -> Play / Pause (or Apply configuration).
-  * `Esc` / `R` -> Reset / Back to configuration screen.
-  * `F` -> Toggle Fullscreen.
+- **Zero-build vanilla stack:** pure HTML5, CSS3, and ES modules. No framework, no bundler, no compile step — open `index.html` and it runs.
+- **Offline-first (PWA):** a Service Worker caches every asset so the timer keeps working in gyms with poor or no connectivity, once it has been loaded once.
+- **Update notifications:** when a new version is deployed, a banner lets you apply it on your own schedule instead of silently swapping code under an in-progress workout.
+- **Precision timing (Web Worker):** the tick loop runs on a dedicated Web Worker thread (50ms interval) so timing stays accurate even when the tab is backgrounded or throttled.
+- **Dynamic audio synthesis:** every beep is synthesized on the fly with the Web Audio API — no audio files to load, no latency. Three distinct tones are used (round-end countdown, warning alert, phase transition) so they're easy to tell apart by ear, plus an adjustable volume slider (handy for muting the frequent EMOM beeps without losing all audio feedback).
+- **Visual countdown pulse:** the on-screen time pulses during the final 3 seconds of a phase, in sync with the audio countdown.
+- **Wake Lock integration:** keeps the screen on during a workout via the Screen Wake Lock API.
+- **Multi-screen sync (optional):** share a running workout with a 6-character code (or a scannable QR code) — any other device can follow it read-only in real time, no account required. See [Multi-Screen Sync](#multi-screen-sync-optional) below.
+- **Local WOD text parser:** paste a WOD's text (EMOM, AMRAP, Tabata, For Time, interval sets, in English or Italian) and the timer auto-configures itself. Parsing is entirely local — no server or AI call involved.
+- **Local workout history:** every completed session is logged on-device (date, mode, rounds, duration) and can be reused to instantly reconfigure the timer. No account, no server — just `localStorage`.
+- **IT / EN language switcher.**
+- **Keyboard shortcuts**, with an in-app help modal (press `?` or use the ⌨️ button):
+  * `Space` — Start / Pause / Resume (or apply the configuration from the setup screen).
+  * `Esc` / `R` — Back to setup / exit the current view.
+  * `F` — Toggle fullscreen.
+  * `?` — Show/hide the shortcuts help.
 
 ---
 
-## ⏱ Workout Modes
+## Workout Modes
 
 ### 1. HIIT (High Intensity Interval Training)
-A highly configurable interval timer supporting:
-- Total Rounds (directly editable via keyboard or stepper buttons).
+A fully configurable interval timer supporting:
+- Total rounds (directly editable via keyboard or stepper buttons).
 - Preparation time.
 - Standard work round duration.
-- End-of-round warning sound (mm:ss format).
+- End-of-round warning sound (mm:ss format), with its own distinct tone and a lead-in countdown.
 - Standard rest between rounds.
-- **⚙️ Advanced Set Timing (Teal style):** Customize the duration of each individual work set.
-- **⚙️ Scheduled Extra Rest (Purple style):** Automatically inject a longer recovery rest phase (e.g., 40s) after every X work rounds (e.g., every 5 rounds).
+- **Advanced set timing:** customize the duration of each individual work set.
+- **Scheduled extra rest:** automatically insert a longer recovery phase (e.g. 40s) after every X work rounds (e.g. every 5 rounds).
 
 ### 2. TABATA
-Standard 20s work / 10s rest protocol. Rounds (8) and preparation (10s) are locked. Configurable work, warning, and rest times.
+Standard 20s work / 10s rest protocol. Rounds (8) and preparation (10s) are locked. Work, warning, and rest times are configurable.
 
 ### 3. EMOM (Every Minute On the Minute)
-Work duration is locked at 60s, rest is locked at 0s. Configurable total rounds, preparation, and warning buzzer.
+Work duration is locked at 60s, rest at 0s. Total rounds, preparation, and the warning buzzer are configurable.
 
 ### 4. AMRAP (As Many Rounds As Possible)
-A count-down workout duration timer.
+A countdown workout timer.
 
 ### 5. FOR TIME
-A count-up stopwatch. Includes target time cap and on-screen modifying buttons to add/remove 1 minute to the cap during the workout.
+A count-up stopwatch with a target time cap and on-screen +1/-1 minute buttons to adjust the cap mid-workout.
 
 ---
 
-## 🔗 Sincronizzazione Multi-Schermo (opzionale)
+## Multi-Screen Sync (optional)
 
-Il timer può essere seguito in tempo reale da altri dispositivi tramite un codice a 6 caratteri, senza account e senza login. Finché non si usa questa funzione, il timer resta interamente locale e offline come prima.
+The timer can be followed live from other devices using a 6-character code or by scanning a QR code — no accounts, no login. Until this feature is used, the timer stays fully local and offline as always.
 
-- **Condividi**: durante un allenamento, il pulsante **📡 Condividi** (in alto a sinistra) genera un codice mostrato in basso a destra. Chi ha comandato il timer (premuto "Applica"/"Inizia") resta il "controller".
-- **Segui**: dalla schermata iniziale, inserendo il codice nel box "Segui un allenamento condiviso" un altro dispositivo (telefono in un'altra stanza, TV di un'altra sala, telefono di un atleta) visualizza il timer **in sola lettura**, con audio e beep identici a quelli del controller.
-- **Contatore rep/giri**: chi segue con un codice vede anche un contatore personale di giri/rep, incrementabile a mano. È **solo locale a quel dispositivo**, non viene mai salvato né condiviso con nessuno: serve solo come promemoria personale durante il WOD.
-- **Storico**: il pulsante **📜 Storico** in alto a destra mostra gli ultimi allenamenti completati su quel dispositivo (data, modalità, round, durata). Anche questo è salvato solo in locale (`localStorage`), non richiede account.
+- **Share**: during a workout, the **📡 Share** button (top left) generates a code and a QR code shown in the bottom-right badge. Whoever started the workout (pressed "Apply"/"Start") is the "controller".
+- **Follow**: from the setup screen, entering the code in the "Follow a shared workout" box — or scanning the QR — connects another device (a phone in another room, a TV in another area, an athlete's phone) in **read-only** mode, with the same audio/beeps as the controller.
+- **Personal rep counter**: a device following via code also gets a personal rep/round counter, incremented by hand. It is **local to that device only** — never saved or shared with anyone — just a personal reminder during the WOD.
+- **History**: the **📜 History** button shows the last completed workouts on that device (date, mode, rounds, duration). Also local-only (`localStorage`), no account required.
 
-### Setup richiesto (una tantum)
+### One-time setup
 
-La sincronizzazione si appoggia a **Firebase Firestore** (piano gratuito). GitHub Pages resta l'hosting di tutto il resto: non serve un server.
+Sync relies on **Firebase Firestore** (free tier). GitHub Pages remains the hosting for everything else — no backend server is needed.
 
-1. Crea un progetto su [console.firebase.google.com](https://console.firebase.google.com) (gratuito).
-2. Abilita **Firestore Database** (modalità produzione).
-3. In *Impostazioni progetto → Le tue app*, crea una "app web" e copia la configurazione in [`firebase-config.js`](firebase-config.js), sostituendo i valori placeholder.
-4. Incolla queste **Security Rules** in Firestore → Regole:
+1. Create a project at [console.firebase.google.com](https://console.firebase.google.com) (free).
+2. Enable **Firestore Database** (production mode).
+3. Under *Project settings → Your apps*, create a "Web app" and copy the config into [`firebase-config.js`](firebase-config.js), replacing the placeholder values.
+4. Paste these **Security Rules** under Firestore → Rules:
 
     ```
     rules_version = '2';
@@ -82,16 +87,53 @@ La sincronizzazione si appoggia a **Firebase Firestore** (piano gratuito). GitHu
     }
     ```
 
-5. In Firestore → *Database → TTL* attiva una policy TTL sulla collezione `sessions`, campo `expireAt`, così le sessioni vengono cancellate automaticamente circa 6 ore dopo l'ultimo aggiornamento (nessuna manutenzione manuale necessaria).
+5. Under Firestore → *Database → TTL*, enable a TTL policy on the `sessions` collection, field `expireAt`, so sessions are automatically deleted roughly 6 hours after their last update (no manual cleanup needed).
 
-**Nota sulla sicurezza**: senza account, chi comanda una sessione è distinto da chi la segue tramite un `controllerToken` segreto generato al momento della condivisione e mai esposto a chi si unisce con il codice — solo chi possiede il token può modificare la sessione. Il codice stesso è pensato per essere condiviso a voce/schermo con persone fidate nello stesso box: chiunque lo conosca può seguire in sola lettura la sessione.
+**On security**: without accounts, the controller of a session is distinguished from followers via a secret `controllerToken` generated at share time and never exposed to anyone joining with the code — only the token holder can update the session. The code itself is meant to be shared by voice/screen with trusted people in the same gym: anyone who has it can follow the session read-only.
 
 ---
 
-## 🛠 Technical Architecture
+## Running Locally
+
+This is a static, zero-build app — any static file server works. From the repository root:
+
+```bash
+python3 -m http.server 8931
+```
+
+Then open [http://localhost:8931](http://localhost:8931). Any other static server (`npx serve`, VS Code's "Live Server", etc.) works just as well.
+
+Notes:
+- **Service Worker caching**: the app registers a Service Worker that caches assets. If you don't see your local changes reflected, unregister the Service Worker and clear the Cache Storage from your browser's DevTools (Application tab), then reload.
+- **Firebase**: `firebase-config.js` must contain valid Firebase project credentials for the Multi-Screen Sync feature to work (see above). Everything else works without any setup.
+
+---
+
+## Automated Tests
+
+The DOM- and Worker-coupled parts of the app (`app.js`) can't be safely imported in Node — it creates a real `Worker` and binds event listeners at module load time. To keep the codebase testable without introducing a build step, all pure logic (no DOM/browser APIs) lives in standalone ES modules that both the browser app and Node's test runner can import directly:
+
+- **`time-utils.js`** — time formatting and parsing (`formatSecondsToMMSS`, `parseAndSanitizeTimeToSeconds`).
+- **`wod-parser.js`** — the local WOD text parser, covering EMOM/AMRAP/Tabata/For Time/interval-sets notation in both English and Italian, including several real-world WOD text samples that previously broke earlier parser versions (kept as regression tests).
+
+Tests use Node's built-in test runner (`node:test` / `node:assert`) — no test framework or extra dependency required. Run the full suite with:
+
+```bash
+npm test
+```
+
+or directly with:
+
+```bash
+node --test
+```
+
+---
+
+## Technical Architecture
 
 ### 1. Web Worker Timing
-Most modern browsers throttle JavaScript `setInterval` and `setTimeout` functions to 1s intervals when the tab is in the background or the screen dimming policy kicks in. To bypass this, the timer offloads the tick loop to a background thread using an inline Web Worker created dynamically from a `Blob`:
+Most browsers throttle `setInterval`/`setTimeout` to roughly 1s intervals when a tab is backgrounded or the screen dims. To avoid this, the tick loop runs on a dedicated background thread, created dynamically from a `Blob` so no separate worker file is needed:
 
 ```javascript
 const workerCode = `
@@ -106,12 +148,11 @@ const workerCode = `
     };
 `;
 ```
-This ensures tick execution every 50ms, maintaining visual fluidness and timing accuracy even when the browser window is inactive.
+
+This keeps ticks firing every 50ms, preserving visual fluidity and timing accuracy even when the browser window is inactive. All remaining/elapsed time is computed from an absolute epoch timestamp (`Date.now()` at the moment the current phase started), not accumulated per-tick — this is what lets a remote viewer render an identical countdown to the controller from the same `phaseStartedAt` value.
 
 ### 2. Web Audio API Synthesis
-To prevent lag or loading failures associated with static `.mp3` or `.wav` sound files in low-connectivity areas, all sound alerts are synthesized in real-time. 
-
-Using the Web Audio API, we create a `OscillatorNode` with a triangle waveform (`triangle`) for a clean, non-distorted sound and control the amplitude envelope with a `GainNode` using linear ramps:
+To avoid latency or loading failures tied to static `.mp3`/`.wav` files in low-connectivity gyms, every sound alert is synthesized in real time with an `OscillatorNode` (triangle wave, for a clean, non-harsh tone) and a `GainNode` driving a linear amplitude envelope:
 
 ```javascript
 const osc = ctx.createOscillator();
@@ -120,15 +161,17 @@ osc.type = "triangle";
 osc.frequency.value = frequency;
 
 gainNode.gain.setValueAtTime(0, now);
-gainNode.gain.linearRampToValueAtTime(0.9, now + 0.005);
-gainNode.gain.setValueAtTime(0.9, now + duration - 0.01);
+gainNode.gain.linearRampToValueAtTime(peakGain, now + 0.005);
+gainNode.gain.setValueAtTime(peakGain, now + duration - 0.01);
 gainNode.gain.linearRampToValueAtTime(0, now + duration);
 ```
 
+Three distinct frequencies are used so the different alerts are easy to tell apart by ear: a low tone for the final 3-2-1 countdown of any phase, a perfect fifth above it for the warning alert, and a higher tone for phase transitions (played twice when the whole workout finishes).
+
 ### 3. Progressive Web App (PWA) Caching
-Offline capabilities are managed via `sw.js` implementing a **Stale-While-Revalidate** strategy. Crucial assets (`index.html`, `style.css`, `app.js`, `icon.svg`, and `manifest.json`) are cached locally. When the app is accessed:
-1. It instantly serves the cached version.
-2. It fetches the network version in the background to update the cache for the next reload.
+Offline support is handled by `sw.js` with a **stale-while-revalidate** strategy: every core asset is cached on install, then served instantly from cache while a background fetch refreshes the cache for next time.
+
+New deployments don't take over silently: a new Service Worker installs and waits, and the page shows an update banner. Only once the user confirms does the new worker call `skipWaiting()` and the page reload to the new version — so a coach mid-workout is never yanked onto different code without warning.
 
 ### 4. Screen Wake Lock
 To keep the display active during long workouts without requiring user interaction:
@@ -142,18 +185,26 @@ async function acquireWakeLock() {
     }
 }
 ```
-This lock is released automatically when navigating away or stopping the timer, and re-acquired when starting a workout.
+The lock is released automatically when leaving or stopping the timer, and re-acquired when starting a workout.
+
+### 5. QR Code Pairing
+Joining a shared session by typing a 6-character code works, but scanning is faster. The share badge also renders a QR code (generated fully client-side, no external service) encoding a URL with the session code as a query parameter. Opening that URL — e.g. by scanning it — auto-fills and submits the "follow" flow on load, connecting as a viewer with no typing required.
 
 ---
 
-## 📂 Project Directory Structure
+## Project Directory Structure
 
-- `index.html` - Core layout structure and Service Worker registration.
-- `style.css` - Responsive grid/flex design utilizing viewport-relative typography (`clamp()`, `vw`) for television layouts, plus color-coded option blocks.
-- `app.js` - Sequence builder, sound engine, UI binding, keyboard event router, Web Worker wrapper, and multi-screen sync/history/rep-counter logic (ES module).
-- `sync.js` - Firebase Firestore wrapper (lazy-loaded), used only when sharing or following a session.
-- `firebase-config.js` - Firebase project configuration (placeholder — see "Sincronizzazione Multi-Schermo" above).
-- `sw.js` - Service Worker cache script.
-- `manifest.json` - PWA app installation metadata.
-- `icon.svg` - App launcher icon.
-- `CNAME` - Custom domain DNS configuration for GitHub Pages (`timer.mbianchi.me`).
+- `index.html` — page structure, modals, and Service Worker registration/update-banner wiring.
+- `style.css` — responsive grid/flex layout using viewport-relative typography (`clamp()`, `vw`) for TV-sized screens, plus color-coded option blocks.
+- `app.js` — sequence builder, timing engine, sound engine, UI binding, keyboard shortcut router, Web Worker wrapper, and the multi-screen sync/history/rep-counter/WOD-import glue code (ES module; not designed to be imported outside a browser).
+- `sync.js` — Firebase Firestore wrapper (lazy-loaded), only touched when sharing or following a session.
+- `firebase-config.js` — Firebase project configuration (placeholder — see [Multi-Screen Sync](#multi-screen-sync-optional) above).
+- `i18n.js` — the IT/EN translation dictionary and helpers (`t`, `getLang`, `setLang`).
+- `time-utils.js` — pure time formatting/parsing helpers, covered by `time-utils.test.js`.
+- `wod-parser.js` — the local WOD text parser, covered by `wod-parser.test.js`.
+- `qrcode-lib.js` — a vendored, MIT-licensed QR code encoder ([kazuhikoarase/qrcode-generator](https://github.com/kazuhikoarase/qrcode-generator)), used for the share QR code.
+- `sw.js` — Service Worker cache script.
+- `manifest.json` — PWA install metadata.
+- `icon.svg` — app launcher icon.
+- `package.json` — declares this as an ES module project and defines the `npm test` script; no runtime dependencies.
+- `CNAME` — custom domain configuration for GitHub Pages (`timer.mbianchi.me`).
