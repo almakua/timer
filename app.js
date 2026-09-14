@@ -574,7 +574,7 @@ function playLowBeep() {
     playBeep(880, 0.25);
 }
 function playWarningBeep() {
-    playBeep(1400, 0.25);
+    playBeep(1320, 0.25); // quinta giusta sopra gli 880Hz del countdown normale
 }
 function playHighBeep() {
     playBeep(2000, 0.85);
