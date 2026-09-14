@@ -573,6 +573,9 @@ function playBeep(frequency, duration) {
 function playLowBeep() {
     playBeep(880, 0.25);
 }
+function playWarningBeep() {
+    playBeep(1400, 0.25);
+}
 function playHighBeep() {
     playBeep(2000, 0.85);
 }
@@ -778,10 +781,10 @@ function evaluateBeeps(seg) {
     // Chiave condivisa tra tutte le regole: se un secondo è già stato "coperto"
     // da una regola (es. warning basso che si sovrappone al countdown di fine
     // fase), le altre lo trovano già in beepsFired e non raddoppiano il beep.
-    const fireBeepOnce = () => {
+    const fireBeepOnce = (beepFn) => {
         if (state.beepsFired.has(triggerBeepVal)) return;
         state.beepsFired.add(triggerBeepVal);
-        playLowBeep();
+        beepFn();
     };
 
     if ((state.mode === "hiit" || state.mode === "tabata" || state.mode === "emom") && seg.phase === "work") {
@@ -790,12 +793,16 @@ function evaluateBeeps(seg) {
         // (es. warning a 1:30 -> beep a 1:33, 1:32, 1:31, 1:30). Con un warning basso
         // (es. 5s) il countdown finirebbe troppo a ridosso di quello di fine fase,
         // suonando come due gruppi confusi con una pausa in mezzo: sotto questa soglia
-        // niente lead-in, resta il singolo beep di sempre.
+        // niente lead-in, resta il singolo beep di sempre. Il lead-in suona come il
+        // normale countdown 3-2-1 (stesso tono), ma il beep del warning vero e proprio
+        // (l'ultimo del gruppo) ha un tono distinto, per riconoscerlo a orecchio.
         const WARNING_COUNTDOWN_MIN_SECONDS = 15;
         if (warningLimit > 0) {
             const rangeStart = warningLimit >= WARNING_COUNTDOWN_MIN_SECONDS ? warningLimit + 3 : warningLimit;
-            if (triggerBeepVal >= warningLimit && triggerBeepVal <= rangeStart) {
-                fireBeepOnce();
+            if (triggerBeepVal === warningLimit) {
+                fireBeepOnce(playWarningBeep);
+            } else if (triggerBeepVal > warningLimit && triggerBeepVal <= rangeStart) {
+                fireBeepOnce(playLowBeep);
             }
         }
     }
@@ -803,7 +810,7 @@ function evaluateBeeps(seg) {
     // Beep 3, 2, 1 secondi prima della fine della fase
     if (!(state.mode === "fortime" && seg.phase === "work")) {
         if (triggerBeepVal <= 3 && triggerBeepVal >= 1) {
-            fireBeepOnce();
+            fireBeepOnce(playLowBeep);
         }
     }
 }
