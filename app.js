@@ -126,6 +126,7 @@ function adaptUIForMode() {
     const extraRestWrap = document.getElementById("extra-rest-inputs-container-wrap");
     const rowToggle = document.getElementById("row-toggle-advanced");
     const rowSummary = document.getElementById("row-summary");
+    const advancedAccordion = document.getElementById("advanced-options-accordion");
     const lblWorkMain = document.getElementById("lbl-work-main");
     const lblWorkSub = document.getElementById("lbl-work-sub");
 
@@ -144,11 +145,13 @@ function adaptUIForMode() {
         lblWorkMain.textContent = t("workLabelHiit");
         lblWorkSub.textContent = t("workSubHiit");
         rowToggleExtraRest.classList.remove("hidden");
+        advancedAccordion.classList.remove("hidden");
         toggleAdvancedMode();
         toggleExtraRestMode();
     } else {
         rowToggleExtraRest.classList.add("hidden");
         extraRestWrap.style.display = "none";
+        advancedAccordion.classList.add("hidden");
 
         if (currentMode === "tabata") {
             rowRounds.classList.add("hidden");

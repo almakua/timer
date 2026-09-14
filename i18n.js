@@ -6,7 +6,7 @@ const STORAGE_KEY = "hiit-timer-lang";
 
 const dict = {
     it: {
-        historyBtn: "📜 Storico",
+        historyBtn: "Storico",
         roundsLabel: "Round totali",
         roundsSub: "Numero di round totali (scrivibile da tastiera)",
         prepareLabel: "Prepare",
@@ -28,7 +28,8 @@ const dict = {
         summaryRoundsLabel: "Round",
         summaryTotalLabel: "Durata totale",
         applyBtn: "✓ Applica",
-        joinLabel: "Segui un allenamento condiviso",
+        joinLabel: "🔗 Segui un allenamento condiviso",
+        advancedOptionsSummary: "⚙️ Opzioni avanzate",
         joinPlaceholder: "CODICE",
         joinBtn: "Segui",
         joinBtnConnecting: "Connessione...",
@@ -90,7 +91,7 @@ const dict = {
         historyRoundsPart: "{n} round · ",
         historyClearConfirm: "Cancellare tutto lo storico allenamenti?",
 
-        wodImportBtn: "📋 Incolla WOD",
+        wodImportBtn: "Incolla WOD",
         wodModalTitle: "📋 Incolla il WOD",
         wodHint: "Riconosce formati comuni: EMOM 12, AMRAP 20, Tabata, 21-15-9 for time, 5 rounds 40s/20s...",
         wodTextareaPlaceholder: "Incolla qui il testo del WOD",
@@ -108,7 +109,7 @@ const dict = {
         alertCoachEndedSharing: "Il coach ha terminato la condivisione.",
     },
     en: {
-        historyBtn: "📜 History",
+        historyBtn: "History",
         roundsLabel: "Total rounds",
         roundsSub: "Total number of rounds (typeable from keyboard)",
         prepareLabel: "Prepare",
@@ -130,7 +131,8 @@ const dict = {
         summaryRoundsLabel: "Rounds",
         summaryTotalLabel: "Total duration",
         applyBtn: "✓ Apply",
-        joinLabel: "Follow a shared workout",
+        joinLabel: "🔗 Follow a shared workout",
+        advancedOptionsSummary: "⚙️ Advanced options",
         joinPlaceholder: "CODE",
         joinBtn: "Follow",
         joinBtnConnecting: "Connecting...",
@@ -192,7 +194,7 @@ const dict = {
         historyRoundsPart: "{n} rounds · ",
         historyClearConfirm: "Clear all workout history?",
 
-        wodImportBtn: "📋 Paste WOD",
+        wodImportBtn: "Paste WOD",
         wodModalTitle: "📋 Paste the WOD",
         wodHint: "Recognizes common formats: EMOM 12, AMRAP 20, Tabata, 21-15-9 for time, 5 rounds 40s/20s...",
         wodTextareaPlaceholder: "Paste the WOD text here",

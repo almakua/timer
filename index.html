@@ -11,14 +11,15 @@
     </head>
     <body>
         <div id="setup-screen">
-            <select id="lang-switcher" class="lang-switcher" aria-label="Language / Lingua">
-                <option value="it">🇮🇹 Italiano</option>
-                <option value="en">🇬🇧 English</option>
-            </select>
-
-            <button type="button" class="btn-history" id="btn-history" data-i18n="historyBtn">
-                📜 Storico
-            </button>
+            <!-- Barra utility: azioni usate di rado, raggruppate e discrete -->
+            <div class="utility-bar">
+                <select id="lang-switcher" class="lang-switcher" aria-label="Language / Lingua">
+                    <option value="it">🇮🇹 Italiano</option>
+                    <option value="en">🇬🇧 English</option>
+                </select>
+                <button type="button" class="btn-utility" id="btn-wod-import" title="Incolla WOD" data-i18n-title="wodImportBtn">📋</button>
+                <button type="button" class="btn-utility" id="btn-history" title="Storico" data-i18n-title="historyBtn">📜</button>
+            </div>
 
             <h1>HIIT Timer Pro</h1>
 
@@ -40,8 +41,6 @@
                     FOR TIME
                 </button>
             </div>
-
-            <button type="button" class="btn-wod-import" id="btn-wod-import" data-i18n="wodImportBtn">📋 Incolla WOD</button>
 
             <div class="config-grid">
                 <div class="config-row" id="row-rounds">
@@ -131,77 +130,83 @@
                 </div>
             </div>
 
-            <!-- TOGGLE TEMPI DIVERSI PER SET (TEAL STYLE) -->
-            <div class="toggle-row" id="row-toggle-advanced">
-                <label class="toggle-label-wrap" for="cfg-advanced-toggle">
-                    <span style="color:var(--advanced-sets);" data-i18n="advancedToggleLabel">Imposta tempi diversi per ogni set</span>
-                    <div class="switch">
-                        <input type="checkbox" id="cfg-advanced-toggle" />
-                        <span class="slider"></span>
+            <!-- Opzioni avanzate HIIT: richiuse di default, usate raramente -->
+            <details class="advanced-options" id="advanced-options-accordion">
+                <summary data-i18n="advancedOptionsSummary">⚙️ Opzioni avanzate</summary>
+                <div class="advanced-options-body">
+                    <!-- TOGGLE TEMPI DIVERSI PER SET (TEAL STYLE) -->
+                    <div class="toggle-row" id="row-toggle-advanced">
+                        <label class="toggle-label-wrap" for="cfg-advanced-toggle">
+                            <span style="color:var(--advanced-sets);" data-i18n="advancedToggleLabel">Imposta tempi diversi per ogni set</span>
+                            <div class="switch">
+                                <input type="checkbox" id="cfg-advanced-toggle" />
+                                <span class="slider"></span>
+                            </div>
+                        </label>
                     </div>
-                </label>
-            </div>
 
-            <!-- OPZIONI TEMPI DIVERSI (COMPARE SUBITO SOTTO IL TOGGLE RELATIVO) -->
-            <div
-                class="rounds-list-container"
-                id="rounds-inputs-container-wrap"
-            >
-                <h3 style="color:var(--advanced-sets);" data-i18n="advancedTitle">Personalizza durata singoli Set (mm:ss)</h3>
-                <div class="rounds-list" id="rounds-inputs-container"></div>
-            </div>
-
-            <!-- TOGGLE RECUPERI EXTRA (PURPLE STYLE) -->
-            <div class="toggle-row" id="row-toggle-extra-rest">
-                <label class="toggle-label-wrap" for="cfg-extra-rest-toggle">
-                    <span style="color:var(--extra-rest);" data-i18n="extraRestToggleLabel">Inserisci recuperi extra programmati</span>
-                    <div class="switch">
-                        <input type="checkbox" id="cfg-extra-rest-toggle" checked />
-                        <span class="slider"></span>
+                    <!-- OPZIONI TEMPI DIVERSI (COMPARE SUBITO SOTTO IL TOGGLE RELATIVO) -->
+                    <div
+                        class="rounds-list-container"
+                        id="rounds-inputs-container-wrap"
+                    >
+                        <h3 style="color:var(--advanced-sets);" data-i18n="advancedTitle">Personalizza durata singoli Set (mm:ss)</h3>
+                        <div class="rounds-list" id="rounds-inputs-container"></div>
                     </div>
-                </label>
-            </div>
 
-            <!-- OPZIONI RECUPERI EXTRA (COMPARE SUBITO SOTTO IL TOGGLE RELATIVO) -->
-            <div id="extra-rest-inputs-container-wrap">
-                <!-- RIGA: REST EXTRA (DURATA) -->
-                <div class="config-row" id="row-extra-rest">
-                    <label>
-                        <span class="label-main" style="color:var(--extra-rest);" data-i18n="extraRestLabel">Rest Extra</span>
-                        <span data-i18n="extraRestSub">Durata del recupero lungo speciale (mm:ss)</span>
-                    </label>
-                    <div class="stepper">
-                        <button data-field="extraRest" data-delta="-5">−</button>
-                        <input
-                            type="text"
-                            id="cfg-extraRest"
-                            data-value="40"
-                            inputmode="numeric"
-                        />
-                        <button data-field="extraRest" data-delta="5">+</button>
+                    <!-- TOGGLE RECUPERI EXTRA (PURPLE STYLE) -->
+                    <div class="toggle-row" id="row-toggle-extra-rest">
+                        <label class="toggle-label-wrap" for="cfg-extra-rest-toggle">
+                            <span style="color:var(--extra-rest);" data-i18n="extraRestToggleLabel">Inserisci recuperi extra programmati</span>
+                            <div class="switch">
+                                <input type="checkbox" id="cfg-extra-rest-toggle" checked />
+                                <span class="slider"></span>
+                            </div>
+                        </label>
+                    </div>
+
+                    <!-- OPZIONI RECUPERI EXTRA (COMPARE SUBITO SOTTO IL TOGGLE RELATIVO) -->
+                    <div id="extra-rest-inputs-container-wrap">
+                        <!-- RIGA: REST EXTRA (DURATA) -->
+                        <div class="config-row" id="row-extra-rest">
+                            <label>
+                                <span class="label-main" style="color:var(--extra-rest);" data-i18n="extraRestLabel">Rest Extra</span>
+                                <span data-i18n="extraRestSub">Durata del recupero lungo speciale (mm:ss)</span>
+                            </label>
+                            <div class="stepper">
+                                <button data-field="extraRest" data-delta="-5">−</button>
+                                <input
+                                    type="text"
+                                    id="cfg-extraRest"
+                                    data-value="40"
+                                    inputmode="numeric"
+                                />
+                                <button data-field="extraRest" data-delta="5">+</button>
+                            </div>
+                        </div>
+
+                        <!-- RIGA: FREQUENZA REST EXTRA -->
+                        <div class="config-row" id="row-extra-rest-freq">
+                            <label>
+                                <span class="label-main" style="color:var(--extra-rest);" data-i18n="extraRestFreqLabel">Frequenza Rest Extra</span>
+                                <span data-i18n="extraRestFreqSub">Inserisci un Rest Extra ogni X round di lavoro</span>
+                            </label>
+                            <div class="stepper">
+                                <button id="btn-extra-rest-freq-minus">−</button>
+                                <input
+                                    type="number"
+                                    id="cfg-extraRestFreq"
+                                    min="0"
+                                    max="30"
+                                    value="5"
+                                    readonly
+                                />
+                                <button id="btn-extra-rest-freq-plus">+</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
-
-                <!-- RIGA: FREQUENZA REST EXTRA -->
-                <div class="config-row" id="row-extra-rest-freq">
-                    <label>
-                        <span class="label-main" style="color:var(--extra-rest);" data-i18n="extraRestFreqLabel">Frequenza Rest Extra</span>
-                        <span data-i18n="extraRestFreqSub">Inserisci un Rest Extra ogni X round di lavoro</span>
-                    </label>
-                    <div class="stepper">
-                        <button id="btn-extra-rest-freq-minus">−</button>
-                        <input
-                            type="number"
-                            id="cfg-extraRestFreq"
-                            min="0"
-                            max="30"
-                            value="5"
-                            readonly
-                        />
-                        <button id="btn-extra-rest-freq-plus">+</button>
-                    </div>
-                </div>
-            </div>
+            </details>
 
             <div class="summary-card" id="row-summary">
                 <div class="summary-stat">
@@ -216,9 +221,9 @@
 
             <button class="start-btn" id="btn-apply" data-i18n="applyBtn">✓ Applica</button>
 
-            <!-- Segui un allenamento condiviso da un altro dispositivo -->
-            <div class="join-box">
-                <label class="join-box-label" for="cfg-join-code" data-i18n="joinLabel">Segui un allenamento condiviso</label>
+            <!-- Segui un allenamento condiviso da un altro dispositivo: richiuso di default -->
+            <details class="join-accordion">
+                <summary data-i18n="joinLabel">🔗 Segui un allenamento condiviso</summary>
                 <div class="join-box-row">
                     <input
                         type="text"
@@ -231,7 +236,7 @@
                     />
                     <button type="button" id="btn-join" data-i18n="joinBtn">Segui</button>
                 </div>
-            </div>
+            </details>
         </div>
 
         <div id="active-screen">
