@@ -34,7 +34,7 @@ A fully configurable interval timer supporting:
 - Total rounds (directly editable via keyboard or stepper buttons).
 - Preparation time.
 - Standard work round duration.
-- End-of-round warning sound (mm:ss format), with its own distinct tone and a lead-in countdown.
+- End-of-round warning sound (mm:ss format), with its own distinct tone.
 - Standard rest between rounds.
 - **Advanced set timing:** customize the duration of each individual work set.
 - **Scheduled extra rest:** automatically insert a longer recovery phase (e.g. 40s) after every X work rounds (e.g. every 5 rounds).

@@ -789,21 +789,8 @@ function evaluateBeeps(seg) {
 
     if ((state.mode === "hiit" || state.mode === "tabata" || state.mode === "emom") && seg.phase === "work") {
         const warningLimit = state.warning || 0;
-        // Countdown di 3 beep che anticipano il warning, più il beep del warning stesso
-        // (es. warning a 1:30 -> beep a 1:33, 1:32, 1:31, 1:30). Con un warning basso
-        // (es. 5s) il countdown finirebbe troppo a ridosso di quello di fine fase,
-        // suonando come due gruppi confusi con una pausa in mezzo: sotto questa soglia
-        // niente lead-in, resta il singolo beep di sempre. Il lead-in suona come il
-        // normale countdown 3-2-1 (stesso tono), ma il beep del warning vero e proprio
-        // (l'ultimo del gruppo) ha un tono distinto, per riconoscerlo a orecchio.
-        const WARNING_COUNTDOWN_MIN_SECONDS = 15;
-        if (warningLimit > 0) {
-            const rangeStart = warningLimit >= WARNING_COUNTDOWN_MIN_SECONDS ? warningLimit + 3 : warningLimit;
-            if (triggerBeepVal === warningLimit) {
-                fireBeepOnce(playWarningBeep);
-            } else if (triggerBeepVal > warningLimit && triggerBeepVal <= rangeStart) {
-                fireBeepOnce(playLowBeep);
-            }
+        if (warningLimit > 0 && triggerBeepVal === warningLimit) {
+            fireBeepOnce(playWarningBeep);
         }
     }
 
