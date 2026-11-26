@@ -8,6 +8,7 @@ let currentMode = "hiit";
 let roundTimes = [20, 20, 20, 20, 20, 20, 20, 20, 20, 20];
 let originalBaseTimes = [];
 const DEFAULTS = { prepare: 10, work: 20, warning: 5, rest: 10, extraRest: 40, extraRestFreq: 5 };
+const MAX_ROUNDS = "90"
 
 const modeCacheValues = {
     hiit: { work: 20 },
@@ -366,7 +367,7 @@ const roundsInput = document.getElementById("cfg-rounds");
 roundsInput.addEventListener("blur", () => {
     let val = parseInt(roundsInput.value) || 8;
     if (val < 1) val = 1;
-    if (val > 90) val = 90;
+    if (val > MAX_ROUNDS) val = MAX_ROUNDS;
     roundsInput.value = val;
 
     syncRoundsArray(val);
@@ -383,7 +384,7 @@ roundsInput.addEventListener("keydown", (e) => {
 document.getElementById("btn-round-plus").addEventListener("click", () => {
     const input = document.getElementById("cfg-rounds");
     let val = parseInt(input.value) || 8;
-    if (val < 30) {
+    if (val < MAX_ROUNDS) {
         val++;
         input.value = val;
         syncRoundsArray(val);
@@ -414,7 +415,7 @@ document.getElementById("btn-round-minus").addEventListener("click", () => {
 document.getElementById("btn-extra-rest-freq-plus").addEventListener("click", () => {
     const input = document.getElementById("cfg-extraRestFreq");
     let val = parseInt(input.value) || 0;
-    if (val < 30) input.value = val + 1;
+    if (val < MAX_ROUNDS) input.value = val + 1;
     updateSummary();
 });
 
@@ -1494,7 +1495,7 @@ function applyParsedWod(parsed) {
         if (parsed.work) modeCacheValues.hiit.work = parsed.work;
         if (parsed.rest) setRawValue("rest", parsed.rest);
         if (parsed.rounds) {
-            const val = Math.max(1, Math.min(30, parsed.rounds));
+            const val = Math.max(1, Math.min(90, parsed.rounds));
             document.getElementById("cfg-rounds").value = val;
             syncRoundsArray(val);
         }
