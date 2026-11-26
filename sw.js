@@ -1,4 +1,4 @@
-const CACHE_NAME = 'hiit-timer-pro-v7';
+const CACHE_NAME = 'hiit-timer-pro-v8'; // era v7
 const ASSETS = [
   './',
   './index.html',
@@ -11,8 +11,11 @@ const ASSETS = [
   './wod-parser.js',
   './qrcode-lib.js',
   './manifest.json',
-  './icon.svg'
+  './icon.svg',
+  './logo-buriacus.png',
+  './logo-buriacus-icon.png'
 ];
+
 
 // Installazione: cache delle risorse statiche.
 // Non chiama skipWaiting() automaticamente: se c'è già una versione attiva,

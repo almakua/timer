@@ -6,7 +6,7 @@
         <title>HIIT Timer Pro</title>
         <link rel="stylesheet" href="style.css" />
         <link rel="manifest" href="manifest.json" />
-        <meta name="theme-color" content="#0a0a0a" />
+        <meta name="theme-color" content="#050705" />
         <link rel="icon" href="icon.svg" type="image/svg+xml" />
     </head>
     <body>
@@ -28,7 +28,10 @@
                 <button type="button" class="btn-utility" id="btn-shortcuts-help" title="Scorciatoie da tastiera" data-i18n-title="shortcutsHelpBtn">⌨️</button>
             </div>
 
-            <h1>HIIT Timer Pro</h1>
+        <header class="brand-header">
+          <img src="logo-buriacus.png" alt="CrossFit Buriacus" class="brand-logo" />
+          <p class="brand-subtitle">HIIT TIMER PRO</p>
+        </header>
 
             <!-- Selettore Modalità con Preset integrati -->
             <div class="mode-selector">
@@ -247,6 +250,9 @@
         </div>
 
         <div id="active-screen">
+            <img src="logo-buriacus-icon.png" alt="" class="active-watermark" aria-hidden="true" />
+            <img src="logo-buriacus.png" alt="CrossFit Buriacus" class="active-brand-logo" />
+
             <!-- Aiuto scorciatoie da tastiera -->
             <button type="button" class="btn-shortcuts-help-active" id="btn-shortcuts-help-active" title="Scorciatoie da tastiera" data-i18n-title="shortcutsHelpBtn">⌨️</button>
 

@@ -7,20 +7,22 @@
 }
 
 :root {
-    --bg: #0a0a0a;
-    --surface: #141414;
-    --border: #2a2a2a;
-    --text: #f0f0f0;
-    --muted: #888;
-    --prepare: #f59e0b;
-    --work: #22c55e;
-    --rest: #3b82f6;
-    --extra-rest: #a855f7; /* Viola per il recupero lungo extra */
-    --advanced-sets: #14b8a6; /* Teal per impostazioni avanzate set */
-    --warning: #ef4444;
-    --btn-primary: #f0f0f0;
-    --btn-primary-text: #0a0a0a;
-    --radius: 12px;
+  --bg: #050705;
+  --surface: #0e130e;
+  --surface-2: #141c14;
+  --border: #1e2e1e;
+  --text: #f6fff6;
+  --muted: #85a385;
+  --prepare: #f59e0b;
+  --work: #37f922;
+  --rest: #3b82f6;
+  --extra-rest: #a855f7;
+  --advanced-sets: #14b8a6;
+  --warning: #ef4444;
+  --btn-primary: #37f922;
+  --btn-primary-text: #040804;
+  --brand-glow: rgba(55, 249, 34, 0.35);
+  --radius: 12px;
 }
 
 body {
@@ -1388,3 +1390,136 @@ body.phase-extraRest {
 .timer-display .time-val {
     color: var(--phase-color, var(--text));
 }
+
+/* ── CROSSFIT BURIACUS: NEON ARENA THEME ── */
+body {
+  background: radial-gradient(circle at 50% 0%, rgba(55, 249, 34, 0.16) 0%, var(--bg) 52%);
+  background-color: var(--bg);
+}
+
+/* Header logo + sottotitolo */
+.brand-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 20px;
+}
+
+.brand-logo {
+  height: clamp(42px, 10vw, 56px);
+  width: auto;
+  display: block;
+  object-fit: contain;
+}
+
+.brand-subtitle {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* Tab modalità attivo */
+.mode-tab.active {
+  background: var(--work);
+  color: var(--btn-primary-text);
+  box-shadow: 0 0 14px rgba(55, 249, 34, 0.28);
+}
+
+/* Card configurazione e bottoni + evidenziati */
+.config-row {
+  box-shadow: inset 0 1px 0 rgba(55, 249, 34, 0.08);
+}
+
+.stepper button {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+}
+
+.stepper button:hover {
+  background: #1b2a1b;
+  border-color: var(--work);
+}
+
+.stepper button:last-of-type {
+  border-color: var(--work);
+  color: var(--work);
+}
+
+/* Summary card evidenziata */
+.summary-card {
+  border-color: var(--work);
+  box-shadow: 0 0 18px rgba(55, 249, 34, 0.14);
+}
+
+.summary-stat .val {
+  color: var(--work);
+}
+
+/* Pulsante CTA principale con glow */
+.start-btn {
+  box-shadow: 0 0 22px var(--brand-glow);
+}
+
+/* Active Screen: logo, watermark e look LED */
+/*#active-screen {
+  overflow: hidden;
+}*/
+
+#active-screen > *:not(.active-watermark):not(.top-left-actions):not(.btn-fullscreen):not(.btn-shortcuts-help-active) {
+  position: relative;
+  z-index: 1;
+}
+
+.active-brand-logo {
+  height: clamp(26px, 4vw, 38px);
+  width: auto;
+  display: block;
+  object-fit: contain;
+  margin-top: 4px;
+}
+
+.active-watermark {
+  position: absolute;
+  right: 24px;
+  bottom: 48px;
+  width: clamp(180px, 28vw, 320px);
+  opacity: 0.07;
+  pointer-events: none;
+  z-index: 0;
+  user-select: none;
+}
+
+.phase-badge.work {
+  background: rgba(55, 249, 34, 0.18);
+  color: var(--work);
+  border: 1px solid var(--work);
+}
+
+/*.timer-display .time-val {
+  display: inline-block;
+  padding: 0.08em 0.14em;
+  margin: -0.08em -0.14em;
+  text-shadow: 0 0 28px rgba(55, 249, 34, 0.22);
+}*/
+
+body.phase-work .timer-display .time-val {
+  filter: drop-shadow(0 0 16px rgba(55, 249, 34, 0.25));
+}
+
+
+.progress-wrap {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+}
+
+.progress-bar {
+  box-shadow: 0 0 14px rgba(55, 249, 34, 0.65);
+}
+
+#btn-active-start {
+  box-shadow: 0 0 22px var(--brand-glow);
+}
+
