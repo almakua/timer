@@ -1,4 +1,4 @@
-const CACHE_NAME = 'hiit-timer-pro-v8'; // era v7
+const CACHE_NAME = 'hiit-timer-pro-v9'; // era v8
 const ASSETS = [
   './',
   './index.html',

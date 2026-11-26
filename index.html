@@ -5,6 +5,9 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>HIIT Timer Pro</title>
         <link rel="stylesheet" href="style.css" />
+        <script>
+          document.documentElement.dataset.theme = localStorage.getItem('buriacus-theme') || 'neon';
+        </script>        
         <link rel="manifest" href="manifest.json" />
         <meta name="theme-color" content="#050705" />
         <link rel="icon" href="icon.svg" type="image/svg+xml" />
@@ -22,6 +25,11 @@
                 <select id="lang-switcher" class="lang-switcher" aria-label="Language / Lingua">
                     <option value="it">🇮🇹 Italiano</option>
                     <option value="en">🇬🇧 English</option>
+                </select>
+                <select id="theme-switcher" class="lang-switcher" aria-label="Theme">
+                  <option value="neon">Neon Arena</option>
+                  <option value="stealth">Stealth Box</option>
+                  <option value="brutalist">Brutalist</option>
                 </select>
                 <button type="button" class="btn-utility" id="btn-wod-import" title="Incolla WOD" data-i18n-title="wodImportBtn">📋</button>
                 <button type="button" class="btn-utility" id="btn-history" title="Storico" data-i18n-title="historyBtn">📜</button>

@@ -1391,13 +1391,7 @@ body.phase-extraRest {
     color: var(--phase-color, var(--text));
 }
 
-/* ── CROSSFIT BURIACUS: NEON ARENA THEME ── */
-body {
-  background: radial-gradient(circle at 50% 0%, rgba(55, 249, 34, 0.16) 0%, var(--bg) 52%);
-  background-color: var(--bg);
-}
-
-/* Header logo + sottotitolo */
+/* ── CROSSFIT BURIACUS: BASE CONDIVISA ── */
 .brand-header {
   display: flex;
   flex-direction: column;
@@ -1421,52 +1415,19 @@ body {
   color: var(--muted);
 }
 
-/* Tab modalità attivo */
 .mode-tab.active {
   background: var(--work);
   color: var(--btn-primary-text);
-  box-shadow: 0 0 14px rgba(55, 249, 34, 0.28);
-}
-
-/* Card configurazione e bottoni + evidenziati */
-.config-row {
-  box-shadow: inset 0 1px 0 rgba(55, 249, 34, 0.08);
 }
 
 .stepper button {
-  background: var(--surface-2);
+  background: var(--surface-2, var(--border));
   border: 1px solid var(--border);
 }
 
 .stepper button:hover {
-  background: #1b2a1b;
   border-color: var(--work);
 }
-
-.stepper button:last-of-type {
-  border-color: var(--work);
-  color: var(--work);
-}
-
-/* Summary card evidenziata */
-.summary-card {
-  border-color: var(--work);
-  box-shadow: 0 0 18px rgba(55, 249, 34, 0.14);
-}
-
-.summary-stat .val {
-  color: var(--work);
-}
-
-/* Pulsante CTA principale con glow */
-.start-btn {
-  box-shadow: 0 0 22px var(--brand-glow);
-}
-
-/* Active Screen: logo, watermark e look LED */
-/*#active-screen {
-  overflow: hidden;
-}*/
 
 #active-screen > *:not(.active-watermark):not(.top-left-actions):not(.btn-fullscreen):not(.btn-shortcuts-help-active) {
   position: relative;
@@ -1485,41 +1446,174 @@ body {
   position: absolute;
   right: 24px;
   bottom: 48px;
-  width: clamp(180px, 28vw, 320px);
+  width: clamp(180px, 26vw, 280px);
   opacity: 0.07;
   pointer-events: none;
   z-index: 0;
   user-select: none;
 }
 
-.phase-badge.work {
+/* ── TEMA 1: NEON ARENA (default) ── */
+html[data-theme="neon"] {
+  --bg: #050705;
+  --surface: #0e130e;
+  --surface-2: #141c14;
+  --border: #1e2e1e;
+  --text: #f6fff6;
+  --muted: #85a385;
+  --work: #37f922;
+  --btn-primary: #37f922;
+  --btn-primary-text: #040804;
+  --brand-glow: rgba(55, 249, 34, 0.35);
+  --radius: 12px;
+}
+
+html[data-theme="neon"] body {
+  background: radial-gradient(circle at 50% 0%, rgba(55, 249, 34, 0.16) 0%, var(--bg) 52%);
+  background-color: var(--bg);
+}
+
+html[data-theme="neon"] .mode-tab.active {
+  box-shadow: 0 0 14px rgba(55, 249, 34, 0.28);
+}
+
+html[data-theme="neon"] .config-row {
+  box-shadow: inset 0 1px 0 rgba(55, 249, 34, 0.08);
+}
+
+html[data-theme="neon"] .stepper button:last-of-type {
+  border-color: var(--work);
+  color: var(--work);
+}
+
+html[data-theme="neon"] .summary-card {
+  border-color: var(--work);
+  box-shadow: 0 0 18px rgba(55, 249, 34, 0.14);
+}
+
+html[data-theme="neon"] .summary-stat .val {
+  color: var(--work);
+}
+
+html[data-theme="neon"] .start-btn,
+html[data-theme="neon"] #btn-active-start {
+  box-shadow: 0 0 22px var(--brand-glow);
+}
+
+html[data-theme="neon"] .phase-badge.work {
   background: rgba(55, 249, 34, 0.18);
   color: var(--work);
   border: 1px solid var(--work);
 }
 
-/*.timer-display .time-val {
-  display: inline-block;
-  padding: 0.08em 0.14em;
-  margin: -0.08em -0.14em;
-  text-shadow: 0 0 28px rgba(55, 249, 34, 0.22);
-}*/
-
-body.phase-work .timer-display .time-val {
-  filter: drop-shadow(0 0 16px rgba(55, 249, 34, 0.25));
-}
-
-
-.progress-wrap {
+html[data-theme="neon"] .progress-wrap {
   background: var(--surface-2);
   border: 1px solid var(--border);
 }
 
-.progress-bar {
+html[data-theme="neon"] .progress-bar {
   box-shadow: 0 0 14px rgba(55, 249, 34, 0.65);
 }
 
-#btn-active-start {
-  box-shadow: 0 0 22px var(--brand-glow);
+/* ── TEMA 2: STEALTH BOX ── */
+html[data-theme="stealth"] {
+  --bg: #080a08;
+  --surface: #121512;
+  --surface-2: #191d19;
+  --border: #232923;
+  --text: #f3f6f3;
+  --muted: #889288;
+  --work: #37f922;
+  --btn-primary: #37f922;
+  --btn-primary-text: #050805;
+  --radius: 10px;
 }
 
+html[data-theme="stealth"] body {
+  background: var(--bg);
+}
+
+html[data-theme="stealth"] .summary-stat:first-child .val {
+  color: var(--work);
+}
+
+html[data-theme="stealth"] .phase-badge.work {
+  background: rgba(55, 249, 34, 0.15);
+  color: var(--work);
+  border: 1px solid var(--work);
+}
+
+html[data-theme="stealth"] .active-watermark {
+  display: none;
+}
+
+/* ── TEMA 3: INDUSTRIAL BRUTALIST ── */
+html[data-theme="brutalist"] {
+  --bg: #000000;
+  --surface: #0c0c0c;
+  --surface-2: #161616;
+  --border: #303030;
+  --text: #ffffff;
+  --muted: #a3a3a3;
+  --work: #37f922;
+  --btn-primary: #37f922;
+  --btn-primary-text: #000000;
+  --radius: 3px;
+}
+
+html[data-theme="brutalist"] body {
+  background: var(--bg);
+}
+
+html[data-theme="brutalist"] .brand-header {
+  padding-bottom: 14px;
+  border-bottom: 2px solid var(--work);
+}
+
+html[data-theme="brutalist"] .lang-switcher,
+html[data-theme="brutalist"] .btn-utility,
+html[data-theme="brutalist"] .btn-share,
+html[data-theme="brutalist"] .phase-badge {
+  border-radius: var(--radius);
+}
+
+html[data-theme="brutalist"] .config-row .label-main,
+html[data-theme="brutalist"] .advanced-options summary,
+html[data-theme="brutalist"] .join-accordion summary {
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+html[data-theme="brutalist"] .summary-card {
+  border: 2px solid var(--text);
+  padding: 0;
+  gap: 0;
+}
+
+html[data-theme="brutalist"] .summary-stat {
+  padding: 14px 8px;
+}
+
+html[data-theme="brutalist"] .summary-stat + .summary-stat {
+  border-left: 2px solid var(--text);
+}
+
+html[data-theme="brutalist"] .phase-badge.work {
+  background: var(--work);
+  color: #000000;
+}
+
+html[data-theme="brutalist"] .progress-wrap,
+html[data-theme="brutalist"] .progress-bar {
+  border-radius: 0;
+}
+
+html[data-theme="brutalist"] .progress-wrap {
+  height: 12px;
+  border: 1px solid var(--text);
+  background: #000000;
+}
+
+html[data-theme="brutalist"] .active-watermark {
+  display: none;
+}

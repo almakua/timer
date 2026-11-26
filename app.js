@@ -1620,3 +1620,33 @@ if (joinCodeFromUrl) {
     document.getElementById("cfg-join-code").value = joinCodeFromUrl.trim().toUpperCase();
     joinSession();
 }
+
+// ── THEME SWITCHER ──
+(() => {
+  const THEME_STORAGE_KEY = 'buriacus-theme';
+  const THEME_COLORS = {
+    neon: '#050705',
+    stealth: '#080a08',
+    brutalist: '#000000',
+  };
+
+  const select = document.getElementById('theme-switcher');
+  const metaTheme = document.querySelector('meta[name="theme-color"]');
+
+  function applyTheme(theme) {
+    const valid = THEME_COLORS[theme] ? theme : 'neon';
+    document.documentElement.dataset.theme = valid;
+    if (select) select.value = valid;
+    if (metaTheme) metaTheme.setAttribute('content', THEME_COLORS[valid]);
+  }
+
+  applyTheme(localStorage.getItem(THEME_STORAGE_KEY) || 'neon');
+
+  if (select) {
+    select.addEventListener('change', (e) => {
+      const next = e.target.value;
+      localStorage.setItem(THEME_STORAGE_KEY, next);
+      applyTheme(next);
+    });
+  }
+})();
