@@ -366,7 +366,7 @@ const roundsInput = document.getElementById("cfg-rounds");
 roundsInput.addEventListener("blur", () => {
     let val = parseInt(roundsInput.value) || 8;
     if (val < 1) val = 1;
-    if (val > 30) val = 30;
+    if (val > 90) val = 90;
     roundsInput.value = val;
 
     syncRoundsArray(val);
