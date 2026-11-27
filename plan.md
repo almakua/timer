@@ -1,7 +1,9 @@
-# Plan: bypass HTTP cache on service worker install
+# Done: end of workout image
 
-In `sw.js`, `install` handler: replace `return cache.addAll(ASSETS);` with
-`return cache.addAll(ASSETS.map((url) => new Request(url, { cache: 'reload' })));`
-and add a 1 line lowercase comment above it: `// bypass the http cache so a new version never stores stale files`
+Status: completed (2026-11-27)
 
-Don't bump `CACHE_NAME` (already v12 and not yet deployed). Run `npm test`
+- image shown in `#finished-overlay` instead of the title, title kept `sr-only`
+- `end-image.webp` 800px, black background, speed lines faded toward edges, bottom and left fade, green elements untouched
+- no border/glow, entry animation with reduced motion support
+- `sw.js`: asset cached, `CACHE_NAME` v12, install fetches with `cache: 'reload'`
+- `AGENTS.md` added
