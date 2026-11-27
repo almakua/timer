@@ -1,4 +1,4 @@
-const CACHE_NAME = 'hiit-timer-pro-v9'; // era v8
+const CACHE_NAME = 'hiit-timer-pro-v12'; // era v11
 const ASSETS = [
   './',
   './index.html',
@@ -13,7 +13,8 @@ const ASSETS = [
   './manifest.json',
   './icon.svg',
   './logo-buriacus.png',
-  './logo-buriacus-icon.png'
+  './logo-buriacus-icon.png',
+  './end-image.webp'
 ];
 
 
