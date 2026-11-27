@@ -25,7 +25,8 @@ const ASSETS = [
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS);
+      // bypass the http cache so a new version never stores stale files
+      return cache.addAll(ASSETS.map((url) => new Request(url, { cache: 'reload' })));
     })
   );
 });
